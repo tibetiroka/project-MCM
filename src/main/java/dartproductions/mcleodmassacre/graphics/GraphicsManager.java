@@ -64,11 +64,7 @@ public class GraphicsManager extends JPanel {
 		});
 		//
 		PANEL = new GraphicsManager();
-		//LABEL = new JLabel();
 		WINDOW.setContentPane(PANEL);
-		//panel.add(LABEL);
-		//panel.setPreferredSize(WINDOW.getSize());
-		//LABEL.setPreferredSize(panel.getSize());
 		//
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -77,38 +73,24 @@ public class GraphicsManager extends JPanel {
 		}
 		//
 		PANEL.setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
-		//WINDOW.setLocationByPlatform(false);
-		//WINDOW.setLocationRelativeTo(null);
-		//WINDOW.setLocation(0, 0);
 		WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		WINDOW.setResizable(false);
-		WINDOW.setUndecorated(true);
 		//
+		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
-		//WINDOW.setBounds(0, 0, WINDOW.getWidth(), WINDOW.getHeight());
-		setLocationToTopRight();
+		WINDOW.setLocation(0, 0);
 		LOGGER.info("Window created");
 	}
-	static void setLocationToTopRight() {
-		GraphicsConfiguration config = WINDOW.getGraphicsConfiguration();
-		Rectangle bounds = config.getBounds();
-		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
-		
-		int x = bounds.x + bounds.width - insets.right - WINDOW.getWidth();
-		int y = bounds.y + insets.top;
-		WINDOW.setLocation(x, y);
-	}
+	
 	private static void gameLoop() {
 		while(Main.isRunning()) {
 			Rectangle visible = PANEL.getVisibleRect();
-			//BufferedImage buffer = new BufferedImage(WINDOW.getWidth() - 16, WINDOW.getHeight() - 16 - 23 , BufferedImage.TYPE_INT_ARGB);
 			BUFFER = new BufferedImage(visible.width == 0 ? WINDOW.getWidth() - 16 : visible.width, visible.height == 0 ? WINDOW.getHeight() - 16 - 23 : visible.height, BufferedImage.TYPE_INT_ARGB);
 			try {
 				paintGraphics();
 			} catch(Exception e) {
 				LOGGER.error("Error during graphics painting", e);
 			}
-			//LABEL.setIcon(new ImageIcon(buffer));
 			WINDOW.repaint();
 			if(GameEngine.isRunning() && GameEngine.getState() != EngineState.LOADING) {
 				synchronized(GRAPHICS_LOCK) {
