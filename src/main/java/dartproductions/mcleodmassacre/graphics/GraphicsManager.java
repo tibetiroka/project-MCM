@@ -77,11 +77,11 @@ public class GraphicsManager extends JPanel {
 		}
 		//
 		PANEL.setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
+		WINDOW.setLocationByPlatform(false);
+		WINDOW.setLocation(0, 0);
 		WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		WINDOW.setResizable(false);
 		WINDOW.setUndecorated(true);
-		WINDOW.setLocationByPlatform(false);
-		WINDOW.setLocation(0, 0);
 		//
 		WINDOW.setVisible(true);
 		LOGGER.info("Window created");
