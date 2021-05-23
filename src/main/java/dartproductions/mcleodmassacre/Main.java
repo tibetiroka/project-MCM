@@ -23,6 +23,9 @@ public class Main {
 	 * True if additional debug information should be logged. Defaults to false.
 	 */
 	private static boolean DEBUG;
+	/**
+	 * The state of the application: true if it is running, false if it is shutting down.
+	 */
 	private static volatile boolean RUNNING = true;
 	private static ExecutorService EXECUTORS = Executors.newFixedThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() - 4));
 	private static volatile GameState GAME_STATE = GameState.LOADING;
