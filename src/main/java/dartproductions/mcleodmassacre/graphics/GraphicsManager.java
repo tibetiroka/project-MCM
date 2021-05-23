@@ -77,16 +77,27 @@ public class GraphicsManager extends JPanel {
 		}
 		//
 		PANEL.setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
-		WINDOW.setLocationByPlatform(false);
-		WINDOW.setLocation(0, 0);
+		//WINDOW.setLocationByPlatform(false);
+		//WINDOW.setLocationRelativeTo(null);
+		//WINDOW.setLocation(0, 0);
 		WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		WINDOW.setResizable(false);
 		WINDOW.setUndecorated(true);
 		//
 		WINDOW.setVisible(true);
+		//WINDOW.setBounds(0, 0, WINDOW.getWidth(), WINDOW.getHeight());
+		setLocationToTopRight();
 		LOGGER.info("Window created");
 	}
-	
+	static void setLocationToTopRight() {
+		GraphicsConfiguration config = WINDOW.getGraphicsConfiguration();
+		Rectangle bounds = config.getBounds();
+		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
+		
+		int x = bounds.x + bounds.width - insets.right - WINDOW.getWidth();
+		int y = bounds.y + insets.top;
+		WINDOW.setLocation(x, y);
+	}
 	private static void gameLoop() {
 		while(Main.isRunning()) {
 			Rectangle visible = PANEL.getVisibleRect();
