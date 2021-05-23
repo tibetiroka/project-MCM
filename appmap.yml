@@ -1,0 +1,5 @@
+# appmap.yml
+name: Super Smash Flashback 1
+packages:
+  # List the packages you'd like to record here.
+  - path: dartproductions.mcleodmassacre
