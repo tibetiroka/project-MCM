@@ -114,8 +114,6 @@ public class ResourceManager {
 				return images;
 			} catch(Exception e) {
 				LOGGER.warn("Could not get frames from image", e);
-				//BufferedImage image_ = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-				//image_.createGraphics();
 			}
 		} catch(IOException e) {
 			LOGGER.error("Could not load image " + file.getPath(), e);
