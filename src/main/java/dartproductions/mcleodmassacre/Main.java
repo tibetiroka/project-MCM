@@ -118,9 +118,13 @@ public class Main {
 	 *
 	 * @param running The new state
 	 */
-	public static void setRunning(boolean running) {
+	public static synchronized void setRunning(boolean running) {
 		Main.RUNNING = running;
 		LOGGER.info("Changed running state to " + running);
+		if(!isRunning()) {
+			EXECUTORS.shutdown();
+			LOGGER.info("Shutting down the global executors");
+		}
 	}
 	
 	/**
