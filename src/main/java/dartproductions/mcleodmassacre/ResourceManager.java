@@ -1,6 +1,7 @@
 package dartproductions.mcleodmassacre;
 
 import dartproductions.mcleodmassacre.graphics.Animation;
+import dartproductions.mcleodmassacre.graphics.Animation.StandardAnimation;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.options.Options;
 import de.cerus.jgif.GifImage;
@@ -18,8 +19,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Accesses and handles stored game resources.
@@ -30,11 +33,11 @@ public class ResourceManager {
 	 */
 	private static final File DATA_DIRECTORY = new File("data");
 	private static final Logger LOGGER = LogManager.getLogger(ResourceManager.class);
-	private static final HashMap<String, Image> IMAGES = new HashMap<>();
-	private static final HashMap<String, Shape> HITBOXES = new HashMap<>();
-	private static final HashMap<String, Area> HITBOX_AREAS = new HashMap<>();
-	private static final HashSet<String> NAMES = new HashSet<>();
-	private static final HashMap<String, Animation> ANIMATIONS = new HashMap<>();
+	private static final ConcurrentHashMap<String, Image> IMAGES = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<String, Shape> HITBOXES = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<String, Area> HITBOX_AREAS = new ConcurrentHashMap<>();
+	private static final Set<String> IMAGE_NAMES = Collections.synchronizedSet(new HashSet<>());
+	private static final ConcurrentHashMap<String, Animation> ANIMATIONS = new ConcurrentHashMap<>();
 	/**
 	 * The active game options
 	 */
@@ -105,7 +108,7 @@ public class ResourceManager {
 			Image image = loadImage(file);
 			LOGGER.debug("Loaded image " + file.getPath());
 			String name = getFileName(file);
-			NAMES.add(name);
+			IMAGE_NAMES.add(name);
 			try {
 				BufferedImage[] images = getImageFrames(image, file);
 				if(images.length > 0) {
