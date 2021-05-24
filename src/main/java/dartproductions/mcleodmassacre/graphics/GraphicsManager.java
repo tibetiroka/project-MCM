@@ -53,8 +53,6 @@ public class GraphicsManager extends JPanel {
 		Options options = ResourceManager.getOptions();
 		WINDOW = new JFrame("McLeod Massacre");
 		//
-		ResourceManager.loadStandardGraphics();
-		//
 		WINDOW.setIconImage(ResourceManager.getImage("icon"));
 		WINDOW.setSize(((IntOption) options.getSetting(StandardOptions.WIDTH)).getValue(), ((IntOption) options.getSetting(StandardOptions.HEIGHT)).getValue());
 		WINDOW.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -80,6 +78,8 @@ public class GraphicsManager extends JPanel {
 		WINDOW.setResizable(false);
 		//
 		configureQuality();
+		//
+		ResourceManager.createAnimations();
 		//
 		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
