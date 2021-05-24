@@ -31,13 +31,19 @@ public class ResolutionManager {
 		bufferSize = new Dimension((int) getDefaultScreenDimension().getWidth() * 3, (int) getDefaultScreenDimension().getHeight() * 3);
 		origin = new Point((int) getDefaultScreenDimension().getWidth(), (int) getDefaultScreenDimension().getHeight());
 		{
-			int minWidth = (int) (getDefaultScreenDimension().getWidth() * getScreenRatio());//scaled size
-			int minHeight = (int) (getDefaultScreenDimension().getHeight() * getScreenRatio());
-			int actualWidth = (int) Math.max(minWidth, getLocalScreenSize().getWidth());//actual size (either the scaled size or the local screen's size)
-			int actualHeight = (int) Math.max(minHeight, getLocalScreenSize().getHeight());
-			int offsetX = actualWidth - minWidth;
-			int offsetY = actualHeight - minHeight;
-			screenRect = new Rectangle(origin.x - offsetX, origin.y - offsetY, actualWidth, actualHeight);
+			double minWidth = getDefaultScreenDimension().getWidth() * getScreenRatio();//scaled size
+			double minHeight = getDefaultScreenDimension().getHeight() * getScreenRatio();
+			double actualWidth = Math.max(minWidth, getLocalScreenSize().getWidth());//actual size (either the scaled size or the local screen's size)
+			double actualHeight = Math.max(minHeight, getLocalScreenSize().getHeight());
+			double offsetX = (actualWidth - minWidth) / 2.0;//offset in scaled size
+			double offsetY = (actualHeight - minHeight) / 2.0;
+			double widthBefore = actualWidth / ratio;
+			double heightBefore = actualHeight / ratio;
+			//System.out.println(offsetX + " " + offsetY);
+			screenRect = new Rectangle((int) (origin.x - offsetX / ratio),
+			                           (int) (origin.y - offsetY / ratio),
+			                           (int) widthBefore,
+			                           (int) heightBefore);
 		}
 	}
 	
