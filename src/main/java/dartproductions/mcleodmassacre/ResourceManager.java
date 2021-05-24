@@ -108,28 +108,6 @@ public class ResourceManager {
 		} catch(Exception e) {
 			LOGGER.error("Could not load default graphics from \"" + hitboxes + "\"", e);
 		}
-		
-		/*File hitboxes = new File(directory, "hitbox");
-		if(hitboxes.exists() && hitboxes.isDirectory()) {
-			for(File file : hitboxes.listFiles()) {
-				BufferedImage[] images = loadAndStoreImage(file);
-				if(images != null && images.length > 0) {
-					final String name = getFileName(file);
-					if(images.length == 1) {
-						ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[0]));
-						HITBOXES.put(name, hitbox);
-						hitbox.whenDone(() -> HITBOX_AREAS.put(name, hitbox.getArea()));
-					} else {
-						for(int i = 0; i < images.length; i++) {
-							ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[i]));
-							HITBOXES.put(name + "-" + i, hitbox);
-							final int j = i;
-							hitbox.whenDone(() -> HITBOX_AREAS.put(name + "-" + j, hitbox.getArea()));
-						}
-					}
-				}
-			}
-		}*/
 		//todo load other subdirs
 	}
 	
