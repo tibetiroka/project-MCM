@@ -60,7 +60,7 @@ public class ResourceManager {
 				LOGGER.error("Could not create file for settings", e);
 			}
 		}
-		//TODO
+		//TODO proper loading
 		OPTIONS = Options.getDefaultOptions();
 	}
 	
@@ -81,17 +81,14 @@ public class ResourceManager {
 			for(File file : hitboxes.listFiles()) {
 				BufferedImage[] images = loadAndStoreImage(file);
 				if(images != null && images.length > 0) {
-					for(BufferedImage image : images) {
-						binarizate(image);//black and white fill only
-					}
 					final String name = getFileName(file);
 					if(images.length == 1) {
-						ImageHitbox hitbox = ImageHitbox.fromImage(images[0]);
+						ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[0]));
 						HITBOXES.put(name, hitbox);
 						hitbox.whenDone(() -> HITBOX_AREAS.put(name, hitbox.getArea()));
 					} else {
 						for(int i = 0; i < images.length; i++) {
-							ImageHitbox hitbox = ImageHitbox.fromImage(images[i]);
+							ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[i]));
 							HITBOXES.put(name + "-" + i, hitbox);
 							final int j = i;
 							hitbox.whenDone(() -> HITBOX_AREAS.put(name + "-" + j, hitbox.getArea()));
@@ -155,16 +152,17 @@ public class ResourceManager {
 	}
 	
 	private static BufferedImage binarizate(BufferedImage image) {
+		BufferedImage newImage=new BufferedImage(image.getWidth(),image.getHeight(),image.getType());
 		for(int x = 0; x < image.getWidth(); x++) {
 			for(int y = 0; y < image.getHeight(); y++) {
 				if(new Color(image.getRGB(x, y), true).getAlpha() == 0) {
-					image.setRGB(x, y, Color.WHITE.getRGB());
+					newImage.setRGB(x, y, Color.WHITE.getRGB());
 				} else {
-					image.setRGB(x, y, Color.BLACK.getRGB());
+					newImage.setRGB(x, y, Color.BLACK.getRGB());
 				}
 			}
 		}
-		return image;
+		return newImage;
 	}
 	
 	private static String getFileName(File file) {
