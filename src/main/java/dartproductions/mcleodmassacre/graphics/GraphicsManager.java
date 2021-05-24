@@ -19,6 +19,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
@@ -27,6 +29,8 @@ public class GraphicsManager extends JPanel {
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
 	protected static final BufferedImage BUFFER = ResolutionManager.createBufferImage();
 	protected static final Graphics2D BUFFER_GRAPHICS = BUFFER.createGraphics();
+	private static final RenderingLayer[] RENDERING_LAYERS = new RenderingLayer[32];
+	private static final AtomicInteger RENDERING_IN_PROGRESS = new AtomicInteger(0);
 	public static Thread GRAPHICS_THREAD;
 	public static JFrame WINDOW;
 	public static GraphicsManager PANEL;
@@ -37,7 +41,7 @@ public class GraphicsManager extends JPanel {
 			LOGGER.error("Attempted to start graphics game loop while previous loop was still running");
 			return;
 		}
-		
+		Arrays.setAll(RENDERING_LAYERS, i -> new RenderingLayer());
 		GRAPHICS_THREAD = new Thread(() -> {
 			RUNNING = true;
 			LOGGER.info("Started graphics thread");
@@ -152,6 +156,8 @@ public class GraphicsManager extends JPanel {
 			}*/
 			
 			//test for image fitting
+			BUFFER_GRAPHICS.setColor(Color.BLUE);
+			fillRectOnScreen(0, 0, getDefaultScreenDimension().width, getDefaultScreenDimension().height);
 			BUFFER_GRAPHICS.setColor(Color.GREEN);
 			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);
 		}
