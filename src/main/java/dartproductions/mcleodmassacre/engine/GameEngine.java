@@ -1,5 +1,6 @@
 package dartproductions.mcleodmassacre.engine;
 
+import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,7 @@ public class GameEngine {
 	private static volatile EngineState STATE = EngineState.STOPPED;
 	private static Instant previousFrame;
 	private static Instant nextFrame;
+	private static boolean firstStart = false;
 	
 	public static void start() {
 		if(ENGINE_THREAD != null && ENGINE_THREAD.isAlive()) {
@@ -30,6 +32,10 @@ public class GameEngine {
 			//todo engine stuff, timings
 		}, "Main Engine Thread");
 		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main engine thread", e));
+		if(firstStart) {
+			firstStart = false;
+			ResourceManager.createAnimations();
+		}
 		ENGINE_THREAD.start();
 	}
 	
