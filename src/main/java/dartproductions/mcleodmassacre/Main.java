@@ -61,6 +61,8 @@ public class Main {
 	 */
 	private static void loadAppData() {
 		ResourceManager.getOptions();
+		ResourceManager.loadStandardGraphics();
+		getExecutors().execute(ResourceManager::loadAllResources);
 	}
 	
 	/**
