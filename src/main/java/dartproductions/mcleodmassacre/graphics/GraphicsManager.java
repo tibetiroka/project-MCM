@@ -20,13 +20,16 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
+import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
+
 public class GraphicsManager extends JPanel {
 	public static final Object GRAPHICS_LOCK = new Object();
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
+	protected static final BufferedImage BUFFER = ResolutionManager.createBufferImage();
+	protected static final Graphics2D BUFFER_GRAPHICS = BUFFER.createGraphics();
 	public static Thread GRAPHICS_THREAD;
 	public static JFrame WINDOW;
 	public static GraphicsManager PANEL;
-	protected static volatile BufferedImage BUFFER;
 	private static volatile boolean RUNNING = false;
 	
 	public static void startGameLoop() {
@@ -76,6 +79,8 @@ public class GraphicsManager extends JPanel {
 		WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		WINDOW.setResizable(false);
 		//
+		configureQuality();
+		//
 		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
 		WINDOW.setLocation(0, 0);
@@ -84,8 +89,7 @@ public class GraphicsManager extends JPanel {
 	
 	private static void gameLoop() {
 		while(Main.isRunning()) {
-			Rectangle visible = PANEL.getVisibleRect();
-			BUFFER = new BufferedImage(visible.width == 0 ? WINDOW.getWidth() - 16 : visible.width, visible.height == 0 ? WINDOW.getHeight() - 16 - 23 : visible.height, BufferedImage.TYPE_INT_ARGB);
+			//BUFFER = new BufferedImage(visible.width == 0 ? WINDOW.getWidth() - 16 : visible.width, visible.height == 0 ? WINDOW.getHeight() - 16 - 23 : visible.height, BufferedImage.TYPE_INT_ARGB);
 			try {
 				paintGraphics();
 			} catch(Exception e) {
@@ -114,47 +118,43 @@ public class GraphicsManager extends JPanel {
 		RUNNING = false;
 	}
 	
-	private static void paintGraphics() {
-		Graphics2D g = BUFFER.createGraphics();
-		{//quality settings
+	public static void configureQuality() {
+		synchronized(GRAPHICS_LOCK) {//quality settings
 			QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
 				case LOW -> RenderingHints.VALUE_RENDER_SPEED;
 				case NORMAL -> RenderingHints.VALUE_RENDER_DEFAULT;
 				case HIGH -> RenderingHints.VALUE_RENDER_QUALITY;
 			});
-			g.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
 				case LOW -> RenderingHints.VALUE_COLOR_RENDER_SPEED;
 				case NORMAL -> RenderingHints.VALUE_COLOR_RENDER_DEFAULT;
 				case HIGH -> RenderingHints.VALUE_COLOR_RENDER_QUALITY;
 			});
-			g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
 				case LOW -> RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED;
 				case NORMAL -> RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT;
 				case HIGH -> RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
 			});
 		}
-		System.out.println("Buffer size: " + BUFFER.getWidth() + " " + BUFFER.getHeight());
-		System.out.println("Window size: " + WINDOW.getSize());
-		System.out.println("Visible size: " + PANEL.getVisibleRect());
-		//
-		//
-		//
-	/*
-		switch(Main.getGameState()) {
-			case LOADING -> {
-				switch(Main.getNextState()) {
-					default:
-						return;
+	}
+	
+	private static void paintGraphics() {
+		synchronized(GRAPHICS_LOCK) {
+			
+			/*switch(Main.getGameState()) {
+				case LOADING -> {
+					switch(Main.getNextState()) {
+						default:
+							return;
+					}
 				}
-			}
-		}*/
-		
-		//test for image fitting
-		g.setColor(Color.GREEN);
-		g.drawRect(0, 0, BUFFER.getWidth() - 1, BUFFER.getHeight() - 1);
-		
-		g.dispose();
+			}*/
+			
+			//test for image fitting
+			BUFFER_GRAPHICS.setColor(Color.GREEN);
+			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);
+		}
 	}
 	
 	private static void closeWindow() {
@@ -169,7 +169,7 @@ public class GraphicsManager extends JPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		g.drawImage(BUFFER, 0, 0, this);
+		g.drawImage(ResolutionManager.bufferToScreenImage(), 0, 0, this);
 	}
 	
 }
