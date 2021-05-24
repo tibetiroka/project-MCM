@@ -4,44 +4,67 @@ import dartproductions.mcleodmassacre.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImageHitbox implements Shape {
-	protected static final HashMap<BufferedImage, ImageHitbox> HITBOXES = new HashMap<>();
+	protected static final HashMap<Integer, ImageHitbox> HITBOXES = new HashMap<>();
 	protected static final AtomicInteger PROCESSING_COUNT = new AtomicInteger();
 	private static final Logger LOGGER = LogManager.getLogger(ImageHitbox.class);
 	protected Runnable whenDone;
 	protected Area outline;
 	
-	protected ImageHitbox(final BufferedImage image) {
-		HITBOXES.put(image, this);
+	protected ImageHitbox(final BufferedImage image, final int hash) {
+		HITBOXES.put(hash, this);
 		PROCESSING_COUNT.incrementAndGet();
 		Main.getExecutors().execute(() -> {
-			outline = createOutline(Color.WHITE, image);
-			synchronized(PROCESSING_COUNT) {
-				if(PROCESSING_COUNT.decrementAndGet() == 0) {
-					PROCESSING_COUNT.notify();
-				}
-			}
-			if(whenDone != null) {
-				whenDone.run();
-			}
-			LOGGER.debug("Created image hitbox (" + image.hashCode() + ")");
+		
 		});
+		outline = createOutline(Color.WHITE, image);
+		synchronized(PROCESSING_COUNT) {
+			if(PROCESSING_COUNT.decrementAndGet() == 0) {
+				PROCESSING_COUNT.notify();
+			}
+		}
+		if(whenDone != null) {
+			whenDone.run();
+		}
+		LOGGER.debug("Created image hitbox (" + hash + ")");
 	}
 	
-	public static ImageHitbox fromImage(BufferedImage image) {
-		if(HITBOXES.containsKey(image)) {
-			return HITBOXES.get(image);
-		} else {
-			return new ImageHitbox(image);
+	public static ImageHitbox fromImage(final BufferedImage image) {
+		try {
+			int hash = calculateHash(image);
+			if(HITBOXES.containsKey(hash)) {
+				return HITBOXES.get(hash);
+			} else {
+				return new ImageHitbox(image, hash);
+			}
+		} catch(Exception e) {
+			LOGGER.error("Could not calculate MD5 checksum of image", e);
+			return null;
 		}
+	}
+	
+	private static int calculateHash(BufferedImage image) throws IOException, NoSuchAlgorithmException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		ImageIO.write(image, "png", outputStream);
+		byte[] data = outputStream.toByteArray();
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		md.update(data);
+		byte[] hash = md.digest();
+		return Arrays.hashCode(hash);
 	}
 	
 	/**
