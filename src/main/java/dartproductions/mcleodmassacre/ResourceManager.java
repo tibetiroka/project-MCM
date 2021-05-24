@@ -1,5 +1,6 @@
 package dartproductions.mcleodmassacre;
 
+import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.options.Options;
 import de.cerus.jgif.GifImage;
@@ -18,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Accesses and handles stored game resources.
@@ -31,6 +33,8 @@ public class ResourceManager {
 	private static final HashMap<String, Image> IMAGES = new HashMap<>();
 	private static final HashMap<String, Shape> HITBOXES = new HashMap<>();
 	private static final HashMap<String, Area> HITBOX_AREAS = new HashMap<>();
+	private static final HashSet<String> NAMES = new HashSet<>();
+	private static final HashMap<String, Animation> ANIMATIONS = new HashMap<>();
 	/**
 	 * The active game options
 	 */
@@ -77,15 +81,17 @@ public class ResourceManager {
 					for(BufferedImage image : images) {
 						binarizate(image);//black and white fill only
 					}
-					String name = getFileName(file);
+					final String name = getFileName(file);
 					if(images.length == 1) {
-						HITBOXES.put(name, ImageHitbox.fromImage(images[0]));
-						HITBOX_AREAS.put(name, ImageHitbox.fromImage(images[0]).getArea());
+						ImageHitbox hitbox = ImageHitbox.fromImage(images[0]);
+						HITBOXES.put(name, hitbox);
+						hitbox.whenDone(() -> HITBOX_AREAS.put(name, hitbox.getArea()));
 					} else {
 						for(int i = 0; i < images.length; i++) {
 							ImageHitbox hitbox = ImageHitbox.fromImage(images[i]);
 							HITBOXES.put(name + "-" + i, hitbox);
-							HITBOX_AREAS.put(name + "-" + i, hitbox.getArea());
+							final int j = i;
+							hitbox.whenDone(() -> HITBOX_AREAS.put(name + "-" + j, hitbox.getArea()));
 						}
 					}
 				}
@@ -99,6 +105,7 @@ public class ResourceManager {
 			Image image = loadImage(file);
 			LOGGER.debug("Loaded image " + file.getPath());
 			String name = getFileName(file);
+			NAMES.add(name);
 			try {
 				BufferedImage[] images = getImageFrames(image, file);
 				if(images.length > 0) {

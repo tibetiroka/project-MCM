@@ -16,7 +16,7 @@ public class ImageHitbox implements Shape {
 	protected static final HashMap<BufferedImage, ImageHitbox> HITBOXES = new HashMap<>();
 	protected static final AtomicInteger PROCESSING_COUNT = new AtomicInteger();
 	private static final Logger LOGGER = LogManager.getLogger(ImageHitbox.class);
-	
+	protected static Runnable whenDone;
 	protected Area outline;
 	
 	protected ImageHitbox(final BufferedImage image) {
@@ -28,6 +28,9 @@ public class ImageHitbox implements Shape {
 				if(PROCESSING_COUNT.decrementAndGet() == 0) {
 					PROCESSING_COUNT.notify();
 				}
+			}
+			if(whenDone != null) {
+				whenDone.run();
 			}
 			LOGGER.debug("Created image hitbox (" + image.hashCode() + ")");
 		});
@@ -54,6 +57,10 @@ public class ImageHitbox implements Shape {
 				}
 			}
 		}
+	}
+	
+	public void whenDone(Runnable r) {
+		whenDone = r;
 	}
 	
 	public Area getArea() {
