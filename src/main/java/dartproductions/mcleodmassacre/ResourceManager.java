@@ -97,9 +97,9 @@ public class ResourceManager {
 						} else {
 							for(int i = 0; i < images.length; i++) {
 								ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[i]));
-								HITBOXES.put(name + "-" + i, hitbox);
+								HITBOXES.put(name + "#" + i, hitbox);
 								final int j = i;
-								hitbox.whenDone(() -> HITBOX_AREAS.put(name + "-" + j, hitbox.getArea()));
+								hitbox.whenDone(() -> HITBOX_AREAS.put(name + "#" + j, hitbox.getArea()));
 							}
 						}
 					}
@@ -148,7 +148,7 @@ public class ResourceManager {
 					} else {
 						IMAGES.put(name, image);
 						for(int i = 0; i < images.length; i++) {
-							IMAGES.put(name + "-" + i, images[i]);
+							IMAGES.put(name + "#" + i, images[i]);
 						}
 					}
 				}
@@ -194,6 +194,11 @@ public class ResourceManager {
 		}
 		if(file.getName().toLowerCase().endsWith(".gif")) {
 			GifImage gif = new GifImage(file);
+			int sum=0;
+			for(int i=0;i<gif.getDecoder().getFrameCount();i++){
+				sum+=gif.getDecoder().getDelay(i);
+			}
+			System.out.println(sum);
 			return gif.getFrames().toArray(new BufferedImage[0]);
 		} else {
 			// Create a buffered image with transparency

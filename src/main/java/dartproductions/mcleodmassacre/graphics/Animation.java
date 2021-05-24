@@ -43,7 +43,7 @@ public interface Animation extends Cloneable {
 		
 		protected int countFrames() {
 			int current = 0;
-			while(ResourceManager.getImage(name + "-" + current) != null) {
+			while(ResourceManager.getImage(name + "#" + current) != null) {
 				current++;
 			}
 			return current;
@@ -51,9 +51,9 @@ public interface Animation extends Cloneable {
 		
 		protected void fetchFrames() {
 			for(int i = 0; i < frames.length; i++) {
-				frames[i] = ResourceManager.getImage(name + "-" + i);
-				frameShapes[i] = ResourceManager.getHitbox(name + "-" + i);
-				frameAreas[i] = ResourceManager.getHitboxArea(name + "-" + i);
+				frames[i] = ResourceManager.getImage(name + "#" + i);
+				frameShapes[i] = ResourceManager.getHitbox(name + "#" + i);
+				frameAreas[i] = ResourceManager.getHitboxArea(name + "#" + i);
 			}
 		}
 		
