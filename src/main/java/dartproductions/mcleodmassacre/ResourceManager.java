@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -194,12 +195,20 @@ public class ResourceManager {
 		}
 		if(file.getName().toLowerCase().endsWith(".gif")) {
 			GifImage gif = new GifImage(file);
-			int sum=0;
-			for(int i=0;i<gif.getDecoder().getFrameCount();i++){
-				sum+=gif.getDecoder().getDelay(i);
+			int sum = 0;
+			int msPerFrame = 20;
+			ArrayList<BufferedImage> images = new ArrayList<>();
+			for(int i = 0; i < gif.getDecoder().getFrameCount(); i++) {
+				sum += gif.getDecoder().getDelay(i);
+				while(sum >= msPerFrame) {
+					images.add(gif.getFrame(i));
+					sum -= msPerFrame;
+				}
 			}
-			System.out.println(sum);
-			return gif.getFrames().toArray(new BufferedImage[0]);
+			if(sum > msPerFrame / 2) {
+				images.add(gif.getFrame(gif.getDecoder().getFrameCount() - 1));
+			}
+			return images.toArray(new BufferedImage[0]);
 		} else {
 			// Create a buffered image with transparency
 			BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
