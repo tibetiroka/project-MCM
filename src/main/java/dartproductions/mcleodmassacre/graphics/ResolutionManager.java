@@ -15,6 +15,8 @@ public class ResolutionManager {
 	private static final Dimension originalScreen;
 	private static final Dimension bufferSize;
 	private static final Point origin;
+	private static final BufferedImage OUTPUT;
+	private static final Graphics2D OUTPUT_GRAPHICS;
 	
 	static {
 		originalScreen = new Dimension(1280, 1024);
@@ -43,14 +45,14 @@ public class ResolutionManager {
 			                           (int) widthBefore,
 			                           (int) heightBefore);
 		}
+		OUTPUT = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
+		OUTPUT_GRAPHICS = OUTPUT.createGraphics();
 	}
 	
 	public static BufferedImage bufferToScreenImage() {
-		BufferedImage output = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = output.createGraphics();
 		//
-		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, output.getWidth(), output.getHeight());
+		OUTPUT_GRAPHICS.setColor(Color.BLACK);
+		OUTPUT_GRAPHICS.fillRect(0, 0, OUTPUT.getWidth(), OUTPUT.getHeight());
 		//
 		BufferedImage visible = BUFFER.getSubimage(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
 		Image scaled = visible.getScaledInstance((int) (screenRect.width * getScreenRatio()), (int) (screenRect.height * getScreenRatio()), switch((QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue()) {
@@ -59,10 +61,10 @@ public class ResolutionManager {
 			case HIGH -> BufferedImage.SCALE_AREA_AVERAGING;
 		});
 		//
-		g.drawImage(scaled, 0, 0, null);
+		OUTPUT_GRAPHICS.drawImage(scaled, 0, 0, null);
 		//
-		g.dispose();
-		return output;
+		OUTPUT_GRAPHICS.dispose();
+		return OUTPUT;
 	}
 	
 	public static BufferedImage createBufferImage() {
@@ -95,7 +97,7 @@ public class ResolutionManager {
 	
 	public static void drawImageOnScreen(int x, int y, Image image) {
 		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
-			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y +origin.y, null);
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, null);
 		}
 	}
 	
@@ -120,8 +122,9 @@ public class ResolutionManager {
 	public static void fillRectOnScreen(int x, int y, int width, int height) {
 		x += origin.x;
 		y += origin.y;
+		Rectangle r = screenRect.intersection(new Rectangle(x, y, width, height));
 		if(screenRect.intersects(x, y, width, height)) {
-			BUFFER_GRAPHICS.fillRect(x, y, width, height);
+			BUFFER_GRAPHICS.fillRect(r.x, r.y, r.width, r.height);
 		}
 	}
 	
