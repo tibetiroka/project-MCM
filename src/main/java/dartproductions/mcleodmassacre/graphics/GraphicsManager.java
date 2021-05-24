@@ -145,16 +145,6 @@ public class GraphicsManager extends JPanel {
 	
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
-			
-			/*switch(Main.getGameState()) {
-				case LOADING -> {
-					switch(Main.getNextState()) {
-						default:
-							return;
-					}
-				}
-			}*/
-			
 			//test for image fitting
 			BUFFER_GRAPHICS.setColor(Color.RED);
 			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
