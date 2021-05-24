@@ -19,10 +19,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Accesses and handles stored game resources.
@@ -54,7 +58,6 @@ public class ResourceManager {
 		File file = getSettingsFile();
 		if(!file.exists()) {
 			try {
-				file.getParentFile().mkdirs();
 				file.createNewFile();
 			} catch(IOException e) {
 				LOGGER.error("Could not create file for settings", e);
@@ -65,18 +68,48 @@ public class ResourceManager {
 	}
 	
 	public static void loadStandardGraphics() {
-		File defaultDirectory = new File(getGraphicsDirectory(), "default");
-		loadGraphics(defaultDirectory);
+		loadGraphics(getGraphicsDirectory() + "/default");
 	}
 	
-	private static void loadGraphics(File directory) {
-		File regular = new File(directory, "regular");
-		if(regular.exists() && regular.isDirectory()) {
-			for(File file : regular.listFiles()) {
-				loadAndStoreImage(file);
-			}
+	private static void loadGraphics(String directory) {
+		String regular = directory + "/regular";
+		try {
+			getPaths(regular).forEach(path -> {
+				if(path.toFile().isFile()) {
+					loadAndStoreImage(path.toFile());
+				}
+			});
+		} catch(Exception e) {
+			LOGGER.error("Could not load default graphics from \"" + regular + "\"", e);
 		}
-		File hitboxes = new File(directory, "hitbox");
+		
+		String hitboxes = directory + "/hitbox";
+		try {
+			getPaths(hitboxes).forEach(path -> {
+				if(path.toFile().isFile()) {
+					BufferedImage[] images = loadAndStoreImage(path.toFile());
+					if(images != null && images.length > 0) {
+						final String name = getFileName(path.toFile());
+						if(images.length == 1) {
+							ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[0]));
+							HITBOXES.put(name, hitbox);
+							hitbox.whenDone(() -> HITBOX_AREAS.put(name, hitbox.getArea()));
+						} else {
+							for(int i = 0; i < images.length; i++) {
+								ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[i]));
+								HITBOXES.put(name + "-" + i, hitbox);
+								final int j = i;
+								hitbox.whenDone(() -> HITBOX_AREAS.put(name + "-" + j, hitbox.getArea()));
+							}
+						}
+					}
+				}
+			});
+		} catch(Exception e) {
+			LOGGER.error("Could not load default graphics from \"" + hitboxes + "\"", e);
+		}
+		
+		/*File hitboxes = new File(directory, "hitbox");
 		if(hitboxes.exists() && hitboxes.isDirectory()) {
 			for(File file : hitboxes.listFiles()) {
 				BufferedImage[] images = loadAndStoreImage(file);
@@ -96,7 +129,7 @@ public class ResourceManager {
 					}
 				}
 			}
-		}
+		}*/
 		//todo load other subdirs
 	}
 	
@@ -152,7 +185,7 @@ public class ResourceManager {
 	}
 	
 	private static BufferedImage binarizate(BufferedImage image) {
-		BufferedImage newImage=new BufferedImage(image.getWidth(),image.getHeight(),image.getType());
+		BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
 		for(int x = 0; x < image.getWidth(); x++) {
 			for(int y = 0; y < image.getHeight(); y++) {
 				if(new Color(image.getRGB(x, y), true).getAlpha() == 0) {
@@ -218,11 +251,25 @@ public class ResourceManager {
 		return HITBOX_AREAS.get(name);
 	}
 	
-	private static File getGraphicsDirectory() {
-		return new File(DATA_DIRECTORY, "grc");
+	private static String getGraphicsDirectory() {
+		return "data/grc";
 	}
 	
 	private static File getSettingsFile() {
-		return new File(DATA_DIRECTORY, "settings.json");
+		return new File("settings.json");
+	}
+	
+	private static Stream<Path> getPaths(String location) throws URISyntaxException, IOException {
+		URI uri = Thread.currentThread().getContextClassLoader().getResource(location).toURI();
+		Path myPath;
+		if(uri.getScheme().equalsIgnoreCase("jar")) {
+			FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+			myPath = fileSystem.getPath(location);
+			fileSystem.close();
+		} else {
+			myPath = Paths.get(uri);
+		}
+		Stream<Path> walk = Files.walk(myPath, 6);
+		return walk;
 	}
 }
