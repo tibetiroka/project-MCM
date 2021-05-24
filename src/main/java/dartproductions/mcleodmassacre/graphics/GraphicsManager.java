@@ -3,7 +3,6 @@ package dartproductions.mcleodmassacre.graphics;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.engine.GameEngine;
-import dartproductions.mcleodmassacre.engine.GameEngine.EngineState;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
@@ -19,8 +18,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
@@ -29,8 +28,6 @@ public class GraphicsManager extends JPanel {
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
 	protected static final BufferedImage BUFFER = ResolutionManager.createBufferImage();
 	protected static final Graphics2D BUFFER_GRAPHICS = BUFFER.createGraphics();
-	private static final RenderingLayer[] RENDERING_LAYERS = new RenderingLayer[32];
-	private static final AtomicInteger RENDERING_IN_PROGRESS = new AtomicInteger(0);
 	public static Thread GRAPHICS_THREAD;
 	public static JFrame WINDOW;
 	public static GraphicsManager PANEL;
@@ -41,7 +38,6 @@ public class GraphicsManager extends JPanel {
 			LOGGER.error("Attempted to start graphics game loop while previous loop was still running");
 			return;
 		}
-		Arrays.setAll(RENDERING_LAYERS, i -> new RenderingLayer());
 		GRAPHICS_THREAD = new Thread(() -> {
 			RUNNING = true;
 			LOGGER.info("Started graphics thread");
@@ -51,6 +47,21 @@ public class GraphicsManager extends JPanel {
 		}, "Main Graphics Thread");
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main graphics thread", e));
 		GRAPHICS_THREAD.start();
+		
+		new Timer().scheduleAtFixedRate(new TimerTask() {//Guarantees frequent updating even when the engine isn't running. Nothing else. The timer is not accurate (5-10ms differences) and there isn't any need to correct this.
+			@Override
+			public void run() {
+				if(isRunning()) {
+					if(!GameEngine.isRunning()) {
+						synchronized(GRAPHICS_LOCK) {
+							GRAPHICS_LOCK.notifyAll();
+						}
+					}
+				} else {
+					cancel();
+				}
+			}
+		}, 20, 20);
 	}
 	
 	private static void initGraphics() {
@@ -93,26 +104,15 @@ public class GraphicsManager extends JPanel {
 	
 	private static void gameLoop() {
 		while(Main.isRunning()) {
-			//BUFFER = new BufferedImage(visible.width == 0 ? WINDOW.getWidth() - 16 : visible.width, visible.height == 0 ? WINDOW.getHeight() - 16 - 23 : visible.height, BufferedImage.TYPE_INT_ARGB);
 			try {
 				paintGraphics();
 			} catch(Exception e) {
 				LOGGER.error("Error during graphics painting", e);
 			}
 			WINDOW.repaint();
-			if(GameEngine.isRunning() && GameEngine.getState() != EngineState.LOADING) {
-				synchronized(GRAPHICS_LOCK) {
-					try {
-						GRAPHICS_LOCK.wait();
-					} catch(InterruptedException e) {
-						LOGGER.warn("Interrupted wait in graphics thread", e);
-					}
-				}
-			} else {
+			synchronized(GRAPHICS_LOCK) {
 				try {
-					synchronized(GRAPHICS_LOCK) {
-						GRAPHICS_LOCK.wait(20);
-					}
+					GRAPHICS_LOCK.wait();
 				} catch(InterruptedException e) {
 					LOGGER.warn("Interrupted wait in graphics thread", e);
 				}
@@ -156,6 +156,8 @@ public class GraphicsManager extends JPanel {
 			}*/
 			
 			//test for image fitting
+			BUFFER_GRAPHICS.setColor(Color.RED);
+			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
 			BUFFER_GRAPHICS.setColor(Color.BLUE);
 			fillRectOnScreen(0, 0, getDefaultScreenDimension().width, getDefaultScreenDimension().height);
 			BUFFER_GRAPHICS.setColor(Color.GREEN);
@@ -174,8 +176,10 @@ public class GraphicsManager extends JPanel {
 	
 	@Override
 	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		g.drawImage(ResolutionManager.bufferToScreenImage(), 0, 0, this);
+		synchronized(GRAPHICS_LOCK) {
+			super.paintComponent(g);
+			g.drawImage(ResolutionManager.bufferToScreenImage(), 0, 0, this);
+		}
 	}
 	
 }
