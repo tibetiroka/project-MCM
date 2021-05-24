@@ -16,7 +16,7 @@ public class ImageHitbox implements Shape {
 	protected static final HashMap<BufferedImage, ImageHitbox> HITBOXES = new HashMap<>();
 	protected static final AtomicInteger PROCESSING_COUNT = new AtomicInteger();
 	private static final Logger LOGGER = LogManager.getLogger(ImageHitbox.class);
-	protected static Runnable whenDone;
+	protected Runnable whenDone;
 	protected Area outline;
 	
 	protected ImageHitbox(final BufferedImage image) {
