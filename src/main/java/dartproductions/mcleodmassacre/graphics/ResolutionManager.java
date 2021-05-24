@@ -6,8 +6,7 @@ import dartproductions.mcleodmassacre.options.QualityOption;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import static dartproductions.mcleodmassacre.graphics.GraphicsManager.BUFFER;
-import static dartproductions.mcleodmassacre.graphics.GraphicsManager.BUFFER_GRAPHICS;
+import static dartproductions.mcleodmassacre.graphics.GraphicsManager.*;
 
 public class ResolutionManager {
 	
@@ -39,7 +38,6 @@ public class ResolutionManager {
 			double offsetY = (actualHeight - minHeight) / 2.0;
 			double widthBefore = actualWidth / ratio;
 			double heightBefore = actualHeight / ratio;
-			//System.out.println(offsetX + " " + offsetY);
 			screenRect = new Rectangle((int) (origin.x - offsetX / ratio),
 			                           (int) (origin.y - offsetY / ratio),
 			                           (int) widthBefore,
@@ -48,14 +46,14 @@ public class ResolutionManager {
 	}
 	
 	public static BufferedImage bufferToScreenImage() {
-		BufferedImage output = new BufferedImage(getBufferAreaOnScreen().width, getBufferAreaOnScreen().height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage output = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = output.createGraphics();
 		//
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, output.getWidth(), output.getHeight());
 		//
-		BufferedImage visible = BUFFER.getSubimage(getBufferAreaOnScreen().x, getBufferAreaOnScreen().y, getBufferAreaOnScreen().width, getBufferAreaOnScreen().height);
-		Image scaled = visible.getScaledInstance((int) (getBufferAreaOnScreen().width * getScreenRatio()), (int) (getBufferAreaOnScreen().height * getScreenRatio()), switch((QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue()) {
+		BufferedImage visible = BUFFER.getSubimage(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+		Image scaled = visible.getScaledInstance((int) (screenRect.width * getScreenRatio()), (int) (screenRect.height * getScreenRatio()), switch((QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue()) {
 			case LOW -> BufferedImage.SCALE_FAST;
 			case NORMAL -> BufferedImage.SCALE_DEFAULT;
 			case HIGH -> BufferedImage.SCALE_AREA_AVERAGING;
@@ -64,7 +62,7 @@ public class ResolutionManager {
 		g.drawImage(scaled, 0, 0, null);
 		//
 		g.dispose();
-		return output;//TODO
+		return output;
 	}
 	
 	public static BufferedImage createBufferImage() {
@@ -96,22 +94,42 @@ public class ResolutionManager {
 	}
 	
 	public static void drawImageOnScreen(int x, int y, Image image) {
-		BUFFER_GRAPHICS.drawImage(image, x + getOriginOnBuffer().x, y + getOriginOnBuffer().y, null);
+		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y +origin.y, null);
+		}
 	}
 	
 	public static void drawImageAnywhere(int x, int y, Image image) {
-		BUFFER_GRAPHICS.drawImage(image, x, y, null);
+		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
+			BUFFER_GRAPHICS.drawImage(image, x, y, null);
+		}
+	}
+	
+	public static void drawImageOnScreen(int x, int y, BufferedImage image) {
+		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, null);
+		}
+	}
+	
+	public static void drawImageAnywhere(int x, int y, BufferedImage image) {
+		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
+			BUFFER_GRAPHICS.drawImage(image, x, y, null);
+		}
 	}
 	
 	public static void fillRectOnScreen(int x, int y, int width, int height) {
-		x += getOriginOnBuffer().x;
-		y += getOriginOnBuffer().y;
-		BUFFER_GRAPHICS.fillRect(x, y, width, height);
+		x += origin.x;
+		y += origin.y;
+		if(screenRect.intersects(x, y, width, height)) {
+			BUFFER_GRAPHICS.fillRect(x, y, width, height);
+		}
 	}
 	
 	public static void drawRectOnScreen(int x, int y, int width, int height) {
-		x += getOriginOnBuffer().x;
-		y += getOriginOnBuffer().y;
-		BUFFER_GRAPHICS.drawRect(x, y, width, height);
+		x += origin.x;
+		y += origin.y;
+		if(screenRect.intersects(x, y, width, height)) {
+			BUFFER_GRAPHICS.drawRect(x, y, width, height);
+		}
 	}
 }
