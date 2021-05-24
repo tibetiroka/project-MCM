@@ -103,6 +103,29 @@ public class ResourceManager {
 		//todo load other subdirs
 	}
 	
+	/**
+	 * Creates animations for all newly loaded images.
+	 */
+	public static void createAnimations() {
+		ImageHitbox.waitForProcessing();
+		for(String name : IMAGE_NAMES) {
+			if(!ANIMATIONS.containsKey(name)) {
+				ANIMATIONS.put(name, new StandardAnimation(name));
+			}
+		}
+	}
+	
+	/**
+	 * Loads all resources not loaded by other methods.
+	 */
+	public static void loadAllResources() {
+		//todo
+	}
+	
+	public static Animation getAnimation(String name) {
+		return ANIMATIONS.containsKey(name) ? ANIMATIONS.get(name).clone() : null;
+	}
+	
 	private static BufferedImage[] loadAndStoreImage(File file) {
 		try {
 			Image image = loadImage(file);
