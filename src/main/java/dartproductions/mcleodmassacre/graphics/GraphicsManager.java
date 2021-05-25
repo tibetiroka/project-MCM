@@ -14,10 +14,13 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,9 +28,9 @@ import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
 public class GraphicsManager extends JPanel {
 	public static final Object GRAPHICS_LOCK = new Object();
+	public static final int LAYER_BOTTOM = 0, LAYER_TOP = 15, LAYER_BACKGROUND = 4, LAYER_GUI = 14, LAYER_MAP = 8, LAYER_CHARACTERS = 11;
+	protected static final RenderingLayer[] LAYERS = new RenderingLayer[16];
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
-	protected static final BufferedImage BUFFER = ResolutionManager.createBufferImage();
-	protected static final Graphics2D BUFFER_GRAPHICS = BUFFER.createGraphics();
 	public static Thread GRAPHICS_THREAD;
 	public static JFrame WINDOW;
 	public static GraphicsManager PANEL;
@@ -96,6 +99,8 @@ public class GraphicsManager extends JPanel {
 		//
 		ResourceManager.createAnimations();
 		//
+		Arrays.setAll(LAYERS, i -> new RenderingLayer());
+		//
 		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
 		WINDOW.setLocation(0, 0);
@@ -146,12 +151,17 @@ public class GraphicsManager extends JPanel {
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
 			//test for image fitting
+			
 			BUFFER_GRAPHICS.setColor(Color.RED);
 			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
 			BUFFER_GRAPHICS.setColor(Color.BLUE);
 			fillRectOnScreen(0, 0, getDefaultScreenDimension().width, getDefaultScreenDimension().height);
 			BUFFER_GRAPHICS.setColor(Color.GREEN);
 			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);
+			//
+			for(RenderingLayer layer : LAYERS) {
+				layer.paint();
+			}
 		}
 	}
 	
@@ -162,6 +172,10 @@ public class GraphicsManager extends JPanel {
 	
 	public static boolean isRunning() {
 		return RUNNING;
+	}
+	
+	public static RenderingLayer getLayer(int index) {
+		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
 	}
 	
 	@Override
