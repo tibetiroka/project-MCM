@@ -1,4 +1,4 @@
-package dartproductions.mcleodmassacre;
+package dartproductions.mcleodmassacre.util;
 
 import java.awt.Point;
 
