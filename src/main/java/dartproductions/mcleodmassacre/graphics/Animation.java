@@ -24,12 +24,14 @@ public interface Animation extends Cloneable {
 	
 	public Animation clone();
 	
+	public int getLength();
+	
 	public static class StandardAnimation implements Animation {
-		private final String name;
-		private final Image[] frames;
-		private final Shape[] frameShapes;
-		private final Area[] frameAreas;
-		private int frame = 0;
+		protected final String name;
+		protected final Image[] frames;
+		protected final Shape[] frameShapes;
+		protected final Area[] frameAreas;
+		protected int frame = 0;
 		
 		
 		public StandardAnimation(String name) {
@@ -98,6 +100,59 @@ public interface Animation extends Cloneable {
 				return (Animation) super.clone();
 			} catch(Exception e) {
 				return null;
+			}
+		}
+		
+		@Override
+		public int getLength() {
+			return frames.length;
+		}
+	}
+	
+	public static class LoopingAnimation extends StandardAnimation {
+		
+		public LoopingAnimation(String name) {
+			super(name);
+		}
+		
+		@Override
+		public void next() {
+			super.next();
+			if(isOver()) {
+				frame = 0;
+			}
+		}
+	}
+	
+	public static class ReplacingAnimation extends StandardAnimation {
+		protected Animation replacement;
+		
+		
+		public ReplacingAnimation(String name, Animation replacement) {
+			super(name);
+			this.replacement = replacement;
+		}
+		
+		public Animation getReplacement() {
+			return replacement;
+		}
+		
+		public void setReplacement(Animation replacement) {
+			this.replacement = replacement;
+		}
+		
+		@Override
+		public void next() {
+			super.next();
+			if(isOver()) {
+				if(replacement != null) {
+					for(RenderingLayer layer : GraphicsManager.LAYERS) {
+						if(layer.get(getAnimationName())!=null) {
+							layer.get(getAnimationName()).setSecond(replacement);
+							break;
+						}
+					}
+				}
 			}
 		}
 	}
