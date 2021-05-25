@@ -6,10 +6,10 @@ import dartproductions.mcleodmassacre.options.QualityOption;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import static dartproductions.mcleodmassacre.graphics.GraphicsManager.*;
-
 public class ResolutionManager {
 	
+	protected static final BufferedImage BUFFER;
+	protected static final Graphics2D BUFFER_GRAPHICS;
 	private static final double ratio;
 	private static final Rectangle screenRect;
 	private static final Dimension originalScreen;
@@ -47,6 +47,9 @@ public class ResolutionManager {
 		}
 		OUTPUT = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
 		OUTPUT_GRAPHICS = OUTPUT.createGraphics();
+		//
+		BUFFER = createBufferImage();
+		BUFFER_GRAPHICS =BUFFER.createGraphics();
 	}
 	
 	public static BufferedImage bufferToScreenImage() {
@@ -67,7 +70,7 @@ public class ResolutionManager {
 		return OUTPUT;
 	}
 	
-	public static BufferedImage createBufferImage() {
+	private static BufferedImage createBufferImage() {
 		return new BufferedImage(getBufferSize().width, getBufferSize().height, BufferedImage.TYPE_INT_ARGB);
 	}
 	
