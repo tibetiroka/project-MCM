@@ -3,8 +3,11 @@ package dartproductions.mcleodmassacre.graphics;
 import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.options.QualityOption;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class ResolutionManager {
 	
@@ -49,7 +52,7 @@ public class ResolutionManager {
 		OUTPUT_GRAPHICS = OUTPUT.createGraphics();
 		//
 		BUFFER = createBufferImage();
-		BUFFER_GRAPHICS =BUFFER.createGraphics();
+		BUFFER_GRAPHICS = BUFFER.createGraphics();
 	}
 	
 	public static BufferedImage bufferToScreenImage() {
@@ -66,7 +69,6 @@ public class ResolutionManager {
 		//
 		OUTPUT_GRAPHICS.drawImage(scaled, 0, 0, null);
 		//
-		OUTPUT_GRAPHICS.dispose();
 		return OUTPUT;
 	}
 	
@@ -100,25 +102,25 @@ public class ResolutionManager {
 	
 	public static void drawImageOnScreen(int x, int y, Image image) {
 		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
-			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, null);
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
 		}
 	}
 	
 	public static void drawImageAnywhere(int x, int y, Image image) {
 		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
-			BUFFER_GRAPHICS.drawImage(image, x, y, null);
+			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
 		}
 	}
 	
 	public static void drawImageOnScreen(int x, int y, BufferedImage image) {
 		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
-			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, null);
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
 		}
 	}
 	
 	public static void drawImageAnywhere(int x, int y, BufferedImage image) {
 		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
-			BUFFER_GRAPHICS.drawImage(image, x, y, null);
+			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
 		}
 	}
 	

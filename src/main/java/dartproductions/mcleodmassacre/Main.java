@@ -1,5 +1,6 @@
 package dartproductions.mcleodmassacre;
 
+import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.input.InputManager;
 import org.apache.logging.log4j.Level;
@@ -8,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Main application class, launches the game
@@ -22,7 +23,7 @@ public class Main {
 	/**
 	 * Globally shared executor service for async tasks
 	 */
-	private static final ExecutorService EXECUTORS = Executors.newFixedThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() - 4));
+	private static final ScheduledExecutorService EXECUTORS = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() - 4));
 	/**
 	 * True if additional debug information should be logged. Defaults to false.
 	 */
@@ -46,6 +47,7 @@ public class Main {
 		parseArgs(args);
 		loadAppData();
 		startGameLoops();
+		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
 	/**
@@ -54,12 +56,14 @@ public class Main {
 	private static void startGameLoops() {
 		GraphicsManager.startGameLoop();
 		InputManager.initialize();
+		GameEngine.start();
 	}
 	
 	/**
 	 * Loads the app's default data
 	 */
 	private static void loadAppData() {
+		ResourceManager.extractResources();
 		ResourceManager.getOptions();
 		ResourceManager.loadStandardGraphics();
 		getExecutors().execute(ResourceManager::loadAllResources);
@@ -69,7 +73,8 @@ public class Main {
 	 * Configures the global logger
 	 */
 	private static void configureLogger() {
-		Configurator.setAllLevels(Main.class.getPackageName(), isDebug() ? Level.DEBUG : Level.INFO);
+		System.setProperty("java.util.logging.manager","org.apache.logging.log4j.jul.LogManager");
+		Configurator.setAllLevels("", isDebug() ? Level.DEBUG : Level.INFO);
 	}
 	
 	/**
@@ -134,7 +139,7 @@ public class Main {
 	 *
 	 * @return The executor
 	 */
-	public static ExecutorService getExecutors() {
+	public static ScheduledExecutorService getExecutors() {
 		return EXECUTORS;
 	}
 	
@@ -165,9 +170,12 @@ public class Main {
 	public static synchronized void setGameState(GameState newGameState, GameState newNextState) {
 		GAME_STATE = newGameState;
 		NEXT_STATE = newNextState;
+		LOGGER.info("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
+		GameEngine.onStateChange(newGameState, newNextState);
+		GraphicsManager.onStateChange(newGameState, newNextState);
 	}
 	
 	public static enum GameState {
-		LOADING, MAIN_MENU, SETTINGS_MENU, SOUND_SETTINGS, CONTROL_SETTINGS, QUALITY_SETTINGS, ROSTER, IN_GAME
+		LOADING, MAIN_MENU, IN_GAME_PAUSED, SETTINGS_MENU, SOUND_SETTINGS, CONTROL_SETTINGS, QUALITY_SETTINGS, ROSTER, IN_GAME
 	}
 }

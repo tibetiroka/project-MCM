@@ -40,7 +40,7 @@ public class ImageHitbox implements Shape {
 		if(whenDone != null) {
 			whenDone.run();
 		}
-		LOGGER.debug("Created image hitbox (" + hash + ")");
+		LOGGER.debug("Created image hitbox " + hash);
 	}
 	
 	public static ImageHitbox fromImage(final BufferedImage image) {

@@ -26,5 +26,8 @@
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.6" level="project" />
     <orderEntry type="library" name="Maven: com.github.RealCerus:JGif:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.4" level="project" />
+    <orderEntry type="library" name="Maven: net.java.jinput:jinput:2.0.9" level="project" />
+    <orderEntry type="library" name="Maven: net.java.jinput:jinput:natives-all:2.0.9" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-jul:2.14.1" level="project" />
   </component>
 </module>

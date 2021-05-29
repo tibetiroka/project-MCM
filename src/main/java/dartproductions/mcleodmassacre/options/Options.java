@@ -1,11 +1,10 @@
 package dartproductions.mcleodmassacre.options;
 
+import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.options.Option.BooleanOption;
 import dartproductions.mcleodmassacre.options.Option.EnumOption;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
-import dartproductions.mcleodmassacre.options.Option.KeyOption;
 
-import javax.swing.KeyStroke;
 import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +27,7 @@ public interface Options extends OptionGroup {
 	public List<OptionGroup> getGroups();
 	
 	public static class StandardOptions implements Options {
-		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX", JUMP_LEFT = "Jump Left", JUMP_RIGHT = "Jump Right", MOVE_UP = "Up", MOVE_DOWN = "Down", MOVE_LEFT = "Left", MOVE_RIGHT = "Right", ATTACK = "Attack", SPECIAL = "Special", GRAB = "Grab", TAUNT = "Taunt", PAUSE = "Pause", WALK = "Walk", SHIELD = "Shield";
+		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX";
 		
 		public final ArrayList<OptionGroup> groups = new ArrayList<>();
 		public String name = "Settings";
@@ -48,9 +47,16 @@ public interface Options extends OptionGroup {
 				sound.setOption(SFX_VOLUME, new IntOption(50));
 				groups.add(sound);
 			}
-			{
-				StandardOptionGroup controls = new StandardOptionGroup(CONTROLS);
-				controls.setOption(JUMP_LEFT, new KeyOption(KeyStroke.getKeyStroke("pressed q")));
+			{//todo proper key binds for input manager
+			//	StandardOptionGroup controls = new StandardOptionGroup(CONTROLS);
+				/*for(ActionType value : ActionType.values()) {
+					System.out.println((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar());
+					controls.setOption(value.name,new KeyOption(KeyStroke.getKeyStroke((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar())));
+				}*/
+			/*	for(ActionType type : ActionType.values) {
+					controls.setOption(type.name, new EnumOption<>(type));
+				}*/
+				/*controls.setOption(JUMP_LEFT, new KeyOption(KeyStroke.getKeyStroke("pressed q")));
 				controls.setOption(JUMP_RIGHT, new KeyOption(KeyStroke.getKeyStroke("pressed e")));
 				controls.setOption(MOVE_UP, new KeyOption(KeyStroke.getKeyStroke("pressed w")));
 				controls.setOption(MOVE_DOWN, new KeyOption(KeyStroke.getKeyStroke("pressed s")));
@@ -63,7 +69,8 @@ public interface Options extends OptionGroup {
 				controls.setOption(WALK, new KeyOption(KeyStroke.getKeyStroke("pressed l")));
 				controls.setOption(PAUSE, new KeyOption(KeyStroke.getKeyStroke("pressed BACKSPACE")));
 				controls.setOption(SHIELD, new KeyOption(KeyStroke.getKeyStroke("pressed i")));
-				groups.add(controls);
+				*/
+			//	groups.add(controls);
 			}
 		}
 		

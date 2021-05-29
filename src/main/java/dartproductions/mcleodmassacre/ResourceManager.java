@@ -22,10 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -33,10 +30,6 @@ import java.util.stream.Stream;
  * Accesses and handles stored game resources.
  */
 public class ResourceManager {
-	/**
-	 * The main data directory where the game's data is stored.
-	 */
-	private static final File DATA_DIRECTORY = new File("data");
 	private static final Logger LOGGER = LogManager.getLogger(ResourceManager.class);
 	private static final ConcurrentHashMap<String, Image> IMAGES = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<String, Shape> HITBOXES = new ConcurrentHashMap<>();
@@ -75,7 +68,8 @@ public class ResourceManager {
 	private static void loadGraphics(String directory) {
 		String regular = directory + "/regular";
 		try {
-			getPaths(regular).forEach(path -> {
+			getPaths(regular, false).forEach(path -> {
+				
 				if(path.toFile().isFile()) {
 					loadAndStoreImage(path.toFile());
 				}
@@ -86,7 +80,7 @@ public class ResourceManager {
 		
 		String hitboxes = directory + "/hitbox";
 		try {
-			getPaths(hitboxes).forEach(path -> {
+			getPaths(hitboxes, false).forEach(path -> {
 				if(path.toFile().isFile()) {
 					BufferedImage[] images = loadAndStoreImage(path.toFile());
 					if(images != null && images.length > 0) {
@@ -108,6 +102,7 @@ public class ResourceManager {
 			});
 		} catch(Exception e) {
 			LOGGER.error("Could not load default graphics from \"" + hitboxes + "\"", e);
+			Main.setRunning(false);
 		}
 		//todo load other subdirs
 	}
@@ -129,6 +124,52 @@ public class ResourceManager {
 	 */
 	public static void loadAllResources() {
 		//todo
+	}
+	
+	public static void extractResources() {
+		if(checkVersion()) {
+			LOGGER.info("Skipping resource extraction: already done for this version");
+		} else {
+			try {
+				Path p = getPathToResource("extract", true);
+				Stream<Path> paths = getPaths("extract", true);
+				paths.forEach(path -> {
+					if(!path.equals(p)) {
+						String newPath = path.toString();
+						newPath = newPath.substring(newPath.indexOf("extract") + "extract".length() + 1);
+						try {
+							Files.copy(path, new File(newPath).toPath(), StandardCopyOption.REPLACE_EXISTING);
+							LOGGER.debug("Extracted file " + newPath);
+						} catch(DirectoryNotEmptyException e) {
+						} catch(Exception e) {
+							LOGGER.error("Error during file extraction", e);
+						}
+					}
+				});
+			} catch(Exception e) {
+				LOGGER.error("Error during resource extraction", e);
+			}
+		}
+	}
+	
+	/**
+	 * Checks if the extracted resources belong to the latest version of the application. Returns false if there are no extracted resources.
+	 *
+	 * @return True if latest version, false otherwise.
+	 */
+	private static boolean checkVersion() {
+		try {
+			File file = new File("version");
+			if(!file.exists()) {
+				return false;
+			}
+			byte[] extractedVersionData = Files.readAllBytes(file.toPath());
+			Path jarVersion = getPathToResource("extract/version", true);
+			byte[] jarVersionData = Files.readAllBytes(jarVersion);
+			return Arrays.equals(extractedVersionData, jarVersionData);
+		} catch(IOException | URISyntaxException e) {
+			return false;
+		}
 	}
 	
 	public static Animation getAnimation(String name) {
@@ -251,17 +292,37 @@ public class ResourceManager {
 		return new File("settings.json");
 	}
 	
-	private static Stream<Path> getPaths(String location) throws URISyntaxException, IOException {
+	private static synchronized Path getPathToResource(String location, boolean forceJar) throws IOException, URISyntaxException {
+		if(!forceJar && new File(location).exists()) {
+			return new File(location).toPath();
+		}
 		URI uri = Thread.currentThread().getContextClassLoader().getResource(location).toURI();
 		Path myPath;
 		if(uri.getScheme().equalsIgnoreCase("jar")) {
-			FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+			FileSystem fileSystem = null;
+			try {
+				fileSystem = FileSystems.getFileSystem(uri);
+				if(fileSystem == null || !fileSystem.isOpen()) {
+					fileSystem = null;
+				}
+			} catch(Exception e) {
+			}
+			if(fileSystem == null) {
+				fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+			}
 			myPath = fileSystem.getPath(location);
-			fileSystem.close();
 		} else {
 			myPath = Paths.get(uri);
 		}
-		Stream<Path> walk = Files.walk(myPath, 6);
-		return walk;
+		return myPath;
+	}
+	
+	private static Stream<Path> getPaths(String location, int depth, boolean forceJar) throws IOException, URISyntaxException {
+		Path myPath = getPathToResource(location, forceJar);
+		return Files.walk(myPath, depth);
+	}
+	
+	private static Stream<Path> getPaths(String location, boolean forceJar) throws IOException, URISyntaxException {
+		return getPaths(location, 60, forceJar);
 	}
 }

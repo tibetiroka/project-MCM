@@ -1,8 +1,8 @@
 package dartproductions.mcleodmassacre.graphics;
 
 import dartproductions.mcleodmassacre.Main;
+import dartproductions.mcleodmassacre.Main.GameState;
 import dartproductions.mcleodmassacre.ResourceManager;
-import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
@@ -14,15 +14,13 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
@@ -35,6 +33,11 @@ public class GraphicsManager extends JPanel {
 	public static JFrame WINDOW;
 	public static GraphicsManager PANEL;
 	private static volatile boolean RUNNING = false;
+	
+	
+	static {
+		Arrays.setAll(LAYERS, i -> new RenderingLayer());
+	}
 	
 	public static void startGameLoop() {
 		if(GRAPHICS_THREAD != null && GRAPHICS_THREAD.isAlive()) {
@@ -51,7 +54,7 @@ public class GraphicsManager extends JPanel {
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main graphics thread", e));
 		GRAPHICS_THREAD.start();
 		
-		new Timer().scheduleAtFixedRate(new TimerTask() {//Guarantees frequent updating even when the engine isn't running. Nothing else. The timer is not accurate (5-10ms differences) and there isn't any need to correct this.
+		/*new Timer().scheduleAtFixedRate(new TimerTask() {//Guarantees frequent updating even when the engine isn't running. Nothing else. The timer is not accurate (5-10ms differences) and there isn't any need to correct this.
 			@Override
 			public void run() {
 				if(isRunning()) {
@@ -64,7 +67,7 @@ public class GraphicsManager extends JPanel {
 					cancel();
 				}
 			}
-		}, 20, 20);
+		}, 20, 20);*/
 	}
 	
 	private static void initGraphics() {
@@ -99,8 +102,6 @@ public class GraphicsManager extends JPanel {
 		//
 		ResourceManager.createAnimations();
 		//
-		Arrays.setAll(LAYERS, i -> new RenderingLayer());
-		//
 		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
 		WINDOW.setLocation(0, 0);
@@ -117,7 +118,7 @@ public class GraphicsManager extends JPanel {
 			WINDOW.repaint();
 			synchronized(GRAPHICS_LOCK) {
 				try {
-					GRAPHICS_LOCK.wait();
+					GRAPHICS_LOCK.wait(100);
 				} catch(InterruptedException e) {
 					LOGGER.warn("Interrupted wait in graphics thread", e);
 				}
@@ -125,6 +126,8 @@ public class GraphicsManager extends JPanel {
 		}
 		closeWindow();
 		RUNNING = false;
+		
+		LOGGER.info("Graphics thread shut down normally");
 	}
 	
 	public static void configureQuality() {
@@ -152,15 +155,25 @@ public class GraphicsManager extends JPanel {
 		synchronized(GRAPHICS_LOCK) {
 			//test for image fitting
 			
-			BUFFER_GRAPHICS.setColor(Color.RED);
+			/*BUFFER_GRAPHICS.setColor(Color.RED);
 			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
 			BUFFER_GRAPHICS.setColor(Color.BLUE);
 			fillRectOnScreen(0, 0, getDefaultScreenDimension().width, getDefaultScreenDimension().height);
 			BUFFER_GRAPHICS.setColor(Color.GREEN);
-			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);
+			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);*/
 			//
 			for(RenderingLayer layer : LAYERS) {
 				layer.paint();
+			}
+			
+			if(Main.getGameState() == GameState.LOADING) {//todo figure out which part updates which states, this is just temp garbage to actually start the app
+				Main.getExecutors().schedule(() -> {//okay this will be moved to the engine with no delay
+					//also fuck loading screens this game should be fast enough
+					//or if it isn't then... that's BAD
+					if(Main.getGameState() == GameState.LOADING) {
+						Main.setGameState(Main.getNextState(), null);
+					}
+				}, 500, TimeUnit.MILLISECONDS);
 			}
 		}
 	}
@@ -176,6 +189,36 @@ public class GraphicsManager extends JPanel {
 	
 	public static RenderingLayer getLayer(int index) {
 		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
+	}
+	
+	public static void clearLayers() {
+		for(RenderingLayer layer : LAYERS) {
+			layer.animations.clear();
+		}
+	}
+	
+	public static void clearLayer(int i) {
+		getLayer(i).animations.clear();
+	}
+	
+	public static synchronized void onStateChange(GameState newGameState, GameState newNextState) {
+		synchronized(GRAPHICS_LOCK) {
+			/*switch(newGameState) {
+				case MAIN_MENU -> {
+					clearLayers();
+					RenderingLayer bg = getLayer(LAYER_BACKGROUND);
+					bg.add(new LoopingAnimation("menu"), new Point(0, 0));
+				}
+				case LOADING -> {
+					clearLayers();
+					RenderingLayer bg = getLayer(LAYER_BACKGROUND);
+					BufferedImage image = ResourceManager.getBufferedImage("loading#0");
+					int x = (getDefaultScreenDimension().width - image.getWidth()) / 2;
+					int y = (getDefaultScreenDimension().height - image.getHeight()) / 2;
+					bg.add(new LoopingAnimation("loading"), new Point(x, y));
+				}
+			}*/
+		}
 	}
 	
 	@Override

@@ -1,39 +1,31 @@
 package dartproductions.mcleodmassacre.graphics;
 
-import dartproductions.mcleodmassacre.util.Pair;
+import dartproductions.mcleodmassacre.entity.Entity;
 
-import java.awt.Point;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
+import static dartproductions.mcleodmassacre.graphics.GraphicsManager.*;
 
 public class RenderingLayer {
-	protected ConcurrentHashMap<String, Pair<Point, Animation>> animations = new ConcurrentHashMap<>();
+	protected List<Entity> animations = Collections.synchronizedList(new ArrayList<>());
 	
+	protected RenderingLayer() {
+	}
 	
 	public void paint() {
-		animations.values().forEach(p -> BUFFER_GRAPHICS.drawImage(p.second().getCurrentFrame(), p.first().x, p.first.y, GraphicsManager.WINDOW));
-		animations.values().forEach(p -> p.second().next());
-		animations.entrySet().removeIf(name -> name.getValue().second().isOver());
+		if(WINDOW.isActive()) {
+			animations.forEach(e -> ResolutionManager.drawImageOnScreen(e.getLocation().x + e.getCurrentAnimation().getOffset().width, e.getLocation().y + e.getCurrentAnimation().getOffset().height, e.getCurrentAnimation().getCurrentFrame()));
+		}
+		animations.forEach(e -> e.getCurrentAnimation().next());
 	}
 	
-	public Pair<Point, Animation> remove(String name) {
-		return animations.remove(name);
+	public void remove(Entity entity) {
+		animations.remove(entity);
 	}
 	
-	public Pair<Point, Animation> get(String name) {
-		return animations.get(name);
-	}
-	
-	public Pair<Point, Animation> add(String name, Animation animation, Point location) {
-		return animations.put(name, new Pair<>(location, animation));
-	}
-	
-	public Pair<Point, Animation> add(String name, Pair<Point, Animation> animation) {
-		return animations.put(name, animation);
-	}
-	
-	public Point changeLocation(String name, Point newLocation) {
-		return get(name).setFirst(newLocation);
+	public void add(Entity entity) {
+		animations.add(entity);
 	}
 }
