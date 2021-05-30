@@ -3,28 +3,73 @@ package dartproductions.mcleodmassacre.entity;
 import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.Point;
 
+/**
+ * A button entity for triggering user actions with the mouse. Reacts to being pressed/hovered/selected, but can't move or collide. The special animations (selected, pressed, hovered etc.) fall back to less specific ones if they are null.
+ */
 public class Button implements Entity {
-	protected final Animation defaultAnimation;
-	protected final Animation onHoverAnimation;
-	protected final Animation onPressAnimation;
-	protected final Animation onSelectedAnimation;
-	protected final Point location;
+	/**
+	 * The default animation of the button
+	 */
+	protected final @NotNull Animation defaultAnimation;
+	/**
+	 * The animation shown when the button is hovered
+	 */
+	protected final @Nullable Animation onHoverAnimation;
+	/**
+	 * The animation shown when the button is pressed
+	 */
+	protected final @Nullable Animation onPressAnimation;
+	/**
+	 * The animation shown when the button is selected
+	 */
+	protected final @Nullable Animation onSelectedAnimation;
+	/**
+	 * The location of the button
+	 */
+	protected final @NotNull Point location;
+	/**
+	 * The action to run when the mouse is released on the button
+	 */
+	protected final @Nullable Runnable onRelease;
+	/**
+	 * The button's pressed state
+	 */
+	protected boolean pressed = false;
+	/**
+	 * The button's hovered state
+	 */
+	protected boolean hovered = false;
+	/**
+	 * The button's selected state
+	 */
+	protected boolean selected = false;
 	
-	protected boolean pressed = false, hovered = false, selected = false;
-	
-	public Button(Animation def, Animation onHover, Animation onPress, Animation onSelected, Point location) {
+	/**
+	 * Creates a new button entity.
+	 *
+	 * @param def        The default animation
+	 * @param onHover    Animation shown when the button is hovered
+	 * @param onPress    Animation shown when the button is pressed
+	 * @param onSelected Animation shown when the button is selected
+	 * @param location   The location of the button
+	 * @param onRelease  The action to run when the mouse is released on the button
+	 */
+	public Button(@NotNull Animation def, @Nullable Animation onHover, @Nullable Animation onPress, @Nullable Animation onSelected, @NotNull Point location, @Nullable Runnable onRelease) {
 		defaultAnimation = def;
 		onHoverAnimation = onHover;
 		onPressAnimation = onPress;
 		onSelectedAnimation = onSelected;
 		this.location = location;
+		this.onRelease = onRelease;
 	}
 	
 	@Override
-	public Animation getCurrentAnimation() {
+	public @NotNull Animation getCurrentAnimation() {
 		if(selected && onSelectedAnimation != null) {
 			return onSelectedAnimation;
 		} else if(pressed && onPressAnimation != null) {
@@ -36,14 +81,16 @@ public class Button implements Entity {
 	}
 	
 	@Override
-	public RenderingLayer getDefaultLayer() {
+	public @NotNull RenderingLayer getDefaultLayer() {
 		return GraphicsManager.getLayer(GraphicsManager.LAYER_GUI);
 	}
 	
 	@Override
 	public void onHover() {
 		hovered = true;
-		onHoverAnimation.reset();
+		if(onHoverAnimation != null) {
+			onHoverAnimation.reset();
+		}
 	}
 	
 	@Override
@@ -61,18 +108,27 @@ public class Button implements Entity {
 	public void onMousePress() {
 		pressed = true;
 		hovered = true;
-		onPressAnimation.reset();
+		if(onPressAnimation != null) {
+			onPressAnimation.reset();
+		}
 	}
 	
 	@Override
 	public void onMouseRelease() {
 		pressed = false;
-		onPressAnimation.reset();
-		onHoverAnimation.reset();
+		if(onPressAnimation != null) {
+			onPressAnimation.reset();
+		}
+		if(onHoverAnimation != null) {
+			onHoverAnimation.reset();
+		}
+		if(onRelease != null) {
+			onRelease.run();
+		}
 	}
 	
 	@Override
-	public Point getLocation() {
+	public @NotNull Point getLocation() {
 		return location;
 	}
 	
@@ -80,7 +136,9 @@ public class Button implements Entity {
 	public void onSelect() {
 		selected = true;
 		hovered = true;
-		onSelectedAnimation.reset();
+		if(onSelectedAnimation != null) {
+			onSelectedAnimation.reset();
+		}
 	}
 	
 	@Override
@@ -96,5 +154,10 @@ public class Button implements Entity {
 	@Override
 	public boolean isSelected() {
 		return false;//todo
+	}
+	
+	@Override
+	public boolean hasMouseCollision() {
+		return true;
 	}
 }

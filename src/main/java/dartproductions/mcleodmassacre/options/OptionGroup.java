@@ -1,5 +1,8 @@
 package dartproductions.mcleodmassacre.options;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 
 /**
@@ -12,7 +15,7 @@ public interface OptionGroup {
 	 *
 	 * @return The options
 	 */
-	public HashMap<String, Option<?>> getAllSettings();
+	public @NotNull HashMap<String, Option<?>> getAllSettings();
 	
 	/**
 	 * Gets the specified setting from {@link #getAllSettings()}
@@ -20,7 +23,7 @@ public interface OptionGroup {
 	 * @param name The name of the option
 	 * @return The option or null if not found
 	 */
-	public default Option<?> getSetting(String name) {
+	public default @Nullable Option<?> getSetting(String name) {
 		return getAllSettings().get(name);
 	}
 	
@@ -32,7 +35,7 @@ public interface OptionGroup {
 	 * @param <T>  The type of the option's value
 	 * @return The option or null if not found
 	 */
-	public default <T> Option<T> getSetting(String name, Class<T> type) {
+	public default @Nullable <T> Option<T> getSetting(String name, Class<T> type) {
 		return (Option<T>) getSetting(name);
 	}
 	
@@ -41,7 +44,7 @@ public interface OptionGroup {
 	 *
 	 * @return The name
 	 */
-	public String getGroupName();
+	public @NotNull String getGroupName();
 	
 	/**
 	 * Gets the value of an option.
@@ -52,34 +55,34 @@ public interface OptionGroup {
 	 * @return The value
 	 * @throws NullPointerException If the option is not found
 	 */
-	public default <T> T getSettingValue(String name, Class<T> type) throws NullPointerException {
+	public default @Nullable <T> T getSettingValue(@NotNull String name, @NotNull Class<T> type) throws NullPointerException {
 		return getSetting(name, type).getValue();
 	}
 	
 	public static class StandardOptionGroup implements OptionGroup {
-		public String name;
-		public HashMap<String, Option<?>> options = new HashMap<>();
+		public final @NotNull HashMap<String, Option<?>> options = new HashMap<>();
+		public @NotNull String name;
 		
-		public StandardOptionGroup(String name) {
+		public StandardOptionGroup(@NotNull String name) {
 			this.name = name;
 		}
 		
 		
 		@Override
-		public HashMap<String, Option<?>> getAllSettings() {
+		public @NotNull HashMap<String, Option<?>> getAllSettings() {
 			return options;
 		}
 		
 		@Override
-		public String getGroupName() {
+		public @NotNull String getGroupName() {
 			return name;
 		}
 		
-		public void setGroupName(String name) {
+		public void setGroupName(@NotNull String name) {
 			this.name = name;
 		}
 		
-		public void setOption(String name, Option<?> option) {
+		public void setOption(@NotNull String name, @NotNull Option<?> option) {
 			options.put(name, option);
 			if(option.getVisibleName() == null) {
 				option.setVisibleName(name);

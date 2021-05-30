@@ -3,6 +3,7 @@ package dartproductions.mcleodmassacre.entity;
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -18,14 +19,14 @@ public interface Entity {
 	 *
 	 * @return The animation
 	 */
-	public Animation getCurrentAnimation();
+	public @NotNull Animation getCurrentAnimation();
 	
 	/**
 	 * Gets the layer where this entity is rendered by default.
 	 *
 	 * @return The rendering layer
 	 */
-	public RenderingLayer getDefaultLayer();
+	public @NotNull RenderingLayer getDefaultLayer();
 	
 	/**
 	 * Runs whenever this entity is hovered. Doesn't run if the entity was hovered in the previous frame.
@@ -72,14 +73,14 @@ public interface Entity {
 	 *
 	 * @return The location
 	 */
-	public Point getLocation();
+	public @NotNull Point getLocation();
 	
 	/**
 	 * Gets the velocity of this entity.
 	 *
 	 * @return The velocity
 	 */
-	public default Dimension getVelocity() {
+	public default @NotNull Dimension getVelocity() {
 		return new Dimension(0, 0);
 	}
 	
@@ -112,6 +113,17 @@ public interface Entity {
 	}
 	
 	/**
+	 * Increases this entity's velocity.
+	 *
+	 * @param accX The change along the x axis
+	 * @param accY The change along the y axis
+	 */
+	public default void accelerate(int accX, int accY) {
+		getVelocity().width += accX;
+		getVelocity().height += accY;
+	}
+	
+	/**
 	 * Handles the entity's custom movements. It is recommended to call this method from the {@link #process()} method if it is implemented.
 	 */
 	public default void move() {
@@ -120,7 +132,7 @@ public interface Entity {
 			int maxY = getMaxSpeedY();
 			Dimension vel = getVelocity();
 			
-			vel.height += getGravity();//gravity
+			accelerate(0, getGravity());//gravity
 			
 			if(vel.width != 0) {//deceleration
 				if(vel.width > 0) {

@@ -1,5 +1,6 @@
 package dartproductions.mcleodmassacre;
 
+import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.Animation.StandardAnimation;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
@@ -7,6 +8,8 @@ import dartproductions.mcleodmassacre.options.Options;
 import de.cerus.jgif.GifImage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.ImageIcon;
 import java.awt.Color;
@@ -31,23 +34,46 @@ import java.util.stream.Stream;
  */
 public class ResourceManager {
 	private static final Logger LOGGER = LogManager.getLogger(ResourceManager.class);
-	private static final ConcurrentHashMap<String, Image> IMAGES = new ConcurrentHashMap<>();
-	private static final ConcurrentHashMap<String, Shape> HITBOXES = new ConcurrentHashMap<>();
-	private static final ConcurrentHashMap<String, Area> HITBOX_AREAS = new ConcurrentHashMap<>();
-	private static final Set<String> IMAGE_NAMES = Collections.synchronizedSet(new HashSet<>());
-	private static final ConcurrentHashMap<String, Animation> ANIMATIONS = new ConcurrentHashMap<>();
+	/**
+	 * The loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 */
+	private static final @NotNull ConcurrentHashMap<String, Image> IMAGES = new ConcurrentHashMap<>();
+	/**
+	 * Hitboxes created from the loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 */
+	private static final @NotNull ConcurrentHashMap<String, Shape> HITBOXES = new ConcurrentHashMap<>();
+	/**
+	 * Hitbox areas created from the loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 */
+	private static final @NotNull ConcurrentHashMap<String, Area> HITBOX_AREAS = new ConcurrentHashMap<>();
+	/**
+	 * The names of the loaded images
+	 */
+	private static final @NotNull Set<String> IMAGE_NAMES = Collections.synchronizedSet(new HashSet<>());
+	/**
+	 * The created animations; the key is the file's name without extension
+	 */
+	private static final @NotNull ConcurrentHashMap<String, Animation> ANIMATIONS = new ConcurrentHashMap<>();
 	/**
 	 * The active game options
 	 */
 	private static Options OPTIONS;
 	
-	public static Options getOptions() {
+	/**
+	 * Gets the active game options. Loads them from the settings file if they are not yet loaded.
+	 *
+	 * @return The options
+	 */
+	public static @NotNull Options getOptions() {
 		if(OPTIONS == null) {
 			loadSettings();
 		}
 		return OPTIONS;
 	}
 	
+	/**
+	 * Loads the game options from the files.
+	 */
 	private static void loadSettings() {
 		File file = getSettingsFile();
 		if(!file.exists()) {
@@ -61,11 +87,19 @@ public class ResourceManager {
 		OPTIONS = Options.getDefaultOptions();
 	}
 	
+	/**
+	 * Loads all graphics that are necessary to have in order to open the application window.
+	 */
 	public static void loadStandardGraphics() {
 		loadGraphics(getGraphicsDirectory() + "/default");
 	}
 	
-	private static void loadGraphics(String directory) {
+	/**
+	 * Loads graphical elements from the specified directory.
+	 *
+	 * @param directory The directory to load from
+	 */
+	private static void loadGraphics(@NotNull String directory) {
 		String regular = directory + "/regular";
 		try {
 			getPaths(regular, false).forEach(path -> {
@@ -86,15 +120,17 @@ public class ResourceManager {
 					if(images != null && images.length > 0) {
 						final String name = getFileName(path.toFile());
 						if(images.length == 1) {
-							ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[0]));
-							HITBOXES.put(name, hitbox);
-							hitbox.whenDone(() -> HITBOX_AREAS.put(name, hitbox.getArea()));
+							ImageHitbox.createFromImage(binarisate(images[0]), hitbox -> {
+								HITBOXES.put(name, hitbox);
+								HITBOX_AREAS.put(name, hitbox.getArea());
+							});
 						} else {
 							for(int i = 0; i < images.length; i++) {
-								ImageHitbox hitbox = ImageHitbox.fromImage(binarizate(images[i]));
-								HITBOXES.put(name + "#" + i, hitbox);
-								final int j = i;
-								hitbox.whenDone(() -> HITBOX_AREAS.put(name + "#" + j, hitbox.getArea()));
+								final String name_ = name + "#" + i;
+								ImageHitbox.createFromImage(binarisate(images[i]), hitbox -> {
+									HITBOXES.put(name_, hitbox);
+									HITBOX_AREAS.put(name_, hitbox.getArea());
+								});
 							}
 						}
 					}
@@ -104,7 +140,7 @@ public class ResourceManager {
 			LOGGER.error("Could not load default graphics from \"" + hitboxes + "\"", e);
 			Main.setRunning(false);
 		}
-		//todo load other subdirs
+		//todo load other subdirs if needed
 	}
 	
 	/**
@@ -126,10 +162,14 @@ public class ResourceManager {
 		//todo
 	}
 	
+	/**
+	 * Extracts all resources from the application jar.
+	 */
 	public static void extractResources() {
 		if(checkVersion()) {
 			LOGGER.info("Skipping resource extraction: already done for this version");
 		} else {
+			LOGGER.info("Extracting resources");
 			try {
 				Path p = getPathToResource("extract", true);
 				Stream<Path> paths = getPaths("extract", true);
@@ -172,11 +212,17 @@ public class ResourceManager {
 		}
 	}
 	
-	public static Animation getAnimation(String name) {
+	/**
+	 * Gets the animation with the specified name.
+	 *
+	 * @param name The name of the animation
+	 * @return The animation or null
+	 */
+	public static @Nullable Animation getAnimation(@NotNull String name) {
 		return ANIMATIONS.containsKey(name) ? ANIMATIONS.get(name).clone() : null;
 	}
 	
-	private static BufferedImage[] loadAndStoreImage(File file) {
+	private static @NotNull BufferedImage[] loadAndStoreImage(@NotNull File file) {
 		try {
 			Image image = loadImage(file);
 			LOGGER.debug("Loaded image " + file.getPath());
@@ -204,7 +250,13 @@ public class ResourceManager {
 		return null;
 	}
 	
-	private static BufferedImage binarizate(BufferedImage image) {
+	/**
+	 * Creates a two-colored (binarised) version of the image. A pixel is black on the result if the image had a non-transparent pixel at that location, all other pixels are white.
+	 *
+	 * @param image The image to use
+	 * @return The binarised image
+	 */
+	private static @NotNull BufferedImage binarisate(@NotNull BufferedImage image) {
 		BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
 		for(int x = 0; x < image.getWidth(); x++) {
 			for(int y = 0; y < image.getHeight(); y++) {
@@ -218,7 +270,13 @@ public class ResourceManager {
 		return newImage;
 	}
 	
-	private static String getFileName(File file) {
+	/**
+	 * Gets the name of the file without its extension
+	 *
+	 * @param file The file
+	 * @return The name of the file
+	 */
+	private static @NotNull String getFileName(@NotNull File file) {
 		String name = file.getName();
 		if(name.contains(".")) {
 			name = name.substring(0, name.lastIndexOf("."));
@@ -226,49 +284,70 @@ public class ResourceManager {
 		return name;
 	}
 	
-	private static Image loadImage(File file) throws MalformedURLException {
+	/**
+	 * Reads the image from the specified file
+	 *
+	 * @param file The file
+	 * @return The image
+	 * @throws MalformedURLException If the file's location is not valid
+	 */
+	private static @NotNull Image loadImage(@NotNull File file) throws MalformedURLException {
 		return new ImageIcon(file.toURI().toURL()).getImage();
 	}
 	
-	private static BufferedImage[] getImageFrames(Image image, File file) throws FileNotFoundException {
+	/**
+	 * Gets all of the separate frames from an image. If the images is not animated, the returned array only contains the original image.
+	 *
+	 * @param image the image
+	 * @param file  The file the image was loaded from
+	 * @return The frames as separate images
+	 * @throws FileNotFoundException If the file is not found
+	 */
+	private static @NotNull BufferedImage[] getImageFrames(@NotNull Image image, @NotNull File file) throws FileNotFoundException {
 		if(image instanceof BufferedImage) {
 			return new BufferedImage[]{(BufferedImage) image};
 		}
 		if(file.getName().toLowerCase().endsWith(".gif")) {
 			GifImage gif = new GifImage(file);
 			int sum = 0;
-			int msPerFrame = 20;
 			ArrayList<BufferedImage> images = new ArrayList<>();
 			for(int i = 0; i < gif.getDecoder().getFrameCount(); i++) {
 				sum += gif.getDecoder().getDelay(i);
-				while(sum >= msPerFrame) {
+				while(sum >= GameEngine.FRAME_LENGTH) {
 					images.add(gif.getFrame(i));
-					sum -= msPerFrame;
+					sum -= GameEngine.FRAME_LENGTH;
 				}
 			}
-			if(sum > msPerFrame / 2) {
+			if(sum > GameEngine.FRAME_LENGTH / 2) {
 				images.add(gif.getFrame(gif.getDecoder().getFrameCount() - 1));
 			}
 			return images.toArray(new BufferedImage[0]);
 		} else {
-			// Create a buffered image with transparency
 			BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-			
-			// Draw the image on to the buffered image
 			Graphics2D g = bimage.createGraphics();
 			g.drawImage(image, 0, 0, null);
 			g.dispose();
-			
-			// Return the buffered image
 			return new BufferedImage[]{bimage};
 		}
 	}
 	
-	public static Image getImage(String name) {
+	/**
+	 * Gets the image with the specified name
+	 *
+	 * @param name The name of the image
+	 * @return The image or null if not found
+	 */
+	public static @Nullable Image getImage(@NotNull String name) {
 		return IMAGES.get(name);
 	}
 	
-	public static BufferedImage getBufferedImage(String name) {
+	/**
+	 * Gets the image with the specified name as a {@link BufferedImage}.
+	 *
+	 * @param name The name of the image
+	 * @return The image or null if not found
+	 */
+	public static @Nullable BufferedImage getBufferedImage(@NotNull String name) {
 		Image i = getImage(name);
 		if(i instanceof BufferedImage image) {
 			return image;
@@ -276,23 +355,54 @@ public class ResourceManager {
 		return null;
 	}
 	
-	public static Shape getHitbox(String name) {
+	/**
+	 * Gets the hitbox with the specified name
+	 *
+	 * @param name The name of the hitbox
+	 * @return The hitbox or null if not found
+	 */
+	public static @Nullable Shape getHitbox(@NotNull String name) {
 		return HITBOXES.get(name);
 	}
 	
-	public static Area getHitboxArea(String name) {
+	/**
+	 * Gets the hitbox area with the specified name
+	 *
+	 * @param name The name of the hitbox area
+	 * @return The hitbox area or null if not found
+	 */
+	public static @Nullable Area getHitboxArea(@NotNull String name) {
 		return HITBOX_AREAS.get(name);
 	}
 	
-	private static String getGraphicsDirectory() {
+	/**
+	 * Gets the directory where the graphics resources are stored.
+	 *
+	 * @return The graphics directory
+	 */
+	private static @NotNull String getGraphicsDirectory() {
 		return "data/grc";
 	}
 	
-	private static File getSettingsFile() {
+	/**
+	 * Gets the file that stores the game options.
+	 *
+	 * @return The settings file
+	 */
+	private static @NotNull File getSettingsFile() {
 		return new File("settings.json");
 	}
 	
-	private static synchronized Path getPathToResource(String location, boolean forceJar) throws IOException, URISyntaxException {
+	/**
+	 * Gets a Path to the specified location in the file system.
+	 *
+	 * @param location The location
+	 * @param forceJar True if the location must be inside the application jar/classpath
+	 * @return The path
+	 * @throws IOException        If an exception occurs
+	 * @throws URISyntaxException If an exception occurs
+	 */
+	private static synchronized @NotNull Path getPathToResource(@NotNull String location, boolean forceJar) throws IOException, URISyntaxException {
 		if(!forceJar && new File(location).exists()) {
 			return new File(location).toPath();
 		}
@@ -317,11 +427,30 @@ public class ResourceManager {
 		return myPath;
 	}
 	
+	/**
+	 * Gets all paths to resources in the specified location.
+	 *
+	 * @param location The location
+	 * @param depth    The depth of the search
+	 * @param forceJar True if the location must be inside the application jar/classpath
+	 * @return The paths
+	 * @throws IOException        If an exception occurs
+	 * @throws URISyntaxException If an exception occurs
+	 */
 	private static Stream<Path> getPaths(String location, int depth, boolean forceJar) throws IOException, URISyntaxException {
 		Path myPath = getPathToResource(location, forceJar);
 		return Files.walk(myPath, depth);
 	}
 	
+	/**
+	 * Gets all paths to resources in the specified location. The default search depth is 60.
+	 *
+	 * @param location The location
+	 * @param forceJar True if the location must be inside the application jar/classpath
+	 * @return The paths
+	 * @throws IOException        If an exception occurs
+	 * @throws URISyntaxException If an exception occurs
+	 */
 	private static Stream<Path> getPaths(String location, boolean forceJar) throws IOException, URISyntaxException {
 		return getPaths(location, 60, forceJar);
 	}

@@ -9,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Main application class, launches the game
@@ -23,7 +23,7 @@ public class Main {
 	/**
 	 * Globally shared executor service for async tasks
 	 */
-	private static final ScheduledExecutorService EXECUTORS = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() - 4));
+	private static final ExecutorService EXECUTORS = Executors.newFixedThreadPool(4);
 	/**
 	 * True if additional debug information should be logged. Defaults to false.
 	 */
@@ -73,7 +73,7 @@ public class Main {
 	 * Configures the global logger
 	 */
 	private static void configureLogger() {
-		System.setProperty("java.util.logging.manager","org.apache.logging.log4j.jul.LogManager");
+		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
 		Configurator.setAllLevels("", isDebug() ? Level.DEBUG : Level.INFO);
 	}
 	
@@ -139,7 +139,7 @@ public class Main {
 	 *
 	 * @return The executor
 	 */
-	public static ScheduledExecutorService getExecutors() {
+	public static ExecutorService getExecutors() {
 		return EXECUTORS;
 	}
 	
@@ -175,6 +175,9 @@ public class Main {
 		GraphicsManager.onStateChange(newGameState, newNextState);
 	}
 	
+	/**
+	 * All of the supported states of the application
+	 */
 	public static enum GameState {
 		LOADING, MAIN_MENU, IN_GAME_PAUSED, SETTINGS_MENU, SOUND_SETTINGS, CONTROL_SETTINGS, QUALITY_SETTINGS, ROSTER, IN_GAME
 	}

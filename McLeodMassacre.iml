@@ -9,6 +9,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/dat" />
     </content>
     <content url="file://$MODULE_DIR$/target/appmap" />
     <orderEntry type="inheritedJdk" />
@@ -29,5 +31,6 @@
     <orderEntry type="library" name="Maven: net.java.jinput:jinput:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: net.java.jinput:jinput:natives-all:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-jul:2.14.1" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains:annotations:21.0.1" level="project" />
   </component>
 </module>

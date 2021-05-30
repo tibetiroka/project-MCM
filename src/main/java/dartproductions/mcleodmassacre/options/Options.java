@@ -1,9 +1,9 @@
 package dartproductions.mcleodmassacre.options;
 
-import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.options.Option.BooleanOption;
 import dartproductions.mcleodmassacre.options.Option.EnumOption;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.Toolkit;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface Options extends OptionGroup {
 	
-	public static Options getDefaultOptions() {
+	public static @NotNull Options getDefaultOptions() {
 		return new StandardOptions();
 	}
 	
@@ -24,13 +24,16 @@ public interface Options extends OptionGroup {
 	 *
 	 * @return The option groups
 	 */
-	public List<OptionGroup> getGroups();
+	public @NotNull List<OptionGroup> getGroups();
 	
+	/**
+	 * The standard game options
+	 */
 	public static class StandardOptions implements Options {
 		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX";
 		
-		public final ArrayList<OptionGroup> groups = new ArrayList<>();
-		public String name = "Settings";
+		public final @NotNull ArrayList<OptionGroup> groups = new ArrayList<>();
+		public @NotNull String name = "Settings";
 		
 		public StandardOptions() {
 			{
@@ -48,7 +51,8 @@ public interface Options extends OptionGroup {
 				groups.add(sound);
 			}
 			{//todo proper key binds for input manager
-			//	StandardOptionGroup controls = new StandardOptionGroup(CONTROLS);
+				
+				//	StandardOptionGroup controls = new StandardOptionGroup(CONTROLS);
 				/*for(ActionType value : ActionType.values()) {
 					System.out.println((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar());
 					controls.setOption(value.name,new KeyOption(KeyStroke.getKeyStroke((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar())));
@@ -70,12 +74,12 @@ public interface Options extends OptionGroup {
 				controls.setOption(PAUSE, new KeyOption(KeyStroke.getKeyStroke("pressed BACKSPACE")));
 				controls.setOption(SHIELD, new KeyOption(KeyStroke.getKeyStroke("pressed i")));
 				*/
-			//	groups.add(controls);
+				//	groups.add(controls);
 			}
 		}
 		
 		@Override
-		public HashMap<String, Option<?>> getAllSettings() {
+		public @NotNull HashMap<String, Option<?>> getAllSettings() {
 			HashMap<String, Option<?>> options = new HashMap<>();
 			for(OptionGroup group : getGroups()) {
 				options.putAll(group.getAllSettings());
@@ -84,12 +88,12 @@ public interface Options extends OptionGroup {
 		}
 		
 		@Override
-		public String getGroupName() {
+		public @NotNull String getGroupName() {
 			return name;
 		}
 		
 		@Override
-		public List<OptionGroup> getGroups() {
+		public @NotNull List<OptionGroup> getGroups() {
 			return groups;
 		}
 	}

@@ -9,6 +9,8 @@ import dartproductions.mcleodmassacre.options.Options.StandardOptions;
 import dartproductions.mcleodmassacre.options.QualityOption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -20,31 +22,81 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
+/**
+ * Class for managing graphics-related locks and paint operations.
+ */
 public class GraphicsManager extends JPanel {
-	public static final Object GRAPHICS_LOCK = new Object();
-	public static final int LAYER_BOTTOM = 0, LAYER_TOP = 15, LAYER_BACKGROUND = 4, LAYER_GUI = 14, LAYER_MAP = 8, LAYER_CHARACTERS = 11;
-	protected static final RenderingLayer[] LAYERS = new RenderingLayer[16];
+	/**
+	 * General-purpose lock for functions related to graphics
+	 */
+	public static final @NotNull Object GRAPHICS_LOCK = new Object();
+	/**
+	 * The index of the lowest priority rendering layer
+	 */
+	public static final int LAYER_BOTTOM = 0;
+	/**
+	 * Index of the highest priority rendering layer
+	 */
+	public static final int LAYER_TOP = 15;
+	/**
+	 * Index of the standard rendering layer used for backgrounds
+	 */
+	public static final int LAYER_BACKGROUND = 4;
+	/**
+	 * Index of the standard rendering layer used for GUIs
+	 */
+	public static final int LAYER_GUI = 14;
+	/**
+	 * Index of the standard rending layer used for game level/map components (ground, walls, etc.)
+	 */
+	public static final int LAYER_MAP = 8;
+	/**
+	 * Index of the standard rendering layer used for game characters
+	 */
+	public static final int LAYER_CHARACTERS = 11;
+	/**
+	 * The rendering layers
+	 */
+	protected static final @NotNull RenderingLayer[] LAYERS = new RenderingLayer[16];
+	/**
+	 * Graphics-related logger
+	 */
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
-	public static Thread GRAPHICS_THREAD;
-	public static JFrame WINDOW;
-	public static GraphicsManager PANEL;
+	/**
+	 * The main graphics thread
+	 */
+	public static @Nullable Thread GRAPHICS_THREAD;
+	/**
+	 * The game window
+	 */
+	public static @NotNull JFrame WINDOW;
+	/**
+	 * The game window's content pane used for rendering
+	 */
+	public static @NotNull GraphicsManager PANEL;
+	/**
+	 * The state of the main graphics thread
+	 */
 	private static volatile boolean RUNNING = false;
 	
 	
 	static {
+		//creating layers
 		Arrays.setAll(LAYERS, i -> new RenderingLayer());
 	}
 	
+	/**
+	 * Starts the graphics game loop. (Starts the graphics thread.) Fails silently if the thread is already running.
+	 */
 	public static void startGameLoop() {
-		if(GRAPHICS_THREAD != null && GRAPHICS_THREAD.isAlive()) {
+		if(GRAPHICS_THREAD != null && GRAPHICS_THREAD.isAlive()) {//if running, fail
 			LOGGER.error("Attempted to start graphics game loop while previous loop was still running");
 			return;
 		}
-		GRAPHICS_THREAD = new Thread(() -> {
+		GRAPHICS_THREAD = new Thread(() -> {//graphics thread
 			RUNNING = true;
 			LOGGER.info("Started graphics thread");
 			Thread.currentThread().setPriority(6);
@@ -53,23 +105,11 @@ public class GraphicsManager extends JPanel {
 		}, "Main Graphics Thread");
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main graphics thread", e));
 		GRAPHICS_THREAD.start();
-		
-		/*new Timer().scheduleAtFixedRate(new TimerTask() {//Guarantees frequent updating even when the engine isn't running. Nothing else. The timer is not accurate (5-10ms differences) and there isn't any need to correct this.
-			@Override
-			public void run() {
-				if(isRunning()) {
-					if(!GameEngine.isRunning()) {
-						synchronized(GRAPHICS_LOCK) {
-							GRAPHICS_LOCK.notifyAll();
-						}
-					}
-				} else {
-					cancel();
-				}
-			}
-		}, 20, 20);*/
 	}
 	
+	/**
+	 * Loads all necessary graphical resources and creates the game window.
+	 */
 	private static void initGraphics() {
 		Options options = ResourceManager.getOptions();
 		WINDOW = new JFrame("McLeod Massacre");
@@ -108,15 +148,18 @@ public class GraphicsManager extends JPanel {
 		LOGGER.info("Window created");
 	}
 	
+	/**
+	 * Rendering loop
+	 */
 	private static void gameLoop() {
 		while(Main.isRunning()) {
-			try {
+			try {//draw on buffer
 				paintGraphics();
 			} catch(Exception e) {
 				LOGGER.error("Error during graphics painting", e);
 			}
-			WINDOW.repaint();
-			synchronized(GRAPHICS_LOCK) {
+			WINDOW.repaint();//draw buffer to screen
+			synchronized(GRAPHICS_LOCK) {//wait for engine
 				try {
 					GRAPHICS_LOCK.wait(100);
 				} catch(InterruptedException e) {
@@ -130,6 +173,9 @@ public class GraphicsManager extends JPanel {
 		LOGGER.info("Graphics thread shut down normally");
 	}
 	
+	/**
+	 * Configures the {@link ResolutionManager#BUFFER_GRAPHICS}'s quality settings.
+	 */
 	public static void configureQuality() {
 		synchronized(GRAPHICS_LOCK) {//quality settings
 			QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
@@ -151,6 +197,9 @@ public class GraphicsManager extends JPanel {
 		}
 	}
 	
+	/**
+	 * Paints the graphics of the rendering layers to the buffer.
+	 */
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
 			//test for image fitting
@@ -165,44 +214,62 @@ public class GraphicsManager extends JPanel {
 			for(RenderingLayer layer : LAYERS) {
 				layer.paint();
 			}
-			
-			if(Main.getGameState() == GameState.LOADING) {//todo figure out which part updates which states, this is just temp garbage to actually start the app
-				Main.getExecutors().schedule(() -> {//okay this will be moved to the engine with no delay
-					//also fuck loading screens this game should be fast enough
-					//or if it isn't then... that's BAD
-					if(Main.getGameState() == GameState.LOADING) {
-						Main.setGameState(Main.getNextState(), null);
-					}
-				}, 500, TimeUnit.MILLISECONDS);
-			}
 		}
 	}
 	
+	/**
+	 * Closes the application window
+	 */
 	private static void closeWindow() {
 		WINDOW.setVisible(false);
 		WINDOW.dispose();
 	}
 	
+	/**
+	 * Checks if the graphics thread is still running. Might keep returning 'true' if the thread didn't shut down correctly.
+	 *
+	 * @return True if running
+	 */
 	public static boolean isRunning() {
 		return RUNNING;
 	}
 	
+	/**
+	 * Gets the specified rendering layer
+	 *
+	 * @param index The index of the layer
+	 * @return The layer
+	 */
 	public static RenderingLayer getLayer(int index) {
 		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
 	}
 	
+	/**
+	 * Removes all entities from all rendering layers. This does NOT remove them from the game engine.
+	 */
 	public static void clearLayers() {
 		for(RenderingLayer layer : LAYERS) {
-			layer.animations.clear();
+			layer.entities.clear();
 		}
 	}
 	
+	/**
+	 * Removes all entities from a rendering layer. This does NOT remove them from the game engine.
+	 *
+	 * @param i The index of the layer
+	 */
 	public static void clearLayer(int i) {
-		getLayer(i).animations.clear();
+		getLayer(i).entities.clear();
 	}
 	
+	/**
+	 * Handles any changes when the application's state changes.
+	 *
+	 * @param newGameState The new state of the application
+	 * @param newNextState The expected state after the new state
+	 */
 	public static synchronized void onStateChange(GameState newGameState, GameState newNextState) {
-		synchronized(GRAPHICS_LOCK) {
+		//synchronized(GRAPHICS_LOCK) {
 			/*switch(newGameState) {
 				case MAIN_MENU -> {
 					clearLayers();
@@ -218,7 +285,7 @@ public class GraphicsManager extends JPanel {
 					bg.add(new LoopingAnimation("loading"), new Point(x, y));
 				}
 			}*/
-		}
+		//}
 	}
 	
 	@Override

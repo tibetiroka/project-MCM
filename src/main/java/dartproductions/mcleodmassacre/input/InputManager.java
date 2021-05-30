@@ -1,93 +1,46 @@
 package dartproductions.mcleodmassacre.input;
 
 import dartproductions.mcleodmassacre.Main;
-import dartproductions.mcleodmassacre.graphics.GraphicsManager;
+import dartproductions.mcleodmassacre.graphics.ResolutionManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType.ControlConfig.ValueControlConfig;
 import net.java.games.input.*;
 import net.java.games.input.Controller.Type;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.MouseInfo;
 import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Class for managing user input.
+ */
 public class InputManager {
-	private static final Logger LOGGER = LogManager.getLogger(InputManager.class);
-	private static final ArrayList<Controller> PLAYER_DEVICES = new ArrayList<>();
-	private static final Object KEY_LOCK = new Object(), MOUSE_LOCK = new Object(), CONTROLLER_LOCK = new Object(), DEVICE_LOCK = new Object();
+	private static final @NotNull Logger LOGGER = LogManager.getLogger(InputManager.class);
+	/**
+	 * The list of devices used by players. The nth device corresponds to the nth player.
+	 */
+	private static final @NotNull ArrayList<Controller> PLAYER_DEVICES = new ArrayList<>();
+	/**
+	 * Lock object used for synchronizations related to the player devices.
+	 */
+	private static final @NotNull Object DEVICE_LOCK = new Object();
 	//
-	//private static final LinkedList<KeyEvent> KEY_EVENTS = new LinkedList<>();
-	//private static final LinkedList<MouseEvent> MOUSE_EVENTS = new LinkedList<>();
-	//
-	//private static final AtomicInteger KEY_EVENT_REQUESTS = new AtomicInteger(0);
-	//private static final AtomicInteger MOUSE_EVENT_REQUESTS = new AtomicInteger(0);
-	//
-	//private static final ConcurrentHashMap<Integer, Boolean> KEY_STATES = new ConcurrentHashMap<>();
-	//private static final boolean[] MOUSE_STATES = new boolean[MouseInfo.getNumberOfButtons()];
-	private static final ArrayList<InputAction<Event>> ACTIONS = new ArrayList<>();
-	//
-	private static volatile KeyEvent LATEST_KEY_EVENT;
-	private static volatile MouseEvent LATEST_MOUSE_EVENT;
+	private static final @NotNull ArrayList<InputAction<Event>> ACTIONS = new ArrayList<>();
 	
+	/**
+	 * Initializes the input manager
+	 */
 	public static void initialize() {
-		/*KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
-			synchronized(KEY_LOCK) {
-				switch(e.getID()) {
-					case KeyEvent.KEY_PRESSED -> KEY_STATES.put(e.getKeyCode(), true);
-					case KeyEvent.KEY_RELEASED -> KEY_STATES.put(e.getKeyCode(), false);
-				}
-				if(KEY_EVENT_REQUESTS.get() > 0) {
-					LATEST_KEY_EVENT = e;
-					KEY_EVENT_REQUESTS.decrementAndGet();
-					KEY_EVENT_REQUESTS.notify();
-				} else {
-					//todo create input event
-				}
-			}
-			return false;
-		});*/
-		/*long eventMask = AWTEvent.MOUSE_MOTION_EVENT_MASK + AWTEvent.MOUSE_EVENT_MASK;
-		Toolkit.getDefaultToolkit().addAWTEventListener(e -> {
-			synchronized(MOUSE_LOCK) {
-				switch(e.getID()) {
-					case MouseEvent.MOUSE_PRESSED -> MOUSE_STATES[((MouseEvent) e).getButton()] = true;
-					case MouseEvent.MOUSE_RELEASED -> MOUSE_STATES[((MouseEvent) e).getButton()] = false;
-				}
-				if(MOUSE_EVENT_REQUESTS.get() > 0) {
-					LATEST_MOUSE_EVENT = (MouseEvent) e;
-					MOUSE_EVENT_REQUESTS.decrementAndGet();
-					MOUSE_EVENT_REQUESTS.notify();
-				} else {
-					//todo create input event
-				}
-			}
-		}, eventMask);*/
 		//init input devices
 		PLAYER_DEVICES.addAll(Arrays.asList(ControllerEnvironment.getDefaultEnvironment().getControllers()));
-		/*{
-			Controller keyboard = null;
-			for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-				if(controller.getType() == Type.KEYBOARD) {
-					keyboard = controller;
-					break;
-				}
-			}
-			if(keyboard != null) {
-				PLAYER_DEVICES.add(keyboard);//okay, let me explain some stuff here. For key events, we are still relying on awt - it turned out to be a lot more reliable. It is however queried and added to the list. Why, you might ask. It is for the sake making keyboard input optional - you should have the option to turn it off at any time, by mapping a controller to the first player. This would be harder to do otherwise. The only drawback of awt is that you can't use multiple keyboards for players - well, that's a price we have to pay. If that becomes necessary, we will switch to jinput, but
-			}
-			for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-				if(controller.getType() == Type.GAMEPAD) {
-					PLAYER_DEVICES.add(controller);
-				}
-			}
-		}*/
+		
+		//listen to controller changes
 		ControllerEnvironment.getDefaultEnvironment().addControllerListener(new ControllerListener() {
 			@Override
 			public void controllerRemoved(ControllerEvent ev) {
@@ -114,7 +67,12 @@ public class InputManager {
 		LOGGER.info("Initialized input manager");
 	}
 	
-	public static ArrayList<InputAction<Event>> getActions() {
+	/**
+	 * Gets the list of actions that have been detected since this method was last called.
+	 *
+	 * @return The new actions
+	 */
+	public static @NotNull ArrayList<InputAction<Event>> getActions() {
 		synchronized(DEVICE_LOCK) {
 			var a = new ArrayList<>(ACTIONS);
 			ACTIONS.clear();
@@ -122,6 +80,9 @@ public class InputManager {
 		}
 	}
 	
+	/**
+	 * Gathers information from the input devices and parses valid {@link InputAction input actions} from them. Runs asynchronously on {@link Main#getExecutors()}.
+	 */
 	public static void pollAsync() {
 		if(Main.isRunning()) {
 			Main.getExecutors().execute(() -> {
@@ -142,8 +103,6 @@ public class InputManager {
 							if(type != null) {
 								InputAction<Event> inputAction = new InputAction<>(type, time, value, i, event);
 								ACTIONS.add(inputAction);
-								System.out.println("Parsed action " + type);
-								//System.out.println(event + " " + "| dead zone: " + event.getComponent().getDeadZone());
 							}
 						}
 					}
@@ -152,111 +111,160 @@ public class InputManager {
 		}
 	}
 	
-/*	public static KeyEvent getNextKeyEvent() {
-		synchronized(KEY_EVENT_REQUESTS) {
-			KEY_EVENT_REQUESTS.incrementAndGet();
-			try {
-				KEY_EVENT_REQUESTS.wait();
-			} catch(InterruptedException e) {
-				LOGGER.warn("Wait for key event was interrupted", e);
-			}
-			return LATEST_KEY_EVENT;
-		}
-	}
-	
-	public static MouseEvent getNextMouseEvent() {
-		synchronized(MOUSE_EVENT_REQUESTS) {
-			MOUSE_EVENT_REQUESTS.incrementAndGet();
-			try {
-				MOUSE_EVENT_REQUESTS.wait();
-			} catch(InterruptedException e) {
-				LOGGER.warn("Wait for mouse event was interrupted", e);
-			}
-			return LATEST_MOUSE_EVENT;
-		}
-	}*/
-	
 	
 	/**
 	 * Gets the cursor location on the local machine.
 	 *
 	 * @return The cursor's location
 	 */
-	public static Point getCursorLocationLocal() {
-		Point screenLoc = MouseInfo.getPointerInfo().getLocation();
-		screenLoc.x -= GraphicsManager.PANEL.getLocationOnScreen().x;
-		screenLoc.y -= GraphicsManager.PANEL.getLocationOnScreen().y;
-		return screenLoc;
+	public static @NotNull Point getCursorLocationLocal() {
+		return MouseInfo.getPointerInfo().getLocation();
 	}
 	
 	/**
-	 * Gets the cursor location as it would appear on tib's machine. Useful if you don't want to fuck around with conversions all day.
+	 * Gets the location of the cursor on the graphics buffer.
+	 *
+	 * @return The cursor's location on the buffer
+	 */
+	public static @NotNull Point getCursorLocationBuffer() {
+		Point loc = getCursorLocationLocal();
+		loc.translate(ResolutionManager.getOriginOnBuffer().x, ResolutionManager.getOriginOnBuffer().y);
+		return loc;
+	}
+	
+	/**
+	 * Gets the cursor location as it would appear on the (nonexistent) development machine. Useful if you don't want to fuck around with conversions all day.
 	 *
 	 * @return The cursor location in the original coordinate system
 	 */
-	public static Point getCursorLocation() {
+	public static @NotNull Point getCursorLocation() {
 		Point screenLoc = MouseInfo.getPointerInfo().getLocation();
-		double currentWidth = Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-		double currentHeight = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-		double myWidth = 1280.;
-		double myHeight = 1024.;
-		screenLoc.setLocation(screenLoc.getX() * myWidth / currentWidth, screenLoc.getY() * myHeight / currentHeight);
+		screenLoc.setLocation(screenLoc.getX() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetX(), screenLoc.getY() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetY());
 		return screenLoc;
 	}
 	
 	/**
-	 * Checks if the key of the given key code is held down.
-	 *
-	 * @param key The key code
-	 * @return True if being pressed
+	 * Enum describing all user actions.
 	 */
-/*	public static boolean isKeyPressed(int key) {
-		return KEY_STATES.getOrDefault(key, false);
-	}*/
-	
-	/**
-	 * Checks if the specified mouse button is held down.
-	 *
-	 * @param button The mouse button
-	 * @return True if being pressed
-	 */
-/*	public static boolean isMouseButtonPressed(int button) {
-		if(MOUSE_STATES.length > button && button >= 0) {
-			return MOUSE_STATES[button];
-		}
-		return false;
-	}*/
-	
 	public static enum ActionType {
+		/**
+		 * Moves the focus upwards in a menu.
+		 */
 		FOCUS_UP("Move up the focus", new ValueControlConfig(0.25f, "Hat Switch", Type.GAMEPAD)),
+		/**
+		 * Moves the focus downwards in a menu.
+		 */
 		FOCUS_DOWN("Move down the focus", new ValueControlConfig(0.5f, "Hat Switch", Type.GAMEPAD), new ValueControlConfig(1, "Button 7", Type.GAMEPAD)),
+		/**
+		 * Moves the focus to the left in a menu.
+		 */
 		FOCUS_LEFT("Move left the focus", new ValueControlConfig(1.0f, "Hat Switch", Type.GAMEPAD), new ValueControlConfig(1, "Button 6", Type.GAMEPAD)),
+		/**
+		 * Moves the focus to the right in a menu.
+		 */
 		FOCUS_RIGHT("Move right the focus", new ValueControlConfig(0.75f, "Hat Switch", Type.GAMEPAD)),
+		/**
+		 * Makes a player jump and go to the left
+		 */
 		JUMP_LEFT("Jump left", new ValueControlConfig(1, "Q", Type.KEYBOARD)),//todo controller input
+		/**
+		 * Makes a player jump and go to the right
+		 */
 		JUMP_RIGHT("Jump right", new ValueControlConfig(1, "E", Type.KEYBOARD)),
+		/**
+		 * Makes a player jump
+		 */
 		MOVE_UP("Up", new ValueControlConfig(1, "W", Type.KEYBOARD), new ValueControlConfig(1, "UP", Type.KEYBOARD), new ValueControlConfig(-1, "Y Axis", Type.GAMEPAD)),
-		MOVE_DOWN("Down", new ValueControlConfig(1, "S", Type.KEYBOARD), new ValueControlConfig(1, "DOWN", Type.KEYBOARD), new ValueControlConfig(1, "Y Axis", Type.GAMEPAD)),
-		MOVE_LEFT("Left", new ValueControlConfig(1, "A", Type.KEYBOARD), new ValueControlConfig(1, "LEFT", Type.KEYBOARD), new ValueControlConfig(-1, "X Axis", Type.GAMEPAD)),
-		MOVE_RIGHT("Right", new ValueControlConfig(1, "D", Type.KEYBOARD), new ValueControlConfig(1, "RIGHT", Type.KEYBOARD), new ValueControlConfig(1, "X Axis", Type.GAMEPAD)),
-		ATTACK("Attack", new ValueControlConfig(1, "P", Type.KEYBOARD), new ValueControlConfig(1, "Button 1", Type.GAMEPAD)),
-		SPECIAL("Special", new ValueControlConfig(1, "0", Type.KEYBOARD), new ValueControlConfig(1, "Button 2", Type.GAMEPAD)),
-		GRAB("Grab", new ValueControlConfig(1, "U", Type.KEYBOARD), new ValueControlConfig(1, "Button 0", Type.GAMEPAD)),
-		TAUNT("Taunt", new ValueControlConfig(1, "K", Type.KEYBOARD), new ValueControlConfig(1, "Button 3", Type.GAMEPAD)),
-		PAUSE("Pause", new ValueControlConfig(1, "BACK", Type.KEYBOARD)),
-		WALK("Walk", new ValueControlConfig(1, "L", Type.KEYBOARD), new ValueControlConfig(1, "Button 8", Type.GAMEPAD)),
-		SHIELD("Shield", new ValueControlConfig(1, "I", Type.KEYBOARD), new ValueControlConfig(0.5f, 1, "Button 9", Type.GAMEPAD)),
-		LEFT_CLICK("Left click", new ValueControlConfig(1, "Left", Type.MOUSE), new ValueControlConfig(1, "Button 8", Type.GAMEPAD), new ValueControlConfig(1, "Button 9", Type.GAMEPAD)),
-		RIGHT_CLICK("Right click", new ValueControlConfig(1, "Left", Type.MOUSE));
-		public static final ActionType[] values = values();
-		public final String name;
-		public final ControlConfig[] controls;
 		
-		private ActionType(String name, ControlConfig... controls) {
+		/**
+		 * Makes a player move downwards
+		 */
+		MOVE_DOWN("Down", new ValueControlConfig(1, "S", Type.KEYBOARD), new ValueControlConfig(1, "DOWN", Type.KEYBOARD), new ValueControlConfig(1, "Y Axis", Type.GAMEPAD)),
+		/**
+		 * Makes a player move to the left
+		 */
+		MOVE_LEFT("Left", new ValueControlConfig(1, "A", Type.KEYBOARD), new ValueControlConfig(1, "LEFT", Type.KEYBOARD), new ValueControlConfig(-1, "X Axis", Type.GAMEPAD)),
+		/**
+		 * Makes a player move to the right
+		 */
+		MOVE_RIGHT("Right", new ValueControlConfig(1, "D", Type.KEYBOARD), new ValueControlConfig(1, "RIGHT", Type.KEYBOARD), new ValueControlConfig(1, "X Axis", Type.GAMEPAD)),
+		/**
+		 * Makes a player attack
+		 */
+		ATTACK("Attack", new ValueControlConfig(1, "P", Type.KEYBOARD), new ValueControlConfig(1, "Button 1", Type.GAMEPAD)),
+		/**
+		 * Makes a player use its special ability
+		 */
+		SPECIAL("Special", new ValueControlConfig(1, "0", Type.KEYBOARD), new ValueControlConfig(1, "Button 2", Type.GAMEPAD)),
+		/**
+		 * Makes a player use its 'grab' ability (wtf is that btw?)
+		 */
+		GRAB("Grab", new ValueControlConfig(1, "U", Type.KEYBOARD), new ValueControlConfig(1, "Button 0", Type.GAMEPAD)),
+		/**
+		 * Makes a player use its 'taunt' ability
+		 */
+		TAUNT("Taunt", new ValueControlConfig(1, "K", Type.KEYBOARD), new ValueControlConfig(1, "Button 3", Type.GAMEPAD)),
+		/**
+		 * Pauses the game
+		 */
+		PAUSE("Pause", new ValueControlConfig(1, "BACK", Type.KEYBOARD)),
+		/**
+		 * Makes a player walk forward (left or right, depending on the facing)
+		 */
+		WALK("Walk", new ValueControlConfig(1, "L", Type.KEYBOARD), new ValueControlConfig(1, "Button 8", Type.GAMEPAD)),
+		/**
+		 * Makes a player activate its shield
+		 */
+		SHIELD("Shield", new ValueControlConfig(1, "I", Type.KEYBOARD), new ValueControlConfig(0.5f, 1, "Button 9", Type.GAMEPAD)),
+		/**
+		 * Indicates a left mouse button press
+		 */
+		LEFT_BUTTON_PRESS("Left click", new ValueControlConfig(1, "Left", Type.MOUSE), new ValueControlConfig(1, "Button 8", Type.GAMEPAD), new ValueControlConfig(1, "Button 9", Type.GAMEPAD)),
+		/**
+		 * Indicates a left mouse button release
+		 */
+		LEFT_BUTTON_RELEASE("Left click", new ValueControlConfig(0, "Left", Type.MOUSE), new ValueControlConfig(0, "Button 8", Type.GAMEPAD), new ValueControlConfig(0, "Button 9", Type.GAMEPAD)),
+		/**
+		 * Indicates a right mouse button press
+		 */
+		RIGHT_BUTTON_PRESS("Right click", new ValueControlConfig(1, "Right", Type.MOUSE)),
+		/**
+		 * Indicates a right mouse button release
+		 */
+		RIGHT_BUTTON_RELEASE("Right click", new ValueControlConfig(0, "Right", Type.MOUSE));
+		
+		/**
+		 * The action types; only exists because {@link #values()} is very poorly optimized
+		 */
+		public static final @NotNull ActionType[] values = values();
+		/**
+		 * The user-friendly name of the action
+		 */
+		public final @NotNull String name;
+		/**
+		 * The controls for this action
+		 */
+		public final @NotNull ControlConfig[] controls;
+		
+		/**
+		 * Creates a new action type
+		 *
+		 * @param name     The name of the action
+		 * @param controls The controls to activate the action
+		 */
+		private ActionType(@NotNull String name, @NotNull ControlConfig... controls) {
 			this.name = name;
 			this.controls = controls;
 		}
 		
-		public static ActionType getAction(Controller controller, Event event) {
+		/**
+		 * Gets an action that matches the specified event
+		 *
+		 * @param controller The controller creating the event
+		 * @param event      The event
+		 * @return The action or null if not found
+		 */
+		public static @Nullable ActionType getAction(@NotNull Controller controller, @NotNull Event event) {
 			for(ActionType type : values) {
 				if(type.matches(controller, event)) {
 					return type;
@@ -265,7 +273,14 @@ public class InputManager {
 			return null;
 		}
 		
-		public boolean matches(Controller controller, Event event) {
+		/**
+		 * Checks if this action matches the specified event.
+		 *
+		 * @param controller The controller creating the event
+		 * @param event      The event
+		 * @return True if matches
+		 */
+		public boolean matches(@NotNull Controller controller, @NotNull Event event) {
 			for(ControlConfig control : controls) {
 				if(control.isValid(controller, event)) {
 					return true;
@@ -274,27 +289,68 @@ public class InputManager {
 			return false;
 		}
 		
+		/**
+		 * Configuration for checking if an input event is valid as an action.
+		 */
 		public static interface ControlConfig {
-			public boolean isValid(Controller controller, Event event);
+			/**
+			 * Checks if this config matches with the specified event
+			 *
+			 * @param controller The controller creating the event
+			 * @param event      The event
+			 * @return True if matches
+			 */
+			public boolean isValid(@NotNull Controller controller, @NotNull Event event);
 			
+			/**
+			 * {@link ControlConfig} implementation where a certain value is expected from a component.
+			 */
 			public static class ValueControlConfig implements ControlConfig {
-				protected float min, max;
-				protected String component;
-				protected List<Controller.Type> types;
+				/**
+				 * The minimum accepted value
+				 */
+				protected float min;
+				/**
+				 * The maximum acepted value
+				 */
+				protected float max;
+				/**
+				 * The name of the input component
+				 */
+				protected @NotNull String component;
+				/**
+				 * The accepted controller types
+				 */
+				protected @NotNull List<Controller.Type> types;
 				
-				public ValueControlConfig(float min, float max, String component, Type... types) {
+				/**
+				 * Creates a new config
+				 *
+				 * @param min       The minimum accepted value
+				 * @param max       The maximum accepted value
+				 * @param component The input device's component
+				 * @param types     The accepted device types
+				 */
+				public ValueControlConfig(float min, float max, @NotNull String component, @NotNull Type... types) {
 					this.types = List.of(types);
 					this.min = min;
 					this.max = max;
 					this.component = component;
 				}
 				
-				public ValueControlConfig(float value, String component, Type... types) {
+				/**
+				 * Creates a new config accepting a single value
+				 *
+				 * @param value     The value to accept
+				 * @param component The input device's component
+				 * @param types     The accepted device types
+				 */
+				public ValueControlConfig(float value, @NotNull String component, @NotNull Type... types) {
 					this(value, value, component, types);
 				}
 				
 				@Override
-				public boolean isValid(Controller controller, Event event) {
+				public boolean isValid(@NotNull Controller controller, @NotNull Event event) {
 					boolean contains = types.contains(controller.getType());
 					if(Math.abs(event.getValue()) - event.getComponent().getDeadZone() < 0) {
 						return false;
@@ -313,11 +369,11 @@ public class InputManager {
 					this.max = max;
 				}
 				
-				public String getComponent() {
+				public @NotNull String getComponent() {
 					return component;
 				}
 				
-				public void setComponent(String component) {
+				public void setComponent(@NotNull String component) {
 					this.component = component;
 				}
 				
@@ -329,46 +385,128 @@ public class InputManager {
 					this.min = min;
 				}
 				
-				public List<Type> getTypes() {
+				public @NotNull List<Type> getTypes() {
 					return types;
 				}
 			}
 		}
 	}
 	
+	/**
+	 * Wrapper for input actions. Contains the type of the action, the time it occurred, the cursor location and the event's data.
+	 *
+	 * @param <T> The type of event to store
+	 */
 	public static class InputAction<T> {
-		protected final ActionType action;
-		protected final Instant time;
-		protected final Point location;
+		/**
+		 * The type of the action
+		 */
+		protected final @NotNull ActionType action;
+		/**
+		 * The time the action occurred
+		 */
+		protected final @NotNull Instant time;
+		/**
+		 * The cursor location at the time of the event
+		 */
+		protected final @NotNull Point location;
+		/**
+		 * The event's input value
+		 */
 		protected final float value;
+		/**
+		 * The player's id associated with the input device
+		 */
 		protected final int playerId;
+		/**
+		 * The event data
+		 */
 		protected final T event;
 		
-		public InputAction(ActionType type, int playerId, T event) {
+		/**
+		 * Creates a new input action. Uses the current time for the event's 'occurred at' time, {@link #getCursorLocation()} for the cursor location and 0 for the event's value.
+		 *
+		 * @param type     The type of the action
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, int playerId, @NotNull T event) {
 			this(type, Instant.now(), playerId, event);
 		}
 		
-		public InputAction(ActionType type, Instant time, int playerId, T event) {
-			this(type, time, null, 0, playerId, event);
+		/**
+		 * Creates a new input action. Uses {@link #getCursorLocation()} for the cursor's location and 0 for the event's value.
+		 *
+		 * @param type     The type of the action
+		 * @param time     The time when it occurred
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, @NotNull Instant time, int playerId, @NotNull T event) {
+			this(type, time, getCursorLocation(), 0, playerId, event);
 		}
 		
-		public InputAction(ActionType type, Point location, int playerId, T event) {
+		/**
+		 * Creates a new input action. Uses the current time as the event's 'occurred at' time, and 0 as the event's value.
+		 *
+		 * @param type     The type of the action
+		 * @param location The cursor location
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, @NotNull Point location, int playerId, @NotNull T event) {
 			this(type, Instant.now(), location, 0, playerId, event);
 		}
 		
-		public InputAction(ActionType type, Instant time, Point location, int playerId, T event) {
+		/**
+		 * Creates a new input action. Uses 0 as the event's value.
+		 *
+		 * @param type     The type of the action
+		 * @param time     The time when it occurred
+		 * @param location The cursor location
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, @NotNull Instant time, @NotNull Point location, int playerId, @NotNull T event) {
 			this(type, time, location, 0, playerId, event);
 		}
 		
-		public InputAction(ActionType type, float value, int playerId, T event) {
-			this(type, Instant.now(), null, value, playerId, event);
+		/**
+		 * Creates a new input action. Uses the current time as the event's 'occurred at' time, and {@link #getCursorLocation()} for the cursor location.
+		 *
+		 * @param type     The type of the action
+		 * @param value    The event's value
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, float value, int playerId, @NotNull T event) {
+			this(type, Instant.now(), getCursorLocation(), value, playerId, event);
 		}
 		
-		public InputAction(ActionType type, Instant time, float value, int playerId, T event) {
-			this(type, time, null, value, playerId, event);
+		/**
+		 * Creates a new input action. Uses {@link #getCursorLocation()} as the cursor location.
+		 *
+		 * @param type     The type of the action
+		 * @param time     The time when it occurred
+		 * @param value    The event's value
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, @NotNull Instant time, float value, int playerId, @NotNull T event) {
+			this(type, time, getCursorLocation(), value, playerId, event);
 		}
 		
-		public InputAction(ActionType type, Instant time, Point location, float value, int playerId, T event) {
+		/**
+		 * Creates a new input action
+		 *
+		 * @param type     The type of the action
+		 * @param time     The time when it occurred
+		 * @param location The cursor location
+		 * @param value    The event's value
+		 * @param playerId The id of the player inputting
+		 * @param event    The event data
+		 */
+		public InputAction(@NotNull ActionType type, @NotNull Instant time, @NotNull Point location, float value, int playerId, @NotNull T event) {
 			this.action = type;
 			this.time = time;
 			this.location = location;
@@ -377,27 +515,57 @@ public class InputManager {
 			this.event = event;
 		}
 		
-		public ActionType getActionType() {
+		/**
+		 * Gets the type of the action this event represents
+		 *
+		 * @return The action's type
+		 */
+		public @NotNull ActionType getActionType() {
 			return action;
 		}
 		
+		/**
+		 * Gets the value of the event (semi-magic number in e.g. {@link Event#getValue()})
+		 *
+		 * @return The event's value
+		 */
 		public double getValue() {
 			return value;
 		}
 		
-		public Instant getEventTime() {
+		/**
+		 * Gets the time the event occurred at.
+		 *
+		 * @return The event's creation time
+		 */
+		public @NotNull Instant getEventTime() {
 			return time;
 		}
 		
-		public Point getLocation() {
+		/**
+		 * Gets the cursor's location at the time the event occurred.
+		 *
+		 * @return The cursor's location
+		 */
+		public @NotNull Point getLocation() {
 			return location;
 		}
 		
+		/**
+		 * Gets the ID of the player who inputted the action.
+		 *
+		 * @return The player's id
+		 */
 		public int getPlayerId() {
 			return playerId;
 		}
 		
-		public T getData() {
+		/**
+		 * Gets the event data
+		 *
+		 * @return The data
+		 */
+		public @NotNull T getData() {
 			return event;
 		}
 		
