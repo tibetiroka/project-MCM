@@ -2,6 +2,7 @@ package dartproductions.mcleodmassacre.engine;
 
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.Main.GameState;
+import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.entity.Background;
 import dartproductions.mcleodmassacre.entity.Button;
 import dartproductions.mcleodmassacre.entity.Entity;
@@ -13,6 +14,7 @@ import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.input.InputManager.InputAction;
+import dartproductions.mcleodmassacre.sound.SoundManager;
 import dartproductions.mcleodmassacre.util.Pair;
 import net.java.games.input.Event;
 import org.apache.logging.log4j.LogManager;
@@ -386,11 +388,15 @@ public class GameEngine {
 			if(newGameState == GameState.IN_GAME_PAUSED) {
 			} else {
 				ENTITIES.forEach(Entity::unregister);
+				SoundManager.stopAll();
+				SoundManager.clear();
 				switch(newGameState) {
 					case MAIN_MENU -> {
 						new Background(new LoopingAnimation("even_better_main_menu_2"), new Point(0, 0)).register();
 						Button button = new Button(new LoopingAnimation("solo_button"), null, null, null, new Point(63, 147), () -> Main.setGameState(GameState.ROSTER, null));
 						button.register();
+						ResourceManager.waitForLoading();
+						SoundManager.play("resurgence_MCM_main_theme", true);
 					}
 					case LOADING -> {
 						scheduleTask(1, () -> Main.setGameState(newNextState, null));

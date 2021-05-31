@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 /**
@@ -34,6 +35,10 @@ import java.util.stream.Stream;
  */
 public class ResourceManager {
 	private static final Logger LOGGER = LogManager.getLogger(ResourceManager.class);
+	/**
+	 * True if the {@link #loadAllResources()} method has finished loading resources.
+	 */
+	private static final AtomicBoolean ALL_LOADED = new AtomicBoolean(false);
 	/**
 	 * The loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
 	 */
@@ -54,6 +59,11 @@ public class ResourceManager {
 	 * The created animations; the key is the file's name without extension
 	 */
 	private static final @NotNull ConcurrentHashMap<String, Animation> ANIMATIONS = new ConcurrentHashMap<>();
+	/**
+	 * The loaded sound effects; the key is the file's name without extension, and the value is the audio data.
+	 */
+	private static final @NotNull ConcurrentHashMap<String, byte[]> SFX = new ConcurrentHashMap<>();
+	
 	/**
 	 * The active game options
 	 */
@@ -159,7 +169,44 @@ public class ResourceManager {
 	 * Loads all resources not loaded by other methods.
 	 */
 	public static void loadAllResources() {
-		//todo
+		loadMusic();
+		ALL_LOADED.set(true);
+		synchronized(ALL_LOADED) {
+			ALL_LOADED.notifyAll();
+		}
+		//load other stuff if necessary
+	}
+	
+	/**
+	 * Waits until all resources are loaded via {@link #loadAllResources()}.
+	 */
+	public static void waitForLoading() {
+		if(!ALL_LOADED.get()) {
+			synchronized(ALL_LOADED) {
+				try {
+					ALL_LOADED.wait();
+				} catch(InterruptedException e) {
+					LOGGER.warn("Interrupted wait in resource manager", e);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Loads the game's sound effects and music.
+	 */
+	private static void loadMusic() {
+		File dir = new File("data/music");
+		if(dir.exists()) {
+			for(File file : dir.listFiles()) {
+				try {
+					SFX.put(getFileName(file), Files.readAllBytes(file.toPath()));
+					LOGGER.debug("Loaded sound " + getFileName(file));
+				} catch(IOException e) {
+					LOGGER.warn("Could not read music file " + file.getPath(), e);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -453,5 +500,15 @@ public class ResourceManager {
 	 */
 	private static Stream<Path> getPaths(String location, boolean forceJar) throws IOException, URISyntaxException {
 		return getPaths(location, 60, forceJar);
+	}
+	
+	/**
+	 * Gets the sound effect with the specified name
+	 *
+	 * @param name The name of the sound effect
+	 * @return The audio data or null if not found
+	 */
+	public static @Nullable byte[] getSound(@NotNull String name) {
+		return SFX.get(name);
 	}
 }
