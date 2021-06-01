@@ -11,7 +11,7 @@ McLeod Massacre is an open-source Super Smash fangame, with loads of original ar
 |Graphics|OpenGL 2.0|OpenGL 4.6|
 |Storage space|200 MB|500 MB|
 
-(Please note that the RAM requirements will depend on your OS. The game generally doesn't use more that 700 MB at any time, but if your OS takes up a lot of the available memory you might need 4GB to actually have enough for the game. The OpenGL version is just an estimation, you will probably be able to run the game on older systems at the cost of performance.)
+(Please note that the actual requirements will depend on your OS. The game generally doesn't use more than 700 MB RAM at any time, but if your OS takes up a lot of the available memory you might need 4GB to actually have enough for the game. The OpenGL version is just an estimation, you will probably be able to run the game on older systems at the cost of performance. The storage space used also depends on the file system of your OS, and it keeps changing as we are adding more and more assets to the game.)
 
 # Installing
 
