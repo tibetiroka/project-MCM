@@ -2,6 +2,17 @@
 
 McLeod Massacre is an open-source Super Smash fangame, with loads of original artwork. This game provides unique experience to any new or veteran player. In this platform fighter you have the ability to play versus other players on your machine, or <TODO: ask discord if we want local servers>.
 
+# Table of contents
+
+- [System Requirements](#system-requirements)
+- [Installing](#installing)
+    - [Installing from GitHub](#installing-from-github)
+      - [Via the McLeodMassacre.zip file](#via-the-mcleodmassacrezip-file)
+      - [Via unzipped release files](#via-unzipped-release-files)
+      - [Building from source](#building-from-source)
+- [Licensing](#licensing)
+- [Contributing](#contributing)
+
 # System Requirements
 
 ||Minimum|Recommended|
