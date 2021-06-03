@@ -88,7 +88,7 @@ There are, however, some exceptions from that.
 
 1. The java files
 
-  	This project includes some OpenJDK runtime files for use in its release bundle. They are distributed under their original license (GNU General Public License, version 2, with the Classpath Exception)[https://openjdk.java.net/legal/gplv2+ce.html] Please check the license for more information.
+  	This project includes some OpenJDK runtime files for use in its release bundle. They are distributed under their original license ([GNU General Public License, version 2, with the Classpath Exception](https://openjdk.java.net/legal/gplv2+ce.html)). Please check the license for more information.
 
   	The files mentioned: 
 
