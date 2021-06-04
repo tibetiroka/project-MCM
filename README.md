@@ -78,7 +78,7 @@ Official releases are available on [GitHub](https://github.com/DartProductions/p
 
 #### **Building from source**
 
-You can use IntelliJ IDEA to import the repository as a project, and use the `-Djava.library.path=target/natives/` JVM argument to run it from the IDE, or the `java -Djava.library.path=lib -jar McLeodMassacre.jar` command to run the built jar file.
+You can use IntelliJ IDEA to import the repository as a project, and use the `-Djava.library.path=target/natives/` JVM argument to run it from the IDE, or the `java -Djava.library.path=lib -cp McLeodMassacre.jar dartproductions.mcleodmassacre.Main` command to run the built jar file.
 
 # Licensing
   
@@ -88,7 +88,7 @@ There are, however, some exceptions from that.
 
 1. The java files
 
-  	This project includes some OpenJDK runtime files for use in its release bundle. They are distributed under their original license (GNU General Public License, version 2, with the Classpath Exception)[https://openjdk.java.net/legal/gplv2+ce.html] Please check the license for more information.
+  	This project includes some OpenJDK runtime files for use in its release bundle. They are distributed under their original license ([GNU General Public License, version 2, with the Classpath Exception](https://openjdk.java.net/legal/gplv2+ce.html)). Please check the license for more information.
 
   	The files mentioned: 
 
