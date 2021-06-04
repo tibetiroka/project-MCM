@@ -78,7 +78,7 @@ Official releases are available on [GitHub](https://github.com/DartProductions/p
 
 #### **Building from source**
 
-You can use IntelliJ IDEA to import the repository as a project, and use the `-Djava.library.path=target/natives/` JVM argument to run it from the IDE, or the `java -Djava.library.path=lib -jar McLeodMassacre.jar` command to run the built jar file.
+You can use IntelliJ IDEA to import the repository as a project, and use the `-Djava.library.path=target/natives/` JVM argument to run it from the IDE, or the `java -Djava.library.path=lib -cp McLeodMassacre.jar dartproductions.mcleodmassacre.Main` command to run the built jar file.
 
 # Licensing
   
