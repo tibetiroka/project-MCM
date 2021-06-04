@@ -2,6 +2,7 @@ package dartproductions.mcleodmassacre;
 
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
+import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.input.InputManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +24,7 @@ public class Main {
 	/**
 	 * Globally shared executor service for async tasks
 	 */
-	private static final ExecutorService EXECUTORS = Executors.newFixedThreadPool(4);
+	private static final ExecutorService EXECUTORS = Executors.newFixedThreadPool(4, Executors.privilegedThreadFactory());
 	/**
 	 * True if additional debug information should be logged. Defaults to false.
 	 */
@@ -54,8 +55,9 @@ public class Main {
 	 * Starts the game loops and async threads
 	 */
 	private static void startGameLoops() {
-		GraphicsManager.startGameLoop();
 		InputManager.initialize();
+		ImageHitbox.waitForProcessing();
+		GraphicsManager.startGameLoop();
 		GameEngine.start();
 	}
 	
@@ -66,7 +68,7 @@ public class Main {
 		ResourceManager.extractResources();
 		ResourceManager.getOptions();
 		ResourceManager.loadStandardGraphics();
-		getExecutors().execute(ResourceManager::loadAllResources);
+		ResourceManager.loadStandardMusic();
 	}
 	
 	/**

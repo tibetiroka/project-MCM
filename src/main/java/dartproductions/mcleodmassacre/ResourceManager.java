@@ -1,8 +1,6 @@
 package dartproductions.mcleodmassacre;
 
 import dartproductions.mcleodmassacre.engine.GameEngine;
-import dartproductions.mcleodmassacre.graphics.Animation;
-import dartproductions.mcleodmassacre.graphics.Animation.StandardAnimation;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.options.Options;
 import de.cerus.jgif.GifImage;
@@ -25,7 +23,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -51,14 +51,6 @@ public class ResourceManager {
 	 * Hitbox areas created from the loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
 	 */
 	private static final @NotNull ConcurrentHashMap<String, Area> HITBOX_AREAS = new ConcurrentHashMap<>();
-	/**
-	 * The names of the loaded images
-	 */
-	private static final @NotNull Set<String> IMAGE_NAMES = Collections.synchronizedSet(new HashSet<>());
-	/**
-	 * The created animations; the key is the file's name without extension
-	 */
-	private static final @NotNull ConcurrentHashMap<String, Animation> ANIMATIONS = new ConcurrentHashMap<>();
 	/**
 	 * The loaded sound effects; the key is the file's name without extension, and the value is the audio data.
 	 */
@@ -102,6 +94,7 @@ public class ResourceManager {
 	 */
 	public static void loadStandardGraphics() {
 		loadGraphics(getGraphicsDirectory() + "/default");
+		LOGGER.debug("Loaded standard graphics");
 	}
 	
 	/**
@@ -113,7 +106,6 @@ public class ResourceManager {
 		String regular = directory + "/regular";
 		try {
 			getPaths(regular, false).forEach(path -> {
-				
 				if(path.toFile().isFile()) {
 					loadAndStoreImage(path.toFile());
 				}
@@ -154,35 +146,38 @@ public class ResourceManager {
 	}
 	
 	/**
-	 * Creates animations for all newly loaded images.
-	 */
-	public static void createAnimations() {
-		ImageHitbox.waitForProcessing();
-		for(String name : IMAGE_NAMES) {
-			if(!ANIMATIONS.containsKey(name)) {
-				ANIMATIONS.put(name, new StandardAnimation(name));
-			}
-		}
-	}
-	
-	/**
 	 * Loads all resources not loaded by other methods.
 	 */
 	public static void loadAllResources() {
-		loadMusic();
-		ALL_LOADED.set(true);
-		synchronized(ALL_LOADED) {
-			ALL_LOADED.notifyAll();
+		if(!ALL_LOADED.get()) {
+			loadOtherMusic();
+			loadOtherGraphics();
+			synchronized(ALL_LOADED) {
+				ALL_LOADED.set(true);
+				ALL_LOADED.notifyAll();
+			}
+			LOGGER.debug("Loaded all resources");
 		}
 		//load other stuff if necessary
+	}
+	
+	/**
+	 * Loads all graphics resources that are required at some point but not loaded by default.
+	 */
+	private static void loadOtherGraphics() {
+		for(File file : new File(getGraphicsDirectory()).listFiles()) {
+			if(!file.getName().equals("default")) {
+				loadGraphics(file.getPath());
+			}
+		}
 	}
 	
 	/**
 	 * Waits until all resources are loaded via {@link #loadAllResources()}.
 	 */
 	public static void waitForLoading() {
-		if(!ALL_LOADED.get()) {
-			synchronized(ALL_LOADED) {
+		synchronized(ALL_LOADED) {
+			if(!ALL_LOADED.get()) {
 				try {
 					ALL_LOADED.wait();
 				} catch(InterruptedException e) {
@@ -190,13 +185,15 @@ public class ResourceManager {
 				}
 			}
 		}
+		ImageHitbox.waitForProcessing();
+		LOGGER.debug("Finished waiting for resource loading");
 	}
 	
 	/**
-	 * Loads the game's sound effects and music.
+	 * Loads the game's standard sound effects.
 	 */
-	private static void loadMusic() {
-		File dir = new File("data/music");
+	public static void loadStandardMusic() {
+		File dir = new File("data/music/default");
 		if(dir.exists()) {
 			for(File file : dir.listFiles()) {
 				try {
@@ -207,6 +204,27 @@ public class ResourceManager {
 				}
 			}
 		}
+		LOGGER.debug("Loaded default sound effects");
+	}
+	
+	/**
+	 * Loads the game's sound effects and music, unless they are loaded by {@link #loadStandardMusic()}.
+	 */
+	public static void loadOtherMusic() {
+		File dir = new File("data/music");
+		if(dir.exists()) {
+			for(File file : dir.listFiles()) {
+				if(!("default".equalsIgnoreCase(file.getName()))) {
+					try {
+						SFX.put(getFileName(file), Files.readAllBytes(file.toPath()));
+						LOGGER.debug("Loaded sound " + getFileName(file));
+					} catch(IOException e) {
+						LOGGER.warn("Could not read music file " + file.getPath(), e);
+					}
+				}
+			}
+		}
+		LOGGER.debug("Loaded all sound effects");
 	}
 	
 	/**
@@ -259,22 +277,11 @@ public class ResourceManager {
 		}
 	}
 	
-	/**
-	 * Gets the animation with the specified name.
-	 *
-	 * @param name The name of the animation
-	 * @return The animation or null
-	 */
-	public static @Nullable Animation getAnimation(@NotNull String name) {
-		return ANIMATIONS.containsKey(name) ? ANIMATIONS.get(name).clone() : null;
-	}
-	
 	private static @NotNull BufferedImage[] loadAndStoreImage(@NotNull File file) {
 		try {
 			Image image = loadImage(file);
 			LOGGER.debug("Loaded image " + file.getPath());
 			String name = getFileName(file);
-			IMAGE_NAMES.add(name);
 			try {
 				BufferedImage[] images = getImageFrames(image, file);
 				if(images.length > 0) {

@@ -91,4 +91,25 @@ public class Background implements Entity {
 	public boolean hasMouseCollision() {
 		return false;
 	}
+	
+	/**
+	 * Same as the background but appears on high priority rendering layers (gui level).
+	 */
+	public static class Foreground extends Background {
+		
+		/**
+		 * Creates a new foreground entity.
+		 *
+		 * @param animation The animation to show
+		 * @param location  The location of the entity
+		 */
+		public Foreground(@NotNull Animation animation, @NotNull Point location) {
+			super(animation, location);
+		}
+		
+		@Override
+		public @NotNull RenderingLayer getDefaultLayer() {
+			return GraphicsManager.getLayer(GraphicsManager.LAYER_GUI);
+		}
+	}
 }

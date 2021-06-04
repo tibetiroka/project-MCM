@@ -22,6 +22,8 @@ public class SoundManager {
 	private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
 	private static float VOLUME = 0.8f;
 	
+	//TODO: add sound categories, play sounds automatically based on game state
+	
 	public static void play(@NotNull String name, boolean looping) {
 		ArrayList<Clip> clips = AUDIO_CLIPS.getOrDefault(name, new ArrayList<>());
 		for(Clip clip : clips) {
@@ -51,6 +53,14 @@ public class SoundManager {
 		} catch(UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			LOGGER.warn("Could not create audio clip", e);
 		}
+	}
+	
+	public static void pause() {
+		//todo
+	}
+	
+	public static void resume() {
+		//todo
 	}
 	
 	private static void setVolume(Clip clip) {

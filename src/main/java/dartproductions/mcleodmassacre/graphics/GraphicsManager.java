@@ -3,6 +3,9 @@ package dartproductions.mcleodmassacre.graphics;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.Main.GameState;
 import dartproductions.mcleodmassacre.ResourceManager;
+import dartproductions.mcleodmassacre.entity.Background;
+import dartproductions.mcleodmassacre.entity.Background.Foreground;
+import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
@@ -16,11 +19,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.Graphics;
-import java.awt.RenderingHints;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
@@ -99,11 +101,14 @@ public class GraphicsManager extends JPanel {
 		GRAPHICS_THREAD = new Thread(() -> {//graphics thread
 			RUNNING = true;
 			LOGGER.info("Started graphics thread");
-			Thread.currentThread().setPriority(6);
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 1);
 			initGraphics();
 			gameLoop();
 		}, "Main Graphics Thread");
-		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main graphics thread", e));
+		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in the main graphics thread", e);
+			Main.setRunning(false);
+		});
 		GRAPHICS_THREAD.start();
 	}
 	
@@ -140,11 +145,17 @@ public class GraphicsManager extends JPanel {
 		//
 		configureQuality();
 		//
-		ResourceManager.createAnimations();
+		//setting cursor
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		BufferedImage image = ResourceManager.getBufferedImage("cursor");
+		Cursor c = toolkit.createCustomCursor(image, new Point(0, toolkit.getBestCursorSize(image.getWidth(), image.getHeight()).height - 1), "MCM standard");
+		WINDOW.setCursor(c);
 		//
 		WINDOW.setUndecorated(true);
 		WINDOW.setVisible(true);
 		WINDOW.setLocation(0, 0);
+		WINDOW.toFront();
+		WINDOW.requestFocus();
 		LOGGER.info("Window created");
 	}
 	
@@ -161,7 +172,9 @@ public class GraphicsManager extends JPanel {
 			WINDOW.repaint();//draw buffer to screen
 			synchronized(GRAPHICS_LOCK) {//wait for engine
 				try {
-					GRAPHICS_LOCK.wait(100);
+					if(Main.isRunning()) {
+						GRAPHICS_LOCK.wait();
+					}
 				} catch(InterruptedException e) {
 					LOGGER.warn("Interrupted wait in graphics thread", e);
 				}
@@ -203,17 +216,18 @@ public class GraphicsManager extends JPanel {
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
 			//test for image fitting
-			
-			/*BUFFER_GRAPHICS.setColor(Color.RED);
+			/*
+			BUFFER_GRAPHICS.setColor(Color.RED);
 			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
 			BUFFER_GRAPHICS.setColor(Color.BLUE);
-			fillRectOnScreen(0, 0, getDefaultScreenDimension().width, getDefaultScreenDimension().height);
+			fillRectOnScreen(0, 0, getDefaultScreenSize().width, getDefaultScreenSize().height);
 			BUFFER_GRAPHICS.setColor(Color.GREEN);
-			drawRectOnScreen(0, 0, getDefaultScreenDimension().width - 1, getDefaultScreenDimension().height - 1);*/
+			drawRectOnScreen(0, 0, getDefaultScreenSize().width - 1, getDefaultScreenSize().height - 1);*/
 			//
 			for(RenderingLayer layer : LAYERS) {
 				layer.paint();
 			}
+			ResolutionManager.fillVisibleAreas();
 		}
 	}
 	
@@ -269,23 +283,29 @@ public class GraphicsManager extends JPanel {
 	 * @param newNextState The expected state after the new state
 	 */
 	public static synchronized void onStateChange(GameState newGameState, GameState newNextState) {
-		//synchronized(GRAPHICS_LOCK) {
-			/*switch(newGameState) {
-				case MAIN_MENU -> {
-					clearLayers();
-					RenderingLayer bg = getLayer(LAYER_BACKGROUND);
-					bg.add(new LoopingAnimation("menu"), new Point(0, 0));
+		synchronized(GRAPHICS_LOCK) {
+			switch(newGameState) {
+				case ROSTER -> {
+					addMenuBackground();
 				}
 				case LOADING -> {
-					clearLayers();
-					RenderingLayer bg = getLayer(LAYER_BACKGROUND);
 					BufferedImage image = ResourceManager.getBufferedImage("loading#0");
-					int x = (getDefaultScreenDimension().width - image.getWidth()) / 2;
-					int y = (getDefaultScreenDimension().height - image.getHeight()) / 2;
-					bg.add(new LoopingAnimation("loading"), new Point(x, y));
+					int x = (ResolutionManager.getDefaultScreenSize().width - image.getWidth()) / 2;
+					int y = (ResolutionManager.getDefaultScreenSize().height - image.getHeight()) / 2;
+					new Background(new LoopingAnimation("loading", new Dimension(x, y)), new Point(0, 0)).register();
 				}
-			}*/
-		//}
+			}
+		}
+	}
+	
+	/**
+	 * Adds the standard menu backgrounds to the rendering engine and the game engine.
+	 */
+	private static void addMenuBackground() {
+		new Background(new LoopingAnimation("cssback"), new Point(0, 0)).register();
+		new Background(new LoopingAnimation("mmborder"), new Point(0, 0)).register();
+		
+		new Foreground(new LoopingAnimation("css_tops"), new Point(0, 0)).register();
 	}
 	
 	@Override

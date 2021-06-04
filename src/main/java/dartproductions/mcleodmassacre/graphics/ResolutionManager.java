@@ -50,6 +50,8 @@ public class ResolutionManager {
 	 */
 	private static final @NotNull Graphics2D OUTPUT_GRAPHICS;
 	
+	private static volatile boolean FILL_VISIBLE_AREAS = true;
+	
 	static {
 		//originalScreen = new Dimension(1280, 1024);
 		originalScreen = new Dimension(1500, 845);
@@ -83,7 +85,12 @@ public class ResolutionManager {
 		//
 		BUFFER = createBufferImage();
 		BUFFER_GRAPHICS = BUFFER.createGraphics();
-	}
+		
+		/*System.out.println(origin);
+		System.out.println(screenRect);
+		System.out.println(screenRect);
+		System.out.println(new Rectangle(-getScreenOffsetX() + origin.x, screenRect.height - getScreenOffsetY() + origin.y, screenRect.width, getScreenOffsetY()));
+	*/}
 	
 	/**
 	 * Draws the appropriate parts of the {@link #BUFFER} to the {@link #OUTPUT} image.
@@ -135,9 +142,9 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Gets the area of the buffer that is visible on the current screen. The returned rectangle is a clone of {@link #screenRect}
+	 * Gets the area of the buffer that represents the original screen on the buffer. The returned rectangle is a clone of {@link #screenRect}
 	 *
-	 * @return The visible area of the buffer
+	 * @return The always visible area of the buffer
 	 */
 	public static @NotNull Rectangle getBufferAreaOnScreen() {
 		return (Rectangle) screenRect.clone();
@@ -189,6 +196,15 @@ public class ResolutionManager {
 	}
 	
 	/**
+	 * Returns the area representing the local screen on the buffer. The returned rectangle is a clone of {@link #screenRect}.
+	 *
+	 * @return The currently visible area of the buffer
+	 */
+	public static Rectangle getLocalScreenOnBuffer() {
+		return (Rectangle) screenRect.clone();
+	}
+	
+	/**
 	 * Draws an image to the part of the buffer that appears on the screen. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system. Doesn't draw images that would be entirely off-screen.
 	 *
 	 * @param x     The x coordinate of the image
@@ -196,7 +212,7 @@ public class ResolutionManager {
 	 * @param image The image to draw
 	 */
 	public static void drawImageOnScreen(int x, int y, Image image) {
-		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
+		if(x <= screenRect.width && y <= screenRect.height) {
 			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
 		}
 	}
@@ -222,7 +238,7 @@ public class ResolutionManager {
 	 * @param image The image to draw
 	 */
 	public static void drawImageOnScreen(int x, int y, BufferedImage image) {
-		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
+		if(screenRect.intersects(x + screenRect.x, y + screenRect.y, image.getWidth(), image.getHeight())) {
 			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
 		}
 	}
@@ -262,12 +278,12 @@ public class ResolutionManager {
 	 * @param width  The width of the rectangle
 	 * @param height The height of the rectangle
 	 */
-	public static void fillRectOnScreen(int x, int y, int width, int height) {
+	protected static void fillRectOnScreen(int x, int y, int width, int height) {
 		x += origin.x;
 		y += origin.y;
 		Rectangle r = screenRect.intersection(new Rectangle(x, y, width, height));
-		if(screenRect.intersects(x, y, width, height)) {
-			BUFFER_GRAPHICS.fillRect(r.x, r.y, r.width, r.height);
+		if(r.width > 0 && r.height > 0) {
+			BUFFER_GRAPHICS.fillRect(x, y, width, height);
 		}
 	}
 	
@@ -279,11 +295,45 @@ public class ResolutionManager {
 	 * @param width  The width of the rectangle
 	 * @param height The height of the rectangle
 	 */
-	public static void drawRectOnScreen(int x, int y, int width, int height) {
+	protected static void drawRectOnScreen(int x, int y, int width, int height) {
 		x += origin.x;
 		y += origin.y;
 		if(screenRect.intersects(x, y, width, height)) {
 			BUFFER_GRAPHICS.drawRect(x, y, width, height);
 		}
+	}
+	
+	/**
+	 * Fills all visible but unpainted areas with black if {@link #isFillVisibleAreas()} is true.
+	 */
+	public static void fillVisibleAreas() {
+		if(!isFillVisibleAreas()) {
+			return;
+		}
+		BUFFER_GRAPHICS.setColor(Color.BLACK);
+		int x = getScreenOffsetX();
+		int y = getScreenOffsetY();
+		fillRectOnScreen(-x, -y, screenRect.width, y);//top
+		fillRectOnScreen(-x, -y, x, screenRect.height);//left
+		fillRectOnScreen(-x, screenRect.height - y * 2, screenRect.width, y);//bottom
+		fillRectOnScreen(screenRect.width - x, -y, x, screenRect.height);//right
+	}
+	
+	/**
+	 * Gets whether visible areas that are not guaranteed to be painted in every frame are filled with black.
+	 *
+	 * @return True if black fill, false otherwise
+	 */
+	public static boolean isFillVisibleAreas() {
+		return FILL_VISIBLE_AREAS;
+	}
+	
+	/**
+	 * Sets whether visible areas that are not guaranteed to be painted in every frame are filled with black. If set to false, the caller has to guarantee that either the area is never painted to, or it is always filled, otherwise unexpected visuals can appear.
+	 *
+	 * @param fillVisibleAreas Whether or not to fill all visible areas
+	 */
+	public static void setFillVisibleAreas(boolean fillVisibleAreas) {
+		FILL_VISIBLE_AREAS = fillVisibleAreas;
 	}
 }

@@ -6,7 +6,7 @@
     <artifactId>McLeodMassacre</artifactId>
     <version>0.1.0</version>
     <build>
-        <finalName>${artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -20,7 +20,6 @@
                         <configuration>
                             <transformers>
                                 <transformer>
-                                    <mainClass>dartproductions.mcleodmassacre.Main</mainClass>
                                     <manifestEntries>
                                         <Multi-Release>true</Multi-Release>
                                     </manifestEntries>

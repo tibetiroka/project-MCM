@@ -10,7 +10,6 @@ import dartproductions.mcleodmassacre.entity.PlayerEntity;
 import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
-import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.input.InputManager.InputAction;
@@ -26,11 +25,8 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Class handling most of the stuff related to game mechanics and physics. Also responsible for scheduling user input and graphics updates.
@@ -52,6 +48,10 @@ public class GameEngine {
 	 * The delay between two frames (in milliseconds).
 	 */
 	public static final int FRAME_LENGTH = 20;
+	/**
+	 * The delay between two frames (in nanoseconds)
+	 */
+	public static final int FRAME_LENGTH_NANO = FRAME_LENGTH * 1000 * 1000;
 	/**
 	 * Logger for the engine
 	 */
@@ -100,6 +100,7 @@ public class GameEngine {
 	 * Time since the previous frame
 	 */
 	private static volatile long delta = 0;
+	private static volatile long tickInState = 0;
 	
 	/**
 	 * Starts the game engine. Fails silently if the engine is already running.
@@ -110,55 +111,50 @@ public class GameEngine {
 			return;
 		}
 		ENGINE_THREAD = new Thread(() -> {//create engine thread
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
 			RUNNING = true;
-			ImageHitbox.waitForProcessing();
+			Main.getExecutors().execute(ResourceManager::loadAllResources);//loading other resources asynchronously
 			LOGGER.info("Started game engine thread");
-			previous = Instant.now().toEpochMilli();
+			previous = System.nanoTime();
 			while(isRunning() && Main.isRunning()) {
-				while(delta >= FRAME_LENGTH) {
-					delta -= FRAME_LENGTH;
+				while(delta >= FRAME_LENGTH_NANO) {
+					delta -= FRAME_LENGTH_NANO;
+					tickInState++;
 					processFrame();
 				}
 				synchronized(GraphicsManager.GRAPHICS_LOCK) {
 					GraphicsManager.GRAPHICS_LOCK.notifyAll();
 				}
-				try {
-					synchronized(ENGINE_WAIT_LOCK) {
-						ENGINE_WAIT_LOCK.wait(100);
+				while(Main.isRunning()) {
+					while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
+						try {
+							Thread.sleep(100);
+						} catch(InterruptedException e) {
+							LOGGER.warn("Interrupted wait for window focus in engine", e);
+						}
+						previous = System.nanoTime();
+						delta = 0;
 					}
-					long l = Instant.now().toEpochMilli();
-					delta += (l - previous);
-					previous = l;
-				} catch(InterruptedException e) {
-					LOGGER.error("Interrupted wait in engine thread", e);
+					long l = System.nanoTime();
+					if(l - previous + delta > FRAME_LENGTH_NANO) {
+						delta += l - previous;
+						previous = l;
+						break;
+					}
 				}
 			}
-			
+			synchronized(GraphicsManager.GRAPHICS_LOCK) {
+				GraphicsManager.GRAPHICS_LOCK.notifyAll();
+			}
+			SoundManager.stopAll();
+			SoundManager.clear();
 			LOGGER.info("Engine thread shut down normally");
 			
 		}, "Main Engine Thread");
-		
-		//engine timer for scheduling frames
-		new Timer().scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				if(Main.isRunning() && GameEngine.isRunning()) {
-					if(GraphicsManager.WINDOW.isActive()) {
-						synchronized(ENGINE_WAIT_LOCK) {//run frame
-							ENGINE_WAIT_LOCK.notifyAll();
-						}
-					} else {//skip frame without running it later
-						long l = Instant.now().toEpochMilli();
-						delta += (l - previous);
-						previous = l;
-						delta = delta % FRAME_LENGTH;
-					}
-				} else {
-					cancel();
-				}
-			}
-		}, 20, 20);
-		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in the main engine thread", e));
+		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in the main engine thread", e);
+			Main.setRunning(false);
+		});
 		ENGINE_THREAD.start();
 	}
 	
@@ -387,6 +383,7 @@ public class GameEngine {
 		synchronized(ENTITY_LOCK) {//todo
 			if(newGameState == GameState.IN_GAME_PAUSED) {
 			} else {
+				tickInState = 0;
 				ENTITIES.forEach(Entity::unregister);
 				SoundManager.stopAll();
 				SoundManager.clear();
@@ -395,11 +392,13 @@ public class GameEngine {
 						new Background(new LoopingAnimation("even_better_main_menu_2"), new Point(0, 0)).register();
 						Button button = new Button(new LoopingAnimation("solo_button"), null, null, null, new Point(63, 147), () -> Main.setGameState(GameState.ROSTER, null));
 						button.register();
-						ResourceManager.waitForLoading();
 						SoundManager.play("resurgence_MCM_main_theme", true);
 					}
 					case LOADING -> {
-						scheduleTask(1, () -> Main.setGameState(newNextState, null));
+						Main.getExecutors().execute(() -> {
+							ResourceManager.waitForLoading();
+							scheduleTask(1, () -> Main.setGameState(newNextState, null));
+						});
 					}
 				}
 			}
