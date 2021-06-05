@@ -5,7 +5,9 @@ import dartproductions.mcleodmassacre.Main.GameState;
 import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.entity.Background;
 import dartproductions.mcleodmassacre.entity.Background.Foreground;
+import dartproductions.mcleodmassacre.entity.Button;
 import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
+import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
@@ -29,58 +31,86 @@ import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
 
 /**
  * Class for managing graphics-related locks and paint operations.
+ *
+ * @since 0.1.0
  */
 public class GraphicsManager extends JPanel {
 	/**
 	 * General-purpose lock for functions related to graphics
+	 *
+	 * @since 0.1.0
 	 */
 	public static final @NotNull Object GRAPHICS_LOCK = new Object();
 	/**
 	 * The index of the lowest priority rendering layer
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_BOTTOM = 0;
 	/**
 	 * Index of the highest priority rendering layer
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_TOP = 15;
 	/**
 	 * Index of the standard rendering layer used for backgrounds
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_BACKGROUND = 4;
 	/**
 	 * Index of the standard rendering layer used for GUIs
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_GUI = 14;
 	/**
 	 * Index of the standard rending layer used for game level/map components (ground, walls, etc.)
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_MAP = 8;
 	/**
 	 * Index of the standard rendering layer used for game characters
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int LAYER_CHARACTERS = 11;
 	/**
 	 * The rendering layers
+	 *
+	 * @since 0.1.0
 	 */
 	protected static final @NotNull RenderingLayer[] LAYERS = new RenderingLayer[16];
 	/**
 	 * Graphics-related logger
+	 *
+	 * @since 0.1.0
 	 */
 	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
 	/**
 	 * The main graphics thread
+	 *
+	 * @since 0.1.0
 	 */
 	public static @Nullable Thread GRAPHICS_THREAD;
 	/**
 	 * The game window
+	 *
+	 * @since 0.1.0
 	 */
 	public static @NotNull JFrame WINDOW;
 	/**
 	 * The game window's content pane used for rendering
+	 *
+	 * @since 0.1.0
 	 */
 	public static @NotNull GraphicsManager PANEL;
 	/**
 	 * The state of the main graphics thread
+	 *
+	 * @since 0.1.0
 	 */
 	private static volatile boolean RUNNING = false;
 	
@@ -92,6 +122,8 @@ public class GraphicsManager extends JPanel {
 	
 	/**
 	 * Starts the graphics game loop. (Starts the graphics thread.) Fails silently if the thread is already running.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void startGameLoop() {
 		if(GRAPHICS_THREAD != null && GRAPHICS_THREAD.isAlive()) {//if running, fail
@@ -108,12 +140,15 @@ public class GraphicsManager extends JPanel {
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in the main graphics thread", e);
 			Main.setRunning(false);
+			System.exit(-10002);
 		});
 		GRAPHICS_THREAD.start();
 	}
 	
 	/**
 	 * Loads all necessary graphical resources and creates the game window.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void initGraphics() {
 		Options options = ResourceManager.getOptions();
@@ -161,6 +196,8 @@ public class GraphicsManager extends JPanel {
 	
 	/**
 	 * Rendering loop
+	 *
+	 * @since 0.1.0
 	 */
 	private static void gameLoop() {
 		while(Main.isRunning()) {
@@ -188,6 +225,8 @@ public class GraphicsManager extends JPanel {
 	
 	/**
 	 * Configures the {@link ResolutionManager#BUFFER_GRAPHICS}'s quality settings.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void configureQuality() {
 		synchronized(GRAPHICS_LOCK) {//quality settings
@@ -212,6 +251,8 @@ public class GraphicsManager extends JPanel {
 	
 	/**
 	 * Paints the graphics of the rendering layers to the buffer.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
@@ -227,12 +268,18 @@ public class GraphicsManager extends JPanel {
 			for(RenderingLayer layer : LAYERS) {
 				layer.paint();
 			}
+			if(Main.isDebug()) {
+				ResolutionManager.BUFFER_GRAPHICS.setColor(Color.RED);
+				ResolutionManager.fillRectOnScreen(InputManager.getCursorLocation().x - 2, InputManager.getCursorLocation().y - 2, 5, 5);
+			}
 			ResolutionManager.fillVisibleAreas();
 		}
 	}
 	
 	/**
 	 * Closes the application window
+	 *
+	 * @since 0.1.0
 	 */
 	private static void closeWindow() {
 		WINDOW.setVisible(false);
@@ -243,6 +290,7 @@ public class GraphicsManager extends JPanel {
 	 * Checks if the graphics thread is still running. Might keep returning 'true' if the thread didn't shut down correctly.
 	 *
 	 * @return True if running
+	 * @since 0.1.0
 	 */
 	public static boolean isRunning() {
 		return RUNNING;
@@ -253,13 +301,16 @@ public class GraphicsManager extends JPanel {
 	 *
 	 * @param index The index of the layer
 	 * @return The layer
+	 * @since 0.1.0
 	 */
-	public static RenderingLayer getLayer(int index) {
+	public static @NotNull RenderingLayer getLayer(int index) {
 		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
 	}
 	
 	/**
 	 * Removes all entities from all rendering layers. This does NOT remove them from the game engine.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void clearLayers() {
 		for(RenderingLayer layer : LAYERS) {
@@ -271,6 +322,7 @@ public class GraphicsManager extends JPanel {
 	 * Removes all entities from a rendering layer. This does NOT remove them from the game engine.
 	 *
 	 * @param i The index of the layer
+	 * @since 0.1.0
 	 */
 	public static void clearLayer(int i) {
 		getLayer(i).entities.clear();
@@ -281,31 +333,69 @@ public class GraphicsManager extends JPanel {
 	 *
 	 * @param newGameState The new state of the application
 	 * @param newNextState The expected state after the new state
+	 * @since 0.1.0
 	 */
-	public static synchronized void onStateChange(GameState newGameState, GameState newNextState) {
+	public static synchronized void onStateChange(@NotNull GameState newGameState, @Nullable GameState newNextState) {
 		synchronized(GRAPHICS_LOCK) {
 			switch(newGameState) {
 				case ROSTER -> {
 					addMenuBackground();
+					addRoster();
+				}
+				case MAIN_MENU -> {
+					addMenuBackground();
+					addGameMenu();
 				}
 				case LOADING -> {
 					BufferedImage image = ResourceManager.getBufferedImage("loading#0");
 					int x = (ResolutionManager.getDefaultScreenSize().width - image.getWidth()) / 2;
 					int y = (ResolutionManager.getDefaultScreenSize().height - image.getHeight()) / 2;
-					new Background(new LoopingAnimation("loading", new Dimension(x, y)), new Point(0, 0)).register();
+					ResolutionManager.fillLocalScreen();
+					new Background(new LoopingAnimation("loading", new Dimension(x, y))).register();
 				}
 			}
 		}
 	}
 	
 	/**
+	 * Adds the standard visuals for the roster.
+	 *
+	 * @since 0.1.0
+	 */
+	private static void addRoster() {//todo
+		new Background(new LoopingAnimation("css_playerboxes")).register();
+		new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.MAIN_MENU, null)).register();
+	}
+	
+	/**
+	 * Adds the standard buttons and visuals for the main menu.
+	 *
+	 * @since 0.1.0
+	 */
+	private static void addGameMenu() {
+		new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.ROSTER, null)).register();
+		new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.GALLERY, null)).register();
+		new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.SETTINGS_MENU, null)).register();
+		new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.DATA_MENU, null)).register();
+		new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.VERSUS_MENU, null)).register();
+		//
+		new Foreground(new LoopingAnimation("mm_data")).register();
+		new Foreground(new LoopingAnimation("mm_gallery")).register();
+		new Foreground(new LoopingAnimation("mm_options")).register();
+		new Foreground(new LoopingAnimation("mm_solo_placeholder")).register();
+		new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
+	}
+	
+	/**
 	 * Adds the standard menu backgrounds to the rendering engine and the game engine.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void addMenuBackground() {
-		new Background(new LoopingAnimation("cssback"), new Point(0, 0)).register();
-		new Background(new LoopingAnimation("mmborder"), new Point(0, 0)).register();
-		
-		new Foreground(new LoopingAnimation("css_tops"), new Point(0, 0)).register();
+		new Background(new LoopingAnimation("menu_background")).register();
+		new Background(new LoopingAnimation("mm_border")).register();
+		//
+		new Foreground(new LoopingAnimation("css_top")).register();
 	}
 	
 	@Override
