@@ -7,6 +7,8 @@ import java.util.HashMap;
 
 /**
  * A simple interface for grouping and accessing multiple {@link Option settings}.
+ *
+ * @since 0.1.0
  */
 public interface OptionGroup {
 	
@@ -14,6 +16,7 @@ public interface OptionGroup {
 	 * Gets all options in this group.
 	 *
 	 * @return The options
+	 * @since 0.1.0
 	 */
 	public @NotNull HashMap<String, Option<?>> getAllSettings();
 	
@@ -22,6 +25,7 @@ public interface OptionGroup {
 	 *
 	 * @param name The name of the option
 	 * @return The option or null if not found
+	 * @since 0.1.0
 	 */
 	public default @Nullable Option<?> getSetting(String name) {
 		return getAllSettings().get(name);
@@ -34,6 +38,7 @@ public interface OptionGroup {
 	 * @param type The class of the option's value
 	 * @param <T>  The type of the option's value
 	 * @return The option or null if not found
+	 * @since 0.1.0
 	 */
 	public default @Nullable <T> Option<T> getSetting(String name, Class<T> type) {
 		return (Option<T>) getSetting(name);
@@ -43,6 +48,7 @@ public interface OptionGroup {
 	 * Gets the name of the option group.
 	 *
 	 * @return The name
+	 * @since 0.1.0
 	 */
 	public @NotNull String getGroupName();
 	
@@ -54,6 +60,7 @@ public interface OptionGroup {
 	 * @param <T>  The type of the value
 	 * @return The value
 	 * @throws NullPointerException If the option is not found
+	 * @since 0.1.0
 	 */
 	public default @Nullable <T> T getSettingValue(@NotNull String name, @NotNull Class<T> type) throws NullPointerException {
 		return getSetting(name, type).getValue();

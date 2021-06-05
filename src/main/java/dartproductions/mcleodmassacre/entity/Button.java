@@ -10,42 +10,62 @@ import java.awt.Point;
 
 /**
  * A button entity for triggering user actions with the mouse. Reacts to being pressed/hovered/selected, but can't move or collide. The special animations (selected, pressed, hovered etc.) fall back to less specific ones if they are null.
+ *
+ * @since 0.1.0
  */
 public class Button implements Entity {
 	/**
 	 * The default animation of the button
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @NotNull Animation defaultAnimation;
 	/**
 	 * The animation shown when the button is hovered
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @Nullable Animation onHoverAnimation;
 	/**
 	 * The animation shown when the button is pressed
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @Nullable Animation onPressAnimation;
 	/**
 	 * The animation shown when the button is selected
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @Nullable Animation onSelectedAnimation;
 	/**
 	 * The location of the button
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @NotNull Point location;
 	/**
 	 * The action to run when the mouse is released on the button
+	 *
+	 * @since 0.1.0
 	 */
 	protected final @Nullable Runnable onRelease;
 	/**
 	 * The button's pressed state
+	 *
+	 * @since 0.1.0
 	 */
 	protected boolean pressed = false;
 	/**
 	 * The button's hovered state
+	 *
+	 * @since 0.1.0
 	 */
 	protected boolean hovered = false;
 	/**
 	 * The button's selected state
+	 *
+	 * @since 0.1.0
 	 */
 	protected boolean selected = false;
 	
@@ -58,6 +78,7 @@ public class Button implements Entity {
 	 * @param onSelected Animation shown when the button is selected
 	 * @param location   The location of the button
 	 * @param onRelease  The action to run when the mouse is released on the button
+	 * @since 0.1.0
 	 */
 	public Button(@NotNull Animation def, @Nullable Animation onHover, @Nullable Animation onPress, @Nullable Animation onSelected, @NotNull Point location, @Nullable Runnable onRelease) {
 		defaultAnimation = def;

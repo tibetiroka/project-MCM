@@ -7,6 +7,8 @@ import java.awt.Point;
 
 /**
  * Entity representing 'ground' or 'floor' -like structures in a level. Isn't interactive. Collides but cannot be moved by collisions.
+ *
+ * @since 0.1.0
  */
 public class GroundEntity extends Background {
 	
@@ -15,6 +17,7 @@ public class GroundEntity extends Background {
 	 *
 	 * @param animation The animation to show
 	 * @param location  The location of the entity
+	 * @since 0.1.0
 	 */
 	public GroundEntity(@NotNull Animation animation, @NotNull Point location) {
 		super(animation, location);
@@ -31,7 +34,7 @@ public class GroundEntity extends Background {
 	}
 	
 	@Override
-	public boolean onCollision(Entity e) {
+	public boolean onCollision(@NotNull Entity e) {
 		return false;
 	}
 }

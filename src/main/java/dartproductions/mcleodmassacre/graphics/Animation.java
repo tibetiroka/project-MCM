@@ -13,6 +13,8 @@ import java.util.UUID;
 
 /**
  * Animations are used for describing an entity's hitbox and visual properties. They are updated every frame.
+ *
+ * @since 0.1.0
  */
 public interface Animation extends Cloneable {
 	
@@ -20,6 +22,7 @@ public interface Animation extends Cloneable {
 	 * Gets the image that this animation is currently showing.
 	 *
 	 * @return The current frame
+	 * @since 0.1.0
 	 */
 	public @NotNull Image getCurrentFrame();
 	
@@ -27,6 +30,7 @@ public interface Animation extends Cloneable {
 	 * Gets the current hitbox of this animation.
 	 *
 	 * @return The hitbox
+	 * @since 0.1.0
 	 */
 	public @Nullable Shape getCurrentHitbox();
 	
@@ -34,6 +38,7 @@ public interface Animation extends Cloneable {
 	 * Gets the current hitbox of this animation as an {@link Area}.
 	 *
 	 * @return The hitbox
+	 * @since 0.1.0
 	 */
 	public @Nullable Area getCurrentHitboxArea();
 	
@@ -41,6 +46,7 @@ public interface Animation extends Cloneable {
 	 * Gets the name of this animation. The returned value doesn't have to match the base name for the images or hitboxes used.
 	 *
 	 * @return The name of this animation
+	 * @since 0.1.0
 	 */
 	public @NotNull String getAnimationName();
 	
@@ -48,16 +54,21 @@ public interface Animation extends Cloneable {
 	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes} / {@link #getCurrentHitboxArea() hitbox areas}.
 	 *
 	 * @return True if over
+	 * @since 0.1.0
 	 */
 	public boolean isOver();
 	
 	/**
 	 * Resets this animation. The animation must return to its first frame.
+	 *
+	 * @since 0.1.0
 	 */
 	public void reset();
 	
 	/**
 	 * Changes the animation to show its next frame and the corresponding hitboxes.
+	 *
+	 * @since 0.1.0
 	 */
 	public void next();
 	
@@ -67,6 +78,7 @@ public interface Animation extends Cloneable {
 	 * Gets the unique id of this animation.
 	 *
 	 * @return The animation's id
+	 * @since 0.1.0
 	 */
 	public @NotNull UUID getId();
 	
@@ -74,6 +86,7 @@ public interface Animation extends Cloneable {
 	 * Gets the length of the animation. The length is the amount of frames an animation can show without being reset.
 	 *
 	 * @return The length
+	 * @since 0.1.0
 	 */
 	public int getLength();
 	
@@ -81,47 +94,56 @@ public interface Animation extends Cloneable {
 	 * Gets the offset of this animation. This is the distance between any 'p' point on the screen (for example, an entity's location which has this animation) and the point where this animation should be drawn.
 	 *
 	 * @return The offset of the animation
+	 * @since 0.1.0
 	 */
 	public @NotNull Dimension getOffset();
 	
 	/**
 	 * Animation implementation for simple animations. The images and hitboxes are automatically queried based on the animation's name.
+	 *
+	 * @since 0.1.0
 	 */
 	public static class StandardAnimation implements Animation {
 		/**
 		 * The name of the animation
 		 *
 		 * @see #getAnimationName()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull String name;
 		/**
 		 * The images to show
 		 *
 		 * @see #getCurrentFrame()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Image[] frames;
 		/**
 		 * The hitboxes of the animation
 		 *
 		 * @see #getCurrentHitbox()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Shape[] frameShapes;
 		/**
 		 * The hitboxes as areas
 		 *
 		 * @see #getCurrentHitboxArea()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Area[] frameAreas;
 		/**
 		 * The id of the animation
 		 *
 		 * @see #getId()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull UUID id = UUID.randomUUID();
 		/**
 		 * The offset of the animation
 		 *
 		 * @see #getOffset()
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Dimension offset;
 		/**
@@ -130,6 +152,7 @@ public interface Animation extends Cloneable {
 		 * @see #getLength()
 		 * @see #getCurrentFrame()
 		 * @see #reset()
+		 * @since 0.1.0
 		 */
 		protected int frame = 0;
 		
@@ -138,6 +161,7 @@ public interface Animation extends Cloneable {
 		 * Creates a new animation with the given name and no offset.
 		 *
 		 * @param name The name of the animation, used for finding images and hitboxes
+		 * @since 0.1.0
 		 */
 		public StandardAnimation(@NotNull String name) {
 			this(name, new Dimension(0, 0));
@@ -148,6 +172,7 @@ public interface Animation extends Cloneable {
 		 *
 		 * @param name   The name of the animation, used for finding images and hitboxes
 		 * @param offset The offset of the animation
+		 * @since 0.1.0
 		 */
 		public StandardAnimation(@NotNull String name, @NotNull Dimension offset) {
 			this.name = name;
@@ -163,6 +188,7 @@ public interface Animation extends Cloneable {
 		 * Counts the amount of images that can be found with the animation's name.
 		 *
 		 * @return The amount of frames
+		 * @since 0.1.0
 		 */
 		protected int countFrames() {
 			int current = 0;
@@ -174,6 +200,8 @@ public interface Animation extends Cloneable {
 		
 		/**
 		 * Sets the values in the {@link #frames}, {@link #frameShapes} and {@link #frameAreas} arrays.
+		 *
+		 * @since 0.1.0
 		 */
 		protected void fetchFrames() {
 			if(frames.length == 1) {
@@ -225,7 +253,7 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public Animation clone() {
+		public @Nullable Animation clone() {
 			try {
 				return (Animation) super.clone();
 			} catch(Exception e) {
@@ -253,14 +281,17 @@ public interface Animation extends Cloneable {
 	
 	/**
 	 * An animation that resets every time it is over, creating a loop.
+	 *
+	 * @since 0.1.0
 	 */
 	public static class LoopingAnimation extends StandardAnimation {
 		/**
 		 * Creates a new animation with the given name and no offset.
 		 *
 		 * @param name The name of the animation, used for finding images and hitboxes
+		 * @since 0.1.0
 		 */
-		public LoopingAnimation(String name) {
+		public LoopingAnimation(@NotNull String name) {
 			this(name, new Dimension(0, 0));
 		}
 		
@@ -269,8 +300,9 @@ public interface Animation extends Cloneable {
 		 *
 		 * @param name   The name of the animation, used for finding images and hitboxes
 		 * @param offset The offset of the animation
+		 * @since 0.1.0
 		 */
-		public LoopingAnimation(String name, Dimension offset) {
+		public LoopingAnimation(@NotNull String name, @NotNull Dimension offset) {
 			super(name, offset);
 		}
 		
@@ -285,28 +317,63 @@ public interface Animation extends Cloneable {
 	
 	/**
 	 * An animation that can render text over its images. The text doesn't change the hitbox.
+	 *
+	 * @since 0.1.0
 	 */
 	public static class AnimationWithText extends LoopingAnimation {
 		/**
 		 * The text to show
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull String text;
 		/**
 		 * The font of the text
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Font font;
 		/**
 		 * The color of the text
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Color color;
+		/**
+		 * The offset of the text along the x axis
+		 */
 		protected final int textOffsetX;
+		/**
+		 * The offset of the text along the y axis
+		 */
 		protected final int textOffsetY;
 		
-		public AnimationWithText(String name, String text, Font font, Color color) {
+		/**
+		 * Creates a new animation with text rendered over each frame.
+		 *
+		 * @param name  The name of the animation
+		 * @param text  The text to render
+		 * @param font  The font of the text
+		 * @param color The color of the text
+		 * @since 0.1.0
+		 */
+		public AnimationWithText(@NotNull String name, @NotNull String text, @NotNull Font font, @NotNull Color color) {
 			this(name, new Dimension(0, 0), text, font, color, 0, 0);
 		}
 		
-		public AnimationWithText(String name, Dimension offset, String text, Font font, Color color, int textOffsetX, int textOffsetY) {
+		/**
+		 * Creates a new animation with text rendered over each frame.
+		 *
+		 * @param name        The name of the animation
+		 * @param text        The text to render
+		 * @param font        The font of the text
+		 * @param color       The color of the text
+		 * @param offset      The offset of the animation
+		 * @param textOffsetX The offset of the text from the animation along the x axis
+		 * @param textOffsetY The offset of the text from the animation along the y axis
+		 * @since 0.1.0
+		 */
+		public AnimationWithText(@NotNull String name, @NotNull Dimension offset, @NotNull String text, @NotNull Font font, @NotNull Color color, int textOffsetX, int textOffsetY) {
 			super(name, offset);
 			this.text = text;
 			this.font = font;
@@ -336,30 +403,44 @@ public interface Animation extends Cloneable {
 	
 	/**
 	 * An animation that can be mirrored along the Y axis.
+	 *
+	 * @since 0.1.0
 	 */
 	public static class MirrorableAnimation implements Animation {
 		/**
 		 * The underlying animation instance
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Animation animation;
 		/**
 		 * The mirrored images of the animation
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull BufferedImage[] mirroredFrames;
 		/**
 		 * The mirrored hitboxes of the animation
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Shape[] mirroredHitboxes;
 		/**
 		 * The mirrored hitbox areas
+		 *
+		 * @since 0.1.0
 		 */
 		protected final @NotNull Area[] mirroredAreas;
 		/**
 		 * True if the animation is mirrored
+		 *
+		 * @since 0.1.0
 		 */
 		protected boolean mirrored;
 		/**
 		 * The current frame
+		 *
+		 * @since 0.1.0
 		 */
 		protected int currentFrame = 0;
 		
@@ -367,6 +448,7 @@ public interface Animation extends Cloneable {
 		 * Creates a new mirrored animation.
 		 *
 		 * @param animation The animation to use
+		 * @since 0.1.0
 		 */
 		public MirrorableAnimation(@NotNull Animation animation) {
 			this(animation, true);
@@ -377,6 +459,7 @@ public interface Animation extends Cloneable {
 		 *
 		 * @param animation The animation to use
 		 * @param mirrored  True if the animation should be mirrored
+		 * @since 0.1.0
 		 */
 		public MirrorableAnimation(@NotNull Animation animation, boolean mirrored) {
 			this.animation = animation;
@@ -410,6 +493,7 @@ public interface Animation extends Cloneable {
 		 * Checks if this animation is mirrored.
 		 *
 		 * @return True if mirrored
+		 * @since 0.1.0
 		 */
 		public boolean isMirrored() {
 			return mirrored;
@@ -419,6 +503,7 @@ public interface Animation extends Cloneable {
 		 * Sets whether this animation is mirrored or not.
 		 *
 		 * @param mirrored True if mirrored
+		 * @since 0.1.0
 		 */
 		public void setMirrored(boolean mirrored) {
 			this.mirrored = mirrored;
@@ -462,7 +547,7 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public Animation clone() {
+		public @Nullable Animation clone() {
 			try {
 				return (Animation) super.clone();
 			} catch(CloneNotSupportedException e) {
