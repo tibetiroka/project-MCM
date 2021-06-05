@@ -3,18 +3,15 @@ package dartproductions.mcleodmassacre.engine;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.Main.GameState;
 import dartproductions.mcleodmassacre.ResourceManager;
-import dartproductions.mcleodmassacre.entity.Background;
-import dartproductions.mcleodmassacre.entity.Button;
 import dartproductions.mcleodmassacre.entity.Entity;
 import dartproductions.mcleodmassacre.entity.PlayerEntity;
-import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.input.InputManager.InputAction;
 import dartproductions.mcleodmassacre.sound.SoundManager;
-import dartproductions.mcleodmassacre.util.Pair;
+import dartproductions.mcleodmassacre.util.Pair.ImmutablePair.ImmutableNullsafePair;
 import net.java.games.input.Event;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,80 +27,123 @@ import java.util.Iterator;
 
 /**
  * Class handling most of the stuff related to game mechanics and physics. Also responsible for scheduling user input and graphics updates.
+ *
+ * @since 0.1.0
  */
 public class GameEngine {
 	/**
 	 * Lock object for suspending the engine. Used in timing frames and pausing.
+	 *
+	 * @since 0.1.0
 	 */
-	public static final Object ENGINE_WAIT_LOCK = new Object();
+	public static final @NotNull Object ENGINE_WAIT_LOCK = new Object();
 	/**
 	 * Lock object for entity-related operations. Used for avoiding {@link java.util.ConcurrentModificationException} in entity-related lists.
+	 *
+	 * @since 0.1.0
 	 */
-	public static final Object ENTITY_LOCK = new Object();
+	public static final @NotNull Object ENTITY_LOCK = new Object();
 	/**
 	 * Lock object for the engine's scheduled tasks.
+	 *
+	 * @since 0.1.0
 	 */
-	public static final Object ENGINE_TASK_LOCK = new Object();
+	public static final @NotNull Object ENGINE_TASK_LOCK = new Object();
 	/**
 	 * The delay between two frames (in milliseconds).
+	 *
+	 * @since 0.1.0
 	 */
-	public static final int FRAME_LENGTH = 20;
+	public static final int FRAME_LENGTH = 30;
 	/**
 	 * The delay between two frames (in nanoseconds)
+	 *
+	 * @since 0.1.0
 	 */
 	public static final int FRAME_LENGTH_NANO = FRAME_LENGTH * 1000 * 1000;
 	/**
 	 * Logger for the engine
+	 *
+	 * @since 0.1.0
 	 */
 	protected static final Logger LOGGER = LogManager.getLogger(GameEngine.class);
 	/**
 	 * List of all existing entities
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Entity> ENTITIES = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> ENTITIES = new ArrayList<>();
 	/**
 	 * List of all entities that can move. Being part of the list does not mean the entity can be moved by collisions, or that it will move at any time.
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Entity> MOVABLE_ENTITIES = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> MOVABLE_ENTITIES = new ArrayList<>();
 	/**
 	 * List of all entities that can collide.
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Entity> COLLIDABLE_ENTITIES = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> COLLIDABLE_ENTITIES = new ArrayList<>();
 	/**
 	 * List of entities to be removed in the next frame
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Entity> ENTITIES_TO_REMOVE = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_REMOVE = new ArrayList<>();
 	/**
 	 * List of entities to be added in the next frame
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Entity> ENTITIES_TO_ADD = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_ADD = new ArrayList<>();
 	/**
 	 * List of player entities
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<PlayerEntity> PLAYERS = new ArrayList<>();
+	protected static final @NotNull ArrayList<PlayerEntity> PLAYERS = new ArrayList<>();
 	/**
 	 * List of delayed engine tasks
+	 *
+	 * @since 0.1.0
 	 */
-	protected static final ArrayList<Pair<Integer, Runnable>> DELAYED_TASKS = new ArrayList<>();
+	protected static final @NotNull ArrayList<ImmutableNullsafePair<Long, Runnable>> DELAYED_TASKS = new ArrayList<>();
 	/**
 	 * The main engine thread
+	 *
+	 * @since 0.1.0
 	 */
 	public static @Nullable Thread ENGINE_THREAD;
 	/**
 	 * The state of the game engine
+	 *
+	 * @since 0.1.0
 	 */
 	private static volatile boolean RUNNING = false;
 	/**
 	 * The time when the previous frame started
+	 *
+	 * @since 0.1.0
 	 */
 	private static volatile long previous = 0;
 	/**
 	 * Time since the previous frame
+	 *
+	 * @since 0.1.0
 	 */
 	private static volatile long delta = 0;
-	private static volatile long tickInState = 0;
+	/**
+	 * The current 'frame' of the engine. The {@link #processFrame()} method is called exactly once in every frame.
+	 *
+	 * @since 0.1.0
+	 */
+	private static long frame = 0;
 	
 	/**
 	 * Starts the game engine. Fails silently if the engine is already running.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void start() {
 		if(ENGINE_THREAD != null && ENGINE_THREAD.isAlive()) {//check if engine is running
@@ -119,21 +159,28 @@ public class GameEngine {
 			while(isRunning() && Main.isRunning()) {
 				while(delta >= FRAME_LENGTH_NANO) {
 					delta -= FRAME_LENGTH_NANO;
-					tickInState++;
+					frame++;
 					processFrame();
 				}
 				synchronized(GraphicsManager.GRAPHICS_LOCK) {
 					GraphicsManager.GRAPHICS_LOCK.notifyAll();
 				}
+				synchronized(SoundManager.AUDIO_LOCK) {
+					SoundManager.AUDIO_LOCK.notifyAll();
+				}
 				while(Main.isRunning()) {
-					while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
-						try {
-							Thread.sleep(100);
-						} catch(InterruptedException e) {
-							LOGGER.warn("Interrupted wait for window focus in engine", e);
+					if(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
+						SoundManager.pause();
+						while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
+							try {
+								Thread.sleep(100);
+							} catch(InterruptedException e) {
+								LOGGER.warn("Interrupted wait for window focus in engine", e);
+							}
+							previous = System.nanoTime();
+							delta = 0;
 						}
-						previous = System.nanoTime();
-						delta = 0;
+						SoundManager.resume();
 					}
 					long l = System.nanoTime();
 					if(l - previous + delta > FRAME_LENGTH_NANO) {
@@ -154,12 +201,15 @@ public class GameEngine {
 		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in the main engine thread", e);
 			Main.setRunning(false);
+			System.exit(-10001);
 		});
 		ENGINE_THREAD.start();
 	}
 	
 	/**
 	 * Method for doing all calculations in a frame.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void processFrame() {
 		handleTasks();
@@ -169,7 +219,7 @@ public class GameEngine {
 			for(Entity entity : ENTITIES) {//self-processing (movement etc)
 				entity.process();
 			}
-			
+			handleEntities();//allows removing both BEFORE and AFTER processing, without staying in the engine for a frame
 			for(Entity first : COLLIDABLE_ENTITIES) {//collision
 				for(Entity second : COLLIDABLE_ENTITIES) {
 					if(second != first && (second.isCollisionMovable() ^ first.isCollisionMovable()) && areIntersecting(first, second)) {
@@ -210,13 +260,14 @@ public class GameEngine {
 	
 	/**
 	 * Runs all tasks scheduled for this frame. Makes sure all tasks have their delays adjusted if necessary.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void handleTasks() {
 		synchronized(ENGINE_TASK_LOCK) {
-			for(Iterator<Pair<Integer, Runnable>> iterator = DELAYED_TASKS.iterator(); iterator.hasNext(); ) {
-				Pair<Integer, Runnable> delayedTask = iterator.next();
-				delayedTask.first--;
-				if(delayedTask.first <= 0) {
+			for(Iterator<ImmutableNullsafePair<Long, Runnable>> iterator = DELAYED_TASKS.iterator(); iterator.hasNext(); ) {
+				ImmutableNullsafePair<Long, Runnable> delayedTask = iterator.next();
+				if(delayedTask.first() <= frame) {
 					delayedTask.second().run();
 				}
 				iterator.remove();
@@ -229,15 +280,18 @@ public class GameEngine {
 	 *
 	 * @param delay The amount of frames to wait before execution
 	 * @param task  The task to execute
+	 * @since 0.1.0
 	 */
 	public static void scheduleTask(int delay, @NotNull Runnable task) {
 		synchronized(ENGINE_TASK_LOCK) {
-			DELAYED_TASKS.add(new Pair<>(delay, task));
+			DELAYED_TASKS.add(new ImmutableNullsafePair<>(delay + frame, task));
 		}
 	}
 	
 	/**
 	 * Handles all entity removals and additions to the engine.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void handleEntities() {
 		synchronized(ENTITY_LOCK) {
@@ -286,6 +340,7 @@ public class GameEngine {
 	 *
 	 * @param id The id of the player
 	 * @return The player or null
+	 * @since 0.1.0
 	 */
 	private static @Nullable PlayerEntity getPlayer(int id) {
 		synchronized(ENTITY_LOCK) {
@@ -298,6 +353,8 @@ public class GameEngine {
 	
 	/**
 	 * Handles input actions queried by {@link InputManager}.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void handleInput() {
 		ArrayList<InputAction<Event>> actions = InputManager.getActions();//get events
@@ -368,6 +425,7 @@ public class GameEngine {
 	 * Checks if the engine is still running. Might return 'true' if the thread didn't shut down correctly.
 	 *
 	 * @return True if running
+	 * @since 0.1.0
 	 */
 	public static boolean isRunning() {
 		return RUNNING;
@@ -378,22 +436,14 @@ public class GameEngine {
 	 *
 	 * @param newGameState The new state of the application
 	 * @param newNextState The expected state after the new state
+	 * @since 0.1.0
 	 */
 	public static synchronized void onStateChange(@NotNull GameState newGameState, @Nullable GameState newNextState) {
 		synchronized(ENTITY_LOCK) {//todo
 			if(newGameState == GameState.IN_GAME_PAUSED) {
 			} else {
-				tickInState = 0;
 				ENTITIES.forEach(Entity::unregister);
-				SoundManager.stopAll();
-				SoundManager.clear();
 				switch(newGameState) {
-					case MAIN_MENU -> {
-						new Background(new LoopingAnimation("even_better_main_menu_2"), new Point(0, 0)).register();
-						Button button = new Button(new LoopingAnimation("solo_button"), null, null, null, new Point(63, 147), () -> Main.setGameState(GameState.ROSTER, null));
-						button.register();
-						SoundManager.play("resurgence_MCM_main_theme", true);
-					}
 					case LOADING -> {
 						Main.getExecutors().execute(() -> {
 							ResourceManager.waitForLoading();
@@ -409,6 +459,7 @@ public class GameEngine {
 	 * Removes an entity from the engine. The entity does NOT get removed from the rendering engine.
 	 *
 	 * @param e The entity to remove
+	 * @since 0.1.0
 	 */
 	public static void unregisterEntity(@NotNull Entity e) {
 		synchronized(ENTITY_LOCK) {
@@ -420,6 +471,7 @@ public class GameEngine {
 	 * Registers an entity in the engine. The entity does NOT get registered in the rendering engine.
 	 *
 	 * @param e The entity to register
+	 * @since 0.1.0
 	 */
 	public static void registerEntity(@NotNull Entity e) {
 		synchronized(ENTITY_LOCK) {
@@ -433,6 +485,7 @@ public class GameEngine {
 	 * @param first  The first entity
 	 * @param second The second entity
 	 * @return True if they are intersecting
+	 * @since 0.1.0
 	 */
 	private static boolean areIntersecting(@NotNull Entity first, @NotNull Entity second) {
 		Area a = second.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
@@ -446,6 +499,7 @@ public class GameEngine {
 	 * @param first  The first entity
 	 * @param second The second entity
 	 * @return Their intersection
+	 * @since 0.1.0
 	 */
 	private static Area getIntersection(@NotNull Entity first, @NotNull Entity second) {
 		Area a = second.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));

@@ -3,6 +3,7 @@ package dartproductions.mcleodmassacre;
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.options.Options;
+import dartproductions.mcleodmassacre.util.Pair.ImmutablePair.ImmutableNullsafePair;
 import de.cerus.jgif.GifImage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,45 +27,66 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 /**
  * Accesses and handles stored game resources.
+ *
+ * @since 0.1.0
  */
 public class ResourceManager {
 	private static final Logger LOGGER = LogManager.getLogger(ResourceManager.class);
 	/**
 	 * True if the {@link #loadAllResources()} method has finished loading resources.
+	 *
+	 * @since 0.1.0
 	 */
-	private static final AtomicBoolean ALL_LOADED = new AtomicBoolean(false);
+	private static final @NotNull AtomicBoolean ALL_LOADED = new AtomicBoolean(false);
 	/**
 	 * The loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 *
+	 * @since 0.1.0
 	 */
 	private static final @NotNull ConcurrentHashMap<String, Image> IMAGES = new ConcurrentHashMap<>();
 	/**
 	 * Hitboxes created from the loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 *
+	 * @since 0.1.0
 	 */
 	private static final @NotNull ConcurrentHashMap<String, Shape> HITBOXES = new ConcurrentHashMap<>();
 	/**
 	 * Hitbox areas created from the loaded images; they key is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF.
+	 *
+	 * @since 0.1.0
 	 */
 	private static final @NotNull ConcurrentHashMap<String, Area> HITBOX_AREAS = new ConcurrentHashMap<>();
 	/**
-	 * The loaded sound effects; the key is the file's name without extension, and the value is the audio data.
+	 * The loaded sound effects. The key of the map is the file's name without extension. The value is a pair that consists of the audio data and the sound categories of the file.
+	 *
+	 * @since 0.1.0
 	 */
-	private static final @NotNull ConcurrentHashMap<String, byte[]> SFX = new ConcurrentHashMap<>();
+	private static final @NotNull ConcurrentHashMap<String, ImmutableNullsafePair<byte[], HashSet<String>>> SFX = new ConcurrentHashMap<>();
+	
+	/**
+	 * The loaded sound effects by categories. The key is the uppercase name of the category, and the value is the list of sound effects in the category.
+	 */
+	private static final @NotNull ConcurrentHashMap<String, ArrayList<String>> SFX_CATEGORIES = new ConcurrentHashMap<>();
 	
 	/**
 	 * The active game options
+	 *
+	 * @since 0.1.0
 	 */
-	private static Options OPTIONS;
+	private static @NotNull Options OPTIONS;
 	
 	/**
 	 * Gets the active game options. Loads them from the settings file if they are not yet loaded.
 	 *
 	 * @return The options
+	 * @since 0.1.0
 	 */
 	public static @NotNull Options getOptions() {
 		if(OPTIONS == null) {
@@ -75,6 +97,8 @@ public class ResourceManager {
 	
 	/**
 	 * Loads the game options from the files.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void loadSettings() {
 		File file = getSettingsFile();
@@ -91,6 +115,8 @@ public class ResourceManager {
 	
 	/**
 	 * Loads all graphics that are necessary to have in order to open the application window.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void loadStandardGraphics() {
 		loadGraphics(getGraphicsDirectory() + "/default");
@@ -101,6 +127,7 @@ public class ResourceManager {
 	 * Loads graphical elements from the specified directory.
 	 *
 	 * @param directory The directory to load from
+	 * @since 0.1.0
 	 */
 	private static void loadGraphics(@NotNull String directory) {
 		String regular = directory + "/regular";
@@ -147,6 +174,8 @@ public class ResourceManager {
 	
 	/**
 	 * Loads all resources not loaded by other methods.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void loadAllResources() {
 		if(!ALL_LOADED.get()) {
@@ -163,6 +192,8 @@ public class ResourceManager {
 	
 	/**
 	 * Loads all graphics resources that are required at some point but not loaded by default.
+	 *
+	 * @since 0.1.0
 	 */
 	private static void loadOtherGraphics() {
 		for(File file : new File(getGraphicsDirectory()).listFiles()) {
@@ -174,6 +205,8 @@ public class ResourceManager {
 	
 	/**
 	 * Waits until all resources are loaded via {@link #loadAllResources()}.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void waitForLoading() {
 		synchronized(ALL_LOADED) {
@@ -191,44 +224,89 @@ public class ResourceManager {
 	
 	/**
 	 * Loads the game's standard sound effects.
+	 *
+	 * @since 0.1.0
 	 */
-	public static void loadStandardMusic() {
+	public static void loadStandardMusic() {//todo: add sound categories
 		File dir = new File("data/music/default");
 		if(dir.exists()) {
 			for(File file : dir.listFiles()) {
-				try {
-					SFX.put(getFileName(file), Files.readAllBytes(file.toPath()));
-					LOGGER.debug("Loaded sound " + getFileName(file));
-				} catch(IOException e) {
-					LOGGER.warn("Could not read music file " + file.getPath(), e);
-				}
-			}
-		}
-		LOGGER.debug("Loaded default sound effects");
-	}
-	
-	/**
-	 * Loads the game's sound effects and music, unless they are loaded by {@link #loadStandardMusic()}.
-	 */
-	public static void loadOtherMusic() {
-		File dir = new File("data/music");
-		if(dir.exists()) {
-			for(File file : dir.listFiles()) {
-				if(!("default".equalsIgnoreCase(file.getName()))) {
+				if(!getFileExtension(file).equalsIgnoreCase("categories")) {
 					try {
-						SFX.put(getFileName(file), Files.readAllBytes(file.toPath()));
+						SFX.put(getFileName(file), new ImmutableNullsafePair<>(Files.readAllBytes(file.toPath()), new HashSet<>()));
 						LOGGER.debug("Loaded sound " + getFileName(file));
 					} catch(IOException e) {
 						LOGGER.warn("Could not read music file " + file.getPath(), e);
 					}
 				}
 			}
+			for(File file : dir.listFiles()) {
+				if(getFileExtension(file).equalsIgnoreCase("categories")) {
+					try {
+						SFX.get(getFileName(file)).second().addAll(Files.readAllLines(file.toPath()));
+					} catch(IOException e) {
+						LOGGER.warn("Could not read music file " + file.getPath(), e);
+					}
+				}
+			}
 		}
+		categorizeSounds();
+		LOGGER.debug("Loaded default sound effects");
+	}
+	
+	/**
+	 * Loads the game's sound effects and music, unless they are loaded by {@link #loadStandardMusic()}.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void loadOtherMusic() {
+		File musicDir = new File("data/music");
+		if(musicDir.exists()) {
+			for(File dir : musicDir.listFiles()) {
+				if(!("default".equalsIgnoreCase(dir.getName()))) {
+					for(File file : dir.listFiles()) {
+						if(!getFileExtension(file).equalsIgnoreCase("categories")) {
+							try {
+								SFX.put(getFileName(file), new ImmutableNullsafePair<>(Files.readAllBytes(file.toPath()), new HashSet<>()));
+								LOGGER.debug("Loaded sound " + getFileName(file));
+							} catch(IOException e) {
+								LOGGER.warn("Could not read music file " + file.getPath(), e);
+							}
+						}
+					}
+					for(File file : dir.listFiles()) {
+						if(getFileExtension(file).equalsIgnoreCase("categories")) {
+							try {
+								SFX.get(getFileName(file)).second().addAll(Files.readAllLines(file.toPath()));
+							} catch(IOException e) {
+								LOGGER.warn("Could not read music file " + file.getPath(), e);
+							}
+						}
+					}
+				}
+			}
+		}
+		categorizeSounds();
 		LOGGER.debug("Loaded all sound effects");
 	}
 	
 	/**
+	 * Assigns all sounds to all of its specified categories in {@link #SFX_CATEGORIES}.
+	 */
+	public static void categorizeSounds() {
+		SFX_CATEGORIES.clear();
+		SFX.forEach((name, pair) -> pair.second().forEach(category -> {
+			if(!SFX_CATEGORIES.containsKey(category.toUpperCase())) {
+				SFX_CATEGORIES.put(category.toUpperCase(), new ArrayList<>());
+			}
+			SFX_CATEGORIES.get(category.toUpperCase()).add(name);
+		}));
+	}
+	
+	/**
 	 * Extracts all resources from the application jar.
+	 *
+	 * @since 0.1.0
 	 */
 	public static void extractResources() {
 		if(checkVersion()) {
@@ -236,6 +314,16 @@ public class ResourceManager {
 		} else {
 			LOGGER.info("Extracting resources");
 			try {
+				{//deleting old data directory
+					File file = new File("data");
+					if(file.exists()) {
+						delete(file);
+					}
+					file = new File("lib");
+					if(file.exists()) {
+						delete(file);
+					}
+				}
 				Path p = getPathToResource("extract", true);
 				Stream<Path> paths = getPaths("extract", true);
 				paths.forEach(path -> {
@@ -258,9 +346,28 @@ public class ResourceManager {
 	}
 	
 	/**
+	 * Deletes the specified file with all of its contents.
+	 *
+	 * @param f The file to delete
+	 * @since 0.1.0
+	 */
+	private static void delete(@NotNull File f) {
+		if(!f.exists()) {
+			return;
+		}
+		if(f.isDirectory()) {
+			for(File c : f.listFiles())
+				delete(c);
+		}
+		if(!f.delete())
+			LOGGER.info("Failed to delete file: " + f.getPath());
+	}
+	
+	/**
 	 * Checks if the extracted resources belong to the latest version of the application. Returns false if there are no extracted resources.
 	 *
 	 * @return True if latest version, false otherwise.
+	 * @since 0.1.0
 	 */
 	private static boolean checkVersion() {
 		try {
@@ -277,6 +384,13 @@ public class ResourceManager {
 		}
 	}
 	
+	/**
+	 * Loads the image from the specified file and stores its frames in {@link #IMAGES}. Does not create hitboxes.
+	 *
+	 * @param file The file to load
+	 * @return The image frames
+	 * @since 0.1.0
+	 */
 	private static @NotNull BufferedImage[] loadAndStoreImage(@NotNull File file) {
 		try {
 			Image image = loadImage(file);
@@ -309,6 +423,7 @@ public class ResourceManager {
 	 *
 	 * @param image The image to use
 	 * @return The binarised image
+	 * @since 0.1.0
 	 */
 	private static @NotNull BufferedImage binarisate(@NotNull BufferedImage image) {
 		BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
@@ -329,6 +444,7 @@ public class ResourceManager {
 	 *
 	 * @param file The file
 	 * @return The name of the file
+	 * @since 0.1.0
 	 */
 	private static @NotNull String getFileName(@NotNull File file) {
 		String name = file.getName();
@@ -339,11 +455,27 @@ public class ResourceManager {
 	}
 	
 	/**
+	 * Gets the extension of the file without its name
+	 *
+	 * @param file The file
+	 * @return The extension of the file
+	 * @since 0.1.0
+	 */
+	private static @NotNull String getFileExtension(@NotNull File file) {
+		String name = file.getName();
+		if(name.contains(".")) {
+			return name.substring(name.lastIndexOf(".") + 1);
+		}
+		return "";
+	}
+	
+	/**
 	 * Reads the image from the specified file
 	 *
 	 * @param file The file
 	 * @return The image
 	 * @throws MalformedURLException If the file's location is not valid
+	 * @since 0.1.0
 	 */
 	private static @NotNull Image loadImage(@NotNull File file) throws MalformedURLException {
 		return new ImageIcon(file.toURI().toURL()).getImage();
@@ -356,6 +488,7 @@ public class ResourceManager {
 	 * @param file  The file the image was loaded from
 	 * @return The frames as separate images
 	 * @throws FileNotFoundException If the file is not found
+	 * @since 0.1.0
 	 */
 	private static @NotNull BufferedImage[] getImageFrames(@NotNull Image image, @NotNull File file) throws FileNotFoundException {
 		if(image instanceof BufferedImage) {
@@ -390,6 +523,7 @@ public class ResourceManager {
 	 *
 	 * @param name The name of the image
 	 * @return The image or null if not found
+	 * @since 0.1.0
 	 */
 	public static @Nullable Image getImage(@NotNull String name) {
 		return IMAGES.get(name);
@@ -400,6 +534,7 @@ public class ResourceManager {
 	 *
 	 * @param name The name of the image
 	 * @return The image or null if not found
+	 * @since 0.1.0
 	 */
 	public static @Nullable BufferedImage getBufferedImage(@NotNull String name) {
 		Image i = getImage(name);
@@ -414,6 +549,7 @@ public class ResourceManager {
 	 *
 	 * @param name The name of the hitbox
 	 * @return The hitbox or null if not found
+	 * @since 0.1.0
 	 */
 	public static @Nullable Shape getHitbox(@NotNull String name) {
 		return HITBOXES.get(name);
@@ -424,6 +560,7 @@ public class ResourceManager {
 	 *
 	 * @param name The name of the hitbox area
 	 * @return The hitbox area or null if not found
+	 * @since 0.1.0
 	 */
 	public static @Nullable Area getHitboxArea(@NotNull String name) {
 		return HITBOX_AREAS.get(name);
@@ -432,7 +569,8 @@ public class ResourceManager {
 	/**
 	 * Gets the directory where the graphics resources are stored.
 	 *
-	 * @return The graphics directory
+	 * @return Path to the graphics directory
+	 * @since 0.1.0
 	 */
 	private static @NotNull String getGraphicsDirectory() {
 		return "data/grc";
@@ -442,6 +580,7 @@ public class ResourceManager {
 	 * Gets the file that stores the game options.
 	 *
 	 * @return The settings file
+	 * @since 0.1.0
 	 */
 	private static @NotNull File getSettingsFile() {
 		return new File("settings.json");
@@ -455,6 +594,7 @@ public class ResourceManager {
 	 * @return The path
 	 * @throws IOException        If an exception occurs
 	 * @throws URISyntaxException If an exception occurs
+	 * @since 0.1.0
 	 */
 	private static synchronized @NotNull Path getPathToResource(@NotNull String location, boolean forceJar) throws IOException, URISyntaxException {
 		if(!forceJar && new File(location).exists()) {
@@ -490,8 +630,9 @@ public class ResourceManager {
 	 * @return The paths
 	 * @throws IOException        If an exception occurs
 	 * @throws URISyntaxException If an exception occurs
+	 * @since 0.1.0
 	 */
-	private static Stream<Path> getPaths(String location, int depth, boolean forceJar) throws IOException, URISyntaxException {
+	private static @NotNull Stream<Path> getPaths(@NotNull String location, int depth, boolean forceJar) throws IOException, URISyntaxException {
 		Path myPath = getPathToResource(location, forceJar);
 		return Files.walk(myPath, depth);
 	}
@@ -504,8 +645,9 @@ public class ResourceManager {
 	 * @return The paths
 	 * @throws IOException        If an exception occurs
 	 * @throws URISyntaxException If an exception occurs
+	 * @since 0.1.0
 	 */
-	private static Stream<Path> getPaths(String location, boolean forceJar) throws IOException, URISyntaxException {
+	private static @NotNull Stream<Path> getPaths(@NotNull String location, boolean forceJar) throws IOException, URISyntaxException {
 		return getPaths(location, 60, forceJar);
 	}
 	
@@ -514,8 +656,35 @@ public class ResourceManager {
 	 *
 	 * @param name The name of the sound effect
 	 * @return The audio data or null if not found
+	 * @since 0.1.0
 	 */
 	public static @Nullable byte[] getSound(@NotNull String name) {
-		return SFX.get(name);
+		return SFX.get(name).first();
+	}
+	
+	/**
+	 * Checks if the specified sound is valid in the category
+	 *
+	 * @param name     The name of the sound
+	 * @param category The name of the category
+	 * @return True if valid, false if the category or the sound doesn't exist or if the sound doesn't have the specified category
+	 */
+	public static boolean isValidSoundForCategory(@NotNull String name, @NotNull String category) {
+		return SFX_CATEGORIES.containsKey(category) && SFX_CATEGORIES.get(category).contains(name);
+	}
+	
+	/**
+	 * Gets a random sound effect from the specified category.
+	 *
+	 * @param category The name of the category
+	 * @return A random sound from the category with its name or null if none exists
+	 */
+	public static @Nullable ImmutableNullsafePair<String, byte[]> getRandomSound(@NotNull String category) {
+		ArrayList<String> a = SFX_CATEGORIES.get(category.toUpperCase());
+		if(a == null || a.isEmpty()) {
+			return null;
+		}
+		String name = a.get((int) (a.size() * Math.random()));
+		return new ImmutableNullsafePair<>(name, getSound(name));
 	}
 }
