@@ -48,6 +48,8 @@ Official releases are available on [GitHub](https://github.com/DartProductions/p
 
     You can probably run the game on other operating systems as well, but they are not supported and the game isn't guaranteed to work properly on them. 
 
+    On Linux and Mac, you migth need to make the launcher file executable via `chmod +x`.
+
 #### **Via unzipped release files**
 
 1. Go to the [releases](https://github.com/DartProductions/project-MCM/releases), and choose the version you want to install. We recommend to use the latest stable release.
