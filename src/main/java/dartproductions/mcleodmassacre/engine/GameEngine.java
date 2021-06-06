@@ -169,6 +169,7 @@ public class GameEngine {
 					SoundManager.AUDIO_LOCK.notifyAll();
 				}
 				while(Main.isRunning()) {
+					Thread.onSpinWait();
 					if(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
 						SoundManager.pause();
 						while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
@@ -187,6 +188,11 @@ public class GameEngine {
 						delta += l - previous;
 						previous = l;
 						break;
+					}
+					try {//trying to decrease busy-wait, but can't do much - same issue with any other timer
+						Thread.sleep(5);
+					} catch(InterruptedException e) {
+						LOGGER.warn("Interrupted sleep in engine", e);
 					}
 				}
 			}
