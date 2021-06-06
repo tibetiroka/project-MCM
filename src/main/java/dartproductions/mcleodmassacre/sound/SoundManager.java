@@ -323,7 +323,7 @@ public class SoundManager {
 	 */
 	private static @NotNull String getSoundCategory(@NotNull GameState state) {
 		return switch(state) {
-			case MAIN_MENU -> CATEGORY_MENU;
+			case MAIN_MENU, DATA_MENU, CONTROL_SETTINGS, GALLERY, SOUND_SETTINGS, SETTINGS_MENU, QUALITY_SETTINGS, ROSTER, VERSUS_MENU -> CATEGORY_MENU;
 			default -> CATEGORY_UNKNOWN;
 		};
 	}
