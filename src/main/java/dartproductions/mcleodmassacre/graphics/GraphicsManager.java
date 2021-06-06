@@ -365,6 +365,40 @@ public class GraphicsManager extends JPanel {
 	private static void addRoster() {//todo
 		new Background(new LoopingAnimation("css_playerboxes")).register();
 		new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.MAIN_MENU, null)).register();
+		new Foreground(new LoopingAnimation("css_top")).register();
+		//
+		{
+			final String[] characters = {"blade", "blue", "azrael", "spikeman", "ronin", "korah", "TODO", "ryder", "TODO", "LS", "terro", "sab", "eton", "mitsu", "daichi", "glitch", "pat", "damaus", "meikiru", "TODO", "internet", "sakuro", "hackensaw", "yjf", "ycoldsteel", "redwolf", "random", "boner", "kfm"};
+			final int rowSize = 8;
+			final int imageWidth = ResourceManager.getBufferedImage("roster_character_background").getWidth();
+			final int imageHeight = ResourceManager.getBufferedImage("roster_character_background").getHeight();
+			final int topOffset = imageHeight;
+			final int spacingHeight = 10;
+			final int spacingWidth = -10;
+			for(int i = 0; i < characters.length; i++) {
+				final String name = characters[i];
+				int row = i / rowSize;
+				int col = i % rowSize;
+				int rowCharacters = Math.min(rowSize, characters.length - row * rowSize);
+				int offsetY = topOffset + imageHeight * row + spacingHeight * row;
+				int offsetX;
+				{
+					int rowWidth = rowCharacters * (spacingWidth + imageWidth) - spacingWidth;//one less spacing than image
+					int firstOffsetX = (getDefaultScreenSize().width - rowWidth) / 2;
+					offsetX = firstOffsetX + col * (spacingWidth + imageWidth);
+				}
+				Image image = ResourceManager.getImage("roster_mug" + name);
+				Foreground character = new Foreground(new LoopingAnimation("roster_mug" + (image == null ? "random" : name), new Dimension(offsetX, offsetY)));
+				Foreground border = new Foreground(new LoopingAnimation("roster_character_border", new Dimension(offsetX, offsetY)));
+				Button button = new Button(new LoopingAnimation("roster_character_background"), null, null, null, new Point(offsetX, offsetY), () -> {
+					//todo
+					System.out.println(name);
+				});
+				button.register();
+				character.register();
+				border.register();
+			}
+		}
 	}
 	
 	/**
@@ -394,8 +428,6 @@ public class GraphicsManager extends JPanel {
 	private static void addMenuBackground() {
 		new Background(new LoopingAnimation("menu_background")).register();
 		new Background(new LoopingAnimation("mm_border")).register();
-		//
-		new Foreground(new LoopingAnimation("css_top")).register();
 	}
 	
 	@Override
