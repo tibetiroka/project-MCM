@@ -52,6 +52,8 @@ Official releases are available on [GitHub](https://github.com/DartProductions/p
 
 1. Go to the [releases](https://github.com/DartProductions/project-MCM/releases), and choose the version you want to install. We recommend to use the latest stable release.
 
+Steps 2 and 3 are for Windows users only. Any Linux or MacOS users have to use the provided java files (Step 3/b).
+
 2. Check your Java version by running the command `java -version` in your console/command line. You can skip this option if you are unsure how to do this.
 
 3. If you don't have the latest version (Java 16), please install it. **This game requires Java to run.** 
