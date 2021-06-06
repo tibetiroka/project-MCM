@@ -62,9 +62,7 @@ Official releases are available on [GitHub](https://github.com/DartProductions/p
     
 4. Download the game jar file into your installation folder. It should be named `McLeodMassacre.jar`.
 
-5. Double-click the jar file. If the game launches, you have finished the installation.
-
-6. If the game doesn't launch, you might need to use a launcher file specific to your operating system. Download the launcher file into your game installation folder.
+5. You have to use a launcher file specific to your operating system. Download the launcher file into your game installation folder.
   
     - For Windows systems (both 32 and 64 bits), download the `run.bat` or `run.exe` files.
     
