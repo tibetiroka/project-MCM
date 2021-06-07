@@ -157,6 +157,11 @@ public class GameEngine {
 			LOGGER.info("Started game engine thread");
 			previous = System.nanoTime();
 			while(isRunning() && Main.isRunning()) {
+				if(delta > FRAME_LENGTH_NANO * 30) {
+					LOGGER.warn("Massive lag spike: " + delta + " ns (" + Math.round(delta / (double) FRAME_LENGTH_NANO * 100) / 100.0 + " frames)");
+				} else if(delta > FRAME_LENGTH_NANO * 3) {
+					LOGGER.debug("Minor lag spike: " + Math.round(delta / (double) FRAME_LENGTH_NANO * 100) / 100.0 + " frames");
+				}
 				while(delta >= FRAME_LENGTH_NANO) {
 					delta -= FRAME_LENGTH_NANO;
 					frame++;
@@ -203,9 +208,10 @@ public class GameEngine {
 			SoundManager.clear();
 			LOGGER.info("Engine thread shut down normally");
 			
-		}, "Main Engine Thread");
+		}, "Engine");
 		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> {
-			LOGGER.error("Uncaught exception in the main engine thread", e);
+			LOGGER.error("Uncaught exception in the main engine thread (" + t.getName() + ")", e);
+			Main.panic();
 			Main.setRunning(false);
 			System.exit(-10001);
 		});
@@ -399,28 +405,30 @@ public class GameEngine {
 					continue actionLoop;
 				}
 			}
-			PlayerEntity player = getPlayer(action.getPlayerId());//player-related events
-			if(player == null) {
-				continue actionLoop;
-			}
-			switch(action.getActionType()) {
-				case GRAB -> player.grab();
-				case WALK -> player.walk();
-				case TAUNT -> player.taunt();
-				case ATTACK -> player.attack();
-				case SHIELD -> player.shield();
-				case MOVE_UP -> player.moveUp();
-				case MOVE_DOWN -> player.moveDown();
-				case MOVE_LEFT -> player.moveLeft();
-				case MOVE_RIGHT -> player.moveRight();
-				case SPECIAL -> player.special();
-				case JUMP_LEFT -> {
-					player.moveUp();
-					player.moveLeft();
+			if(Main.getGameState() == GameState.IN_GAME) {
+				PlayerEntity player = getPlayer(action.getPlayerId());//player-related events
+				if(player == null) {
+					continue actionLoop;
 				}
-				case JUMP_RIGHT -> {
-					player.moveUp();
-					player.moveRight();
+				switch(action.getActionType()) {
+					case GRAB -> player.grab();
+					case WALK -> player.walk();
+					case TAUNT -> player.taunt();
+					case ATTACK -> player.attack();
+					case SHIELD -> player.shield();
+					case MOVE_UP -> player.moveUp();
+					case MOVE_DOWN -> player.moveDown();
+					case MOVE_LEFT -> player.moveLeft();
+					case MOVE_RIGHT -> player.moveRight();
+					case SPECIAL -> player.special();
+					case JUMP_LEFT -> {
+						player.moveUp();
+						player.moveLeft();
+					}
+					case JUMP_RIGHT -> {
+						player.moveUp();
+						player.moveRight();
+					}
 				}
 			}
 		}
