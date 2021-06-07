@@ -4,12 +4,23 @@ import dartproductions.mcleodmassacre.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.IntFunction;
 
 /**
  * Animations are used for describing an entity's hitbox and visual properties. They are updated every frame.
@@ -569,6 +580,202 @@ public interface Animation extends Cloneable {
 		@Override
 		public @NotNull Dimension getOffset() {
 			return animation.getOffset();
+		}
+	}
+	
+	/**
+	 * Animation for displaying formatted text. The text may change at every frame. This animation has no hitbox and loops continuously.
+	 *
+	 * @since 0.1.0
+	 */
+	public static class FormattedTextAnimation implements Animation {
+		/**
+		 * The empty area used as hitbox.
+		 *
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Area EMPTY = new Area();
+		/**
+		 * The name of the animation
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull String name;
+		/**
+		 * The unique ID of this animation
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull UUID id = UUID.randomUUID();
+		/**
+		 * The rendered version of the texts
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull BufferedImage[] images;
+		/**
+		 * Generator function for the text offset in each frame
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull IntFunction<Dimension> offsetGenerator;
+		/**
+		 * True if the animation should loop
+		 *
+		 * @since 0.1.0
+		 */
+		protected final boolean loop;
+		/**
+		 * The current frame
+		 *
+		 * @since 0.1.0
+		 */
+		protected int frame = 0;
+		
+		/**
+		 * Creates a new text animation.
+		 *
+		 * @param name            The name of the animation
+		 * @param defaultFont     The default font to be modified for formatted texts
+		 * @param colorGenerator  Generator function for the text's color in each frame.
+		 * @param offsetGenerator Generator function for the text's offset in each frame.
+		 * @param textGenerator   Generator function for the text in each frame.
+		 * @param length          The amount of frames to display
+		 * @param loop            True if the animation should loop when done
+		 * @since 0.1.0
+		 */
+		public FormattedTextAnimation(@NotNull String name, @NotNull Font defaultFont, int length, boolean loop, @NotNull IntFunction<Color> colorGenerator, @NotNull IntFunction<List<String>> textGenerator, @NotNull IntFunction<Dimension> offsetGenerator) {
+			this.offsetGenerator = offsetGenerator;
+			this.name = name;
+			this.loop = loop;
+			images = new BufferedImage[length];
+			createImages(defaultFont, textGenerator, colorGenerator);
+		}
+		
+		/**
+		 * Creates the images containing text for display purposes.
+		 *
+		 * @param defaultFont    The default font to use for text rendering
+		 * @param textGenerator  The generator function for getting the text of each frame
+		 * @param colorGenerator The generator function for getting the color of the text of each frame
+		 * @since 0.1.0
+		 */
+		protected void createImages(@NotNull Font defaultFont, @NotNull IntFunction<List<String>> textGenerator, @NotNull IntFunction<Color> colorGenerator) {
+			FontMetrics defaultMetrics = GraphicsManager.PANEL.getFontMetrics(defaultFont);
+			for(int i = 0; i < images.length; i++) {
+				List<String> textLines = textGenerator.apply(i);
+				int maxWidth = 0;
+				int height = 0;
+				ArrayList<BufferedImage> lineImages = new ArrayList<>();
+				//
+				for(String textLine : textLines) {
+					textLine = textLine.trim();
+					Font font = defaultFont;
+					FontMetrics metrics = defaultMetrics;
+					int lineWidth, lineHeight;
+					//
+					if(textLine.isEmpty()) {
+						lineHeight = defaultMetrics.getHeight();
+						lineWidth = 1;
+					} else if(textLine.startsWith("»")) {
+						font = new Font(defaultFont.getName(), defaultFont.getStyle(), (int) (defaultFont.getSize() * 1.5));
+						textLine = textLine.substring(1).trim();
+						metrics = GraphicsManager.PANEL.getFontMetrics(font);
+						lineHeight = metrics.getHeight();
+						lineWidth = metrics.stringWidth(textLine);
+					} else {
+						lineHeight = defaultMetrics.getHeight();
+						lineWidth = defaultMetrics.stringWidth(textLine);
+					}
+					//
+					height += lineHeight;
+					maxWidth = Math.max(lineWidth, maxWidth);
+					//
+					BufferedImage image = new BufferedImage(lineWidth, lineHeight, BufferedImage.TYPE_INT_ARGB);
+					Graphics2D g2 = image.createGraphics();
+					//
+					g2.setColor(colorGenerator.apply(i));
+					g2.setFont(font);
+					g2.drawString(textLine, 0, metrics.getAscent());
+					//
+					g2.dispose();
+					//
+					lineImages.add(image);
+				}
+				BufferedImage image = (images[i] = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_ARGB));
+				{
+					Graphics2D g2 = image.createGraphics();
+					//
+					int y = 0;
+					for(BufferedImage lineImage : lineImages) {
+						g2.drawImage(lineImage, 0, y, null);
+						y += lineImage.getHeight();
+					}
+					g2.dispose();
+				}
+			}
+		}
+		
+		@Override
+		public @NotNull Image getCurrentFrame() {
+			return images[frame];
+		}
+		
+		@Override
+		public @Nullable Shape getCurrentHitbox() {
+			return EMPTY;
+		}
+		
+		@Override
+		public @Nullable Area getCurrentHitboxArea() {
+			return EMPTY;
+		}
+		
+		@Override
+		public @NotNull String getAnimationName() {
+			return name;
+		}
+		
+		@Override
+		public boolean isOver() {
+			return frame >= images.length;
+		}
+		
+		@Override
+		public void reset() {
+			frame = 0;
+		}
+		
+		@Override
+		public void next() {
+			frame++;
+			if(loop && frame >= images.length) {
+				frame = 0;
+			}
+		}
+		
+		@Override
+		public @Nullable FormattedTextAnimation clone() {
+			try {
+				return (FormattedTextAnimation) super.clone();
+			} catch(CloneNotSupportedException e) {
+				return null;
+			}
+		}
+		
+		@Override
+		public @NotNull UUID getId() {
+			return id;
+		}
+		
+		@Override
+		public int getLength() {
+			return images.length;
+		}
+		
+		@Override
+		public @NotNull Dimension getOffset() {
+			return offsetGenerator.apply(frame);
 		}
 	}
 }
