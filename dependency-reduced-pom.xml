@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>dartproductions</groupId>
-  <artifactId>McLeodMassacre</artifactId>
-  <version>0.1.0</version>
-  <build>
-    <finalName>${project.artifactId}</finalName>
-    <plugins>
-      <plugin>
-        <artifactId>maven-clean-plugin</artifactId>
-        <version>3.1.0</version>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>dartproductions</groupId>
+    <artifactId>McLeodMassacre</artifactId>
+    <version>0.1.0</version>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
         <configuration>
           <excludeDefaultDirectories>true</excludeDefaultDirectories>
           <filesets>
@@ -42,7 +42,7 @@
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
-                <transformer/>
+                  <transformer/>
               </transformers>
             </configuration>
           </execution>
@@ -86,16 +86,16 @@
       <url>https://jitpack.io</url>
     </repository>
     <repository>
-      <snapshots/>
+        <snapshots/>
       <id>jcenter</id>
       <url>https://jcenter.com</url>
     </repository>
-    <repository>
-      <releases/>
-      <snapshots/>
-      <id>central-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
+      <repository>
+          <releases/>
+          <snapshots/>
+          <id>central-snapshots</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      </repository>
   </repositories>
   <dependencies>
     <dependency>
