@@ -6,12 +6,14 @@ import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.entity.Background;
 import dartproductions.mcleodmassacre.entity.Background.Foreground;
 import dartproductions.mcleodmassacre.entity.Button;
+import dartproductions.mcleodmassacre.graphics.Animation.FormattedTextAnimation;
 import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
 import dartproductions.mcleodmassacre.options.QualityOption;
+import dartproductions.mcleodmassacre.util.MathUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +23,24 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
+import static dartproductions.mcleodmassacre.util.MathUtils.*;
 
 /**
  * Class for managing graphics-related locks and paint operations.
@@ -136,9 +149,10 @@ public class GraphicsManager extends JPanel {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 1);
 			initGraphics();
 			gameLoop();
-		}, "Main Graphics Thread");
+		}, "Graphics");
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> {
-			LOGGER.error("Uncaught exception in the main graphics thread", e);
+			LOGGER.error("Uncaught exception in the main graphics thread (" + t.getName() + ")", e);
+			Main.panic();
 			Main.setRunning(false);
 			System.exit(-10002);
 		});
@@ -341,20 +355,53 @@ public class GraphicsManager extends JPanel {
 				case ROSTER -> {
 					addMenuBackground();
 					addRoster();
+					addBackButton(GameState.MAIN_MENU);
 				}
 				case MAIN_MENU -> {
 					addMenuBackground();
 					addGameMenu();
 				}
+				case CREDITS -> {
+					addMenuBackground();
+					addCredits();
+				}
+				case DATA_MENU -> {
+					addMenuBackground();
+					addCredits();//temp
+					addBackButton(GameState.MAIN_MENU);
+				}
 				case LOADING -> {
-					BufferedImage image = ResourceManager.getBufferedImage("loading#0");
-					int x = (ResolutionManager.getDefaultScreenSize().width - image.getWidth()) / 2;
-					int y = (ResolutionManager.getDefaultScreenSize().height - image.getHeight()) / 2;
-					ResolutionManager.fillLocalScreen();
-					new Background(new LoopingAnimation("loading", new Dimension(x, y))).register();
+					setToCenter(new Background(new LoopingAnimation("loading"))).register();
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Adds the standard visuals for the credits screen.
+	 *
+	 * @since 0.1.0
+	 */
+	private static void addCredits() {
+		{
+			try {
+				List<String> credits = ResourceManager.readTextFile("credits.txt");
+				Animation creditsAnim = new FormattedTextAnimation("credits", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> credits, i -> new Dimension(0, 0));
+				MathUtils.setToCenter(new Foreground(creditsAnim)).register();
+			} catch(IOException e) {
+				LOGGER.error("Could not read credits file", e);
+			}
+		}
+	}
+	
+	/**
+	 * Adds the 'previous menu' button.
+	 *
+	 * @param state The state to change to when the button is pressed
+	 * @since 0.1.0
+	 */
+	private static void addBackButton(@NotNull GameState state) {
+		new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(state, null)).register();
 	}
 	
 	/**
@@ -362,9 +409,8 @@ public class GraphicsManager extends JPanel {
 	 *
 	 * @since 0.1.0
 	 */
-	private static void addRoster() {//todo
+	private static void addRoster() {
 		new Background(new LoopingAnimation("css_playerboxes")).register();
-		new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.MAIN_MENU, null)).register();
 		new Foreground(new LoopingAnimation("css_top")).register();
 		//
 		{
