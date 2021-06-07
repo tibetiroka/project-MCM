@@ -23,11 +23,18 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.*;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -686,5 +693,15 @@ public class ResourceManager {
 		}
 		String name = a.get((int) (a.size() * Math.random()));
 		return new ImmutableNullsafePair<>(name, getSound(name));
+	}
+	
+	/**
+	 * Reads the contents of a text file.
+	 *
+	 * @param path The path to the text file
+	 * @return The contents of the file, separated at each line
+	 */
+	public static List<String> readTextFile(String path) throws IOException {
+		return Files.readAllLines(new File(path).toPath());
 	}
 }
