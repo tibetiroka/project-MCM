@@ -46,13 +46,13 @@ planning to take this game to other platforms as well.
 
 3. Run the appropriate launcher file depending on your operating system:
 
-    - For Windows systems (both 32 and 64 bits), use the `run.bat` or `run.exe` files.
+   - For Windows systems (both 32 and 64 bits), use the `run.bat` or `run.exe` files.
 
-    - For 64-bit Linux systems, use the `run-linux64` file.
+   - For 64-bit Linux systems, use the `run-linux64` file.
 
-    - For AArch64 Linux systems, use the `run-linux-aarch64` file.
+   - For AArch64 Linux systems, use the `run-linux-aarch64` file.
 
-    - For MacOS systems, use the `run-macos` file.
+   - For MacOS systems, use the `run-macos` file.
 
    You can probably run the game on other operating systems as well, but they are not supported and the game isn't
    guaranteed to work properly on them.
@@ -71,24 +71,24 @@ planning to take this game to other platforms as well.
 
 3. If you don't have the latest version (Java 16), please install it. **This game requires Java to run.**
 
-    - Download official releases from [Oracle](https://www.oracle.com/java/technologies/javase-jdk16-downloads.html).
+   - Download official releases from [Oracle](https://www.oracle.com/java/technologies/javase-jdk16-downloads.html).
 
-    - Alternatively, you can use the java files provided with the release. Make sure you choose the correct version for
-      your operating system (you can download all of the files if you are not sure which one to use). Place the
-      downloaded file(s) in your game installation folder.
+   - Alternatively, you can use the java files provided with the release. Make sure you choose the correct version for
+     your operating system (you can download all of the files if you are not sure which one to use). Place the
+     downloaded file(s) in your game installation folder.
 
 4. Download the game jar file into your installation folder. It should be named `McLeodMassacre.jar`.
 
 5. You have to use a launcher file specific to your operating system. Download the launcher file into your game
    installation folder.
 
-    - For Windows systems (both 32 and 64 bits), download the `run.bat` or `run.exe` files.
+   - For Windows systems (both 32 and 64 bits), download the `run.bat` or `run.exe` files.
 
-    - For 64-bit Linux systems, download the `run-linux64` file.
+   - For 64-bit Linux systems, download the `run-linux64` file.
 
-    - For AArch64 Linux systems, download the `run-linux-aarch64` file.
+   - For AArch64 Linux systems, download the `run-linux-aarch64` file.
 
-    - For MacOS systems, download the `run-macos` file.
+   - For MacOS systems, download the `run-macos` file.
 
    If you are unsure, you can download all of the files and try which one launches the game correctly.
 
@@ -115,16 +115,16 @@ There are some files that are _not_ distributed under that license by us.
 
    The files mentioned:
 
-    - `java.exe` (the `java.exe` file from the Windows/x64 release of OpenJDK 16.0.1 General-Availability Release)
+   - `java.exe` (the `java.exe` file from the Windows/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
-    - `javaw.exe` (the `javaw.exe` file from the Windows/x64 release of OpenJDK 16.0.1 General-Availability Release)
+   - `javaw.exe` (the `javaw.exe` file from the Windows/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
-    - `linux-aarch64-java` (the `java` file from the Linux/AArch64 release of OpenJDK 16.0.1 General-Availability
-      Release)
+   - `linux-aarch64-java` (the `java` file from the Linux/AArch64 release of OpenJDK 16.0.1 General-Availability
+     Release)
 
-    - `linux64-java` (the `java` file from the Linux/x64 release of OpenJDK 16.0.1 General-Availability Release)
+   - `linux64-java` (the `java` file from the Linux/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
-    - `osx-java` (the `java` file from the macOs/x64 release of OpenJDK 16.0.1 General-Availability Release)
+   - `osx-java` (the `java` file from the macOs/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
    The data of these files have not been modified, and we are not claiming any rights for them.
 
