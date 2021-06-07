@@ -102,7 +102,7 @@ jar file.
 # Licensing
 
 This game is distributed under [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).
-This includes all source files, documentation, assets, runtime files, or any other content unless otherwise noted.
+This includes all source files, documentation, assets, runtime files, or any other content unless otherwise noted. This license is present in the license files (in [root](https://github.com/DartProductions/project-MCM/blob/engine-dev/LICENSE) and in [extract](https://github.com/DartProductions/project-MCM/blob/engine-dev/src/main/resources/extract/LICENSE)).
 
 There are some files that are _not_ distributed under that license by us.
 
@@ -142,4 +142,6 @@ There are some files that are _not_ distributed under that license by us.
 As a free and open-spource game, McLeod Massacre was created by the fan community, and we are hoping to keep it that
 way. You are allowed to create your own extensions that can make it into this game after they complete the review
 process.
+
+You can find more detailed contributor information in the [credits](https://github.com/DartProductions/project-MCM/blob/engine-dev/src/main/resources/extract/credits.txt) file.
 
