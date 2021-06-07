@@ -1,17 +1,6 @@
 # McLeod Massacre
 
-McLeod Massacre is an open-source Super Smash fangame, with loads of original artwork. This game provides unique experience to any new or veteran player. In this platform fighter you have the ability to play versus other players on your machine, or <TODO: ask discord if we want local servers>.
-
-# Table of contents
-
-- [System Requirements](#system-requirements)
-- [Installing](#installing)
-    - [Installing from GitHub](#installing-from-github)
-      - [Via the McLeodMassacre.zip file](#via-the-mcleodmassacrezip-file)
-      - [Via unzipped release files](#via-unzipped-release-files)
-      - [Building from source](#building-from-source)
-- [Licensing](#licensing)
-- [Contributing](#contributing)
+McLeod Massacre is an open-source Super Smash fangame, with loads of original artwork. This game provides unique experience to any new or veteran player. In this platform fighter you have the ability to play versus other players on your machine, or fight against anyone on your local network.
 
 # System Requirements
 
@@ -84,9 +73,9 @@ You can use IntelliJ IDEA to import the repository as a project, and use the `-D
 
 # Licensing
   
-This game is distributed under the <TODO: check license> license.
+This game is distributed under [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html). This includes all source files, documentation, assets, runtime files, or any other content unless otherwise noted.
 
-There are, however, some exceptions from that.
+There are some files that are _not_ distributed under that license by us.
 
 1. The java files
 
@@ -106,7 +95,7 @@ There are, however, some exceptions from that.
 
   	The data of these files have not been modified, and we are not claiming any rights for them.
 
-2. Contents of the [lib](https://github.com/tibetiroka/project-MCM/tree/engine-dev/src/main/resources/extract/lib) folder
+2. Contents of the [lib](https://github.com/DartProductions/project-MCM/tree/engine-dev/src/main/resources/extract/lib) folder
 
 	These files belong to other projects we used during the devolopment of this game. Please check the license of [JInput](https://jinput.github.io/jinput/) for the license used for these files.
 
