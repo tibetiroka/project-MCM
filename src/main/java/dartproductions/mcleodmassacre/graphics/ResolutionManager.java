@@ -5,7 +5,14 @@ import dartproductions.mcleodmassacre.options.QualityOption;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
@@ -131,6 +138,10 @@ public class ResolutionManager {
 		});
 		//
 		OUTPUT_GRAPHICS.drawImage(scaled, 0, 0, null);
+		OUTPUT_GRAPHICS.fillRect(0, 0, screenRect.width, 2);
+		OUTPUT_GRAPHICS.fillRect(0, 0, 2, screenRect.height);
+		OUTPUT_GRAPHICS.fillRect(0, screenRect.height - 2, screenRect.width, 2);
+		OUTPUT_GRAPHICS.fillRect(screenRect.width - 2, 0, 2, screenRect.height);
 		//
 		return OUTPUT;
 	}
