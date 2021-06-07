@@ -11,16 +11,16 @@
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.1.0</version>
-        <configuration>
-          <excludeDefaultDirectories>true</excludeDefaultDirectories>
-          <filesets>
-            <fileset>
-              <directory>target</directory>
-              <includes>
-                <include>**</include>
-              </includes>
-              <excludes>
-                <exclude>apptest/**</exclude>
+                <configuration>
+                    <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                    <filesets>
+                        <fileset>
+                            <directory>target</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                            <excludes>
+                                <exclude>apptest/**</exclude>
               </excludes>
             </fileset>
           </filesets>
@@ -80,23 +80,23 @@
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-    <repository>
-        <snapshots/>
-      <id>jcenter</id>
-      <url>https://jcenter.com</url>
-    </repository>
-      <repository>
-          <releases/>
-          <snapshots/>
-          <id>central-snapshots</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <snapshots/>
+            <id>jcenter</id>
+            <url>https://jcenter.com</url>
+        </repository>
+        <repository>
+            <releases/>
+            <snapshots/>
+            <id>central-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
