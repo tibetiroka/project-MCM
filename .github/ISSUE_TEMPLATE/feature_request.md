@@ -2,8 +2,8 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[REQUEST] Your Title Here"
-labels: ''
-assignees: ''
+labels: enhancement, under review
+assignees: tibetiroka
 
 ---
 
