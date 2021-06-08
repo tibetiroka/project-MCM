@@ -8,5 +8,6 @@ Dart (dartboi#9671)
 Phazer (Phazer#2286)
 
 » Other credits
+Main music theme: RedWolfStudios
 Minor music/sfx: Justonemorecupofcoffee#8399
 Minor sprites: Kined#3939
