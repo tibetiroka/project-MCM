@@ -32,8 +32,8 @@ more and more assets to the game.)
 
 # Installing
 
-Official releases are available on [GitHub](https://github.com/DartProductions/project-MCM/releases), and we are
-planning to take this game to other platforms as well.
+Official releases are available on [GitHub](https://github.com/DartProductions/project-MCM/releases) and we are
+planning to take this game to GameJolt and Newgrounds after the first major release.
 
 ### Installing from GitHub
 
