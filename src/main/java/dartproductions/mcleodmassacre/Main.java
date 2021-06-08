@@ -76,6 +76,11 @@ public class Main {
 	private static volatile @Nullable GameState NEXT_STATE = GameState.MAIN_MENU;
 	
 	public static void main(String[] args) {
+		Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in main thread (" + t.getName() + ")", e);
+			panic();
+			System.exit(-2);
+		});
 		checkDebugMode(args);
 		configureLogger();
 		parseArgs(args);
