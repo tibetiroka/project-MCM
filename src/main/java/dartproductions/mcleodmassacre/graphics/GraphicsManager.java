@@ -418,7 +418,7 @@ public class GraphicsManager extends JPanel {
 			final int rowSize = 8;
 			final int imageWidth = ResourceManager.getBufferedImage("roster_character_background").getWidth();
 			final int imageHeight = ResourceManager.getBufferedImage("roster_character_background").getHeight();
-			final int topOffset = imageHeight;
+			final int topOffset = (int) (imageHeight * 1.5);
 			final int spacingHeight = 10;
 			final int spacingWidth = -10;
 			for(int i = 0; i < characters.length; i++) {
