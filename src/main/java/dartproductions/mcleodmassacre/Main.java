@@ -314,7 +314,7 @@ public class Main {
 	 *
 	 * @since 0.1.0
 	 */
-	private static void loadAppData() {
+	private static synchronized void loadAppData() {
 		ResourceManager.extractResources();
 		PluginManager.findPlugins();
 		ResourceManager.waitForLoading();

@@ -4,9 +4,9 @@ import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Cache implementation that doesn't support unloading, and loads all resources as soon as they are registered. Useful for storing resources that can be used by the game at any time. It can also be used as a global registry.
@@ -20,7 +20,7 @@ public class GreedyCache<T> implements Cache<T> {
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull HashMap<Identifier, T> cache = new HashMap<>();
+	protected final @NotNull ConcurrentHashMap<Identifier, T> cache = new ConcurrentHashMap<>();
 	
 	/**
 	 * The identifier of the cache

@@ -1,5 +1,6 @@
 package dartproductions.mcleodmassacre.graphics;
 
+import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -725,11 +726,13 @@ public interface Animation extends Cloneable {
 		protected void fetchFrames() {
 			if(frames.length == 1) {
 				frames[0] = ResourceManager.getImage(Identifier.fromString(name));
-				hitboxes[0] = ResourceManager.getHitbox(Identifier.fromString(name + "/hitbox")).getArea();
+				ImageHitbox hitbox = ResourceManager.getHitbox(Identifier.fromString(name + "/hitbox"));
+				hitboxes[0] = hitbox == null ? null : hitbox.getArea();
 			} else {
 				for(int i = 0; i < frames.length; i++) {
 					frames[i] = ResourceManager.getImage(Identifier.fromString(name + "#" + i));
-					hitboxes[i] = ResourceManager.getHitbox(Identifier.fromString(name + "#" + i + "/hitbox")).getArea();
+					ImageHitbox hitbox = ResourceManager.getHitbox(Identifier.fromString(name + "#" + i + "/hitbox"));
+					hitboxes[i] = hitbox == null ? null : hitbox.getArea();
 				}
 			}
 		}

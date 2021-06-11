@@ -389,10 +389,13 @@ public class ResourceManager {
 	public static void onStateChange(@NotNull GameState newState, @Nullable GameState newNextState) {
 		for(Identifier resourceId : RESOURCE_TAGS.getRegisteredResources()) {
 			HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
-			if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
-				getCacheOfResource(resourceId).load(resourceId);
-			} else {
-				getCacheOfResource(resourceId).unload(resourceId);
+			Cache<?> cache = getCacheOfResource(resourceId);
+			if(cache != null) {
+				if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
+					cache.load(resourceId);
+				} else {
+					cache.unload(resourceId);
+				}
 			}
 		}
 	}
@@ -408,7 +411,7 @@ public class ResourceManager {
 	}
 	
 	/**
-	 * Registers all assets from the specified plugin. The assets' identifiers are registered in the appropriate caches, and their tags are attached to the resources. The name of the assets (the 'name' parameter of their ID's) is their path from the plugin's default directory without the file extension.
+	 * Registers all assets from the specified plugin. The assets' identifiers are registered in the appropriate caches, and their tags are attached to the resources. The name of the assets (the 'name' parameter of their ID's) is the name of the files containing them without the file extension.
 	 * <p>
 	 * This method does not block the calling thread. To ensure the plugin is loaded one must call the {@link #waitForLoading()} method.
 	 *
@@ -419,7 +422,7 @@ public class ResourceManager {
 		new LoadingOperation(() -> {
 			try {
 				getPaths(plugin.getBaseDirectory().getPath(), false).filter(path -> "tags".equalsIgnoreCase(getFileExtension(path.toFile()))).forEach(path -> {
-					Identifier resourceId = Identifier.fromString(plugin.getName(), (path.toFile().getParent() != null ? path.toFile().getParent() + "\\" : "") + getFileName(path.toFile()));
+					Identifier resourceId = Identifier.fromString(plugin.getName(), getFileName(path.toFile()));
 					HashSet<Identifier> tags = new HashSet<>();
 					File resourceFile = getResourceFileFromTags(path);
 					try {
@@ -654,7 +657,7 @@ public class ResourceManager {
 	private static @Nullable File getResourceFileFromTags(@NotNull Path path) {
 		File file = path.toFile().getAbsoluteFile();
 		String name = getFileName(file);
-		Optional<File> resource = Arrays.stream(file.getParentFile().listFiles()).filter(f -> !getFileExtension(f).equalsIgnoreCase("tags")).filter(f -> f.getName().equalsIgnoreCase(name)).findAny();
+		Optional<File> resource = Arrays.stream(file.getParentFile().listFiles()).filter(f -> !getFileExtension(f).equalsIgnoreCase("tags")).filter(f -> getFileName(f).equalsIgnoreCase(name)).findAny();
 		return resource.orElse(null);
 	}
 	
@@ -728,24 +731,28 @@ public class ResourceManager {
 		if(hasTag(resource, Tag.GRAPHICS.getId())) {//graphics resource
 			final boolean isHitboxImage = hasTag(resource, Tag.HITBOX_SOURCE.getId());
 			//
-			IMAGES.register(resource, () -> loadImage(location));//registering basic image
+			final Image image = loadImage(location);
+			final BufferedImage[] images = getImageFrames(image, location);
+			IMAGES.register(resource, () -> images[0]);//registering basic image
+			IMAGES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw"), () -> loadImage(location));
 			if(isHitboxImage) {
 				if(getImage(resource) instanceof BufferedImage) {
-					HITBOXES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/hitbox"), () -> new ImageHitbox(getBufferedImage(resource)));
+					HITBOXES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(resource))));
 				}
 			}
 			//
-			int frameCount = countImageFrames(location);//register all frames
-			for(int i = 0; i < frameCount; i++) {
+			for(int i = 0; i < images.length; i++) {//register all frames
 				final int index = i;
 				final Identifier id = Identifier.fromString(resource.getGroup(), resource.getName() + "#" + index);
-				IMAGES.register(id, () -> getImageFrames(getImage(resource), location)[index]);
+				IMAGES.register(id, () -> getImageFrames(getImage(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw")), location)[index]);
 				if(isHitboxImage) {
 					HITBOXES.register(Identifier.fromString(id.getGroup(), id.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(id))));
 				}
 			}
+			LOGGER.debug("Registered resource " + resource);
 		} else if(hasTag(resource, Tag.AUDIO.getId())) {//audio resource
 			AUDIO.register(resource, () -> Files.readAllBytes(location.toPath()));
+			LOGGER.debug("Registered resource " + resource);
 		}
 	}
 	
