@@ -2,6 +2,8 @@ package dartproductions.mcleodmassacre.entity;
 
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.Animation;
+import dartproductions.mcleodmassacre.graphics.GraphicsManager;
+import dartproductions.mcleodmassacre.graphics.RenderingLayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -128,6 +130,12 @@ public interface PlayerEntity extends Entity {//todo
 		} else {
 			moveRight();
 		}
+	}
+	
+	@Override
+	@NotNull
+	default RenderingLayer getDefaultLayer() {
+		return GraphicsManager.getLayer(GraphicsManager.LAYER_CHARACTERS);
 	}
 	
 	/**
