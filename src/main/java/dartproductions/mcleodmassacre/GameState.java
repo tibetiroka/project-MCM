@@ -288,13 +288,13 @@ public interface GameState {
 	/**
 	 * Runs whenever {@link Main#setGameState(GameState, GameState)} is called when this is the current state. This method runs before {@link #onStateActivation(GameState, GameState, GameState)}.
 	 *
+	 * @param previousNextState The expected state after this state
 	 * @param newGameState      The new game state
 	 * @param newNextState      The expected state after the previous state
-	 * @param previousNextState The expected state after this state
 	 * @see #onStateActivation(GameState, GameState, GameState)
 	 * @since 0.1.0
 	 */
-	default void onStateDeactivation(@NotNull GameState previousNextState, @NotNull GameState newGameState, @Nullable GameState newNextState) {
+	default void onStateDeactivation(@Nullable GameState previousNextState, @NotNull GameState newGameState, @Nullable GameState newNextState) {
 		GraphicsManager.clearLayers();
 		GameEngine.unregisterAllEntities();
 		SoundManager.stopAllSfx();
@@ -381,7 +381,7 @@ public interface GameState {
 		}
 		
 		@Override
-		default void onStateDeactivation(@NotNull GameState previousNextState, @NotNull GameState newGameState, @Nullable GameState newNextState) {
+		default void onStateDeactivation(@Nullable GameState previousNextState, @NotNull GameState newGameState, @Nullable GameState newNextState) {
 			GameState.super.onStateDeactivation(previousNextState, newGameState, newNextState);
 		}
 	}
