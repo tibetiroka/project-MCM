@@ -22,13 +22,13 @@ public interface Identifier {
 	 *
 	 * @since 0.1.0
 	 */
-	public static final String DEFAULT_GROUP = "mcm";
+	String DEFAULT_GROUP = "mcm";
 	/**
 	 * The default group for a plugin's identifier.
 	 *
 	 * @since 0.1.0
 	 */
-	public static final String DEFAULT_PLUGIN_GROUP = "plugin";
+	String DEFAULT_PLUGIN_GROUP = "plugin";
 	
 	/**
 	 * Checks if the given string is valid as a group name for an identifier.
@@ -37,7 +37,7 @@ public interface Identifier {
 	 * @return True if valid
 	 * @since 0.1.0
 	 */
-	public static boolean isValidGroup(@Nullable String group) {
+	static boolean isValidGroup(@Nullable String group) {
 		return group != null && group.length() > 0 && !Pattern.matches(".*\\s+.*", group) && !group.contains(":");
 	}
 	
@@ -48,7 +48,7 @@ public interface Identifier {
 	 * @return True if valid
 	 * @since 0.1.0
 	 */
-	public static boolean isValidName(@Nullable String name) {
+	static boolean isValidName(@Nullable String name) {
 		return name != null && name.length() > 0 && !Pattern.matches(".*\\s+.*", name) && !name.contains(":");
 	}
 	
@@ -60,7 +60,7 @@ public interface Identifier {
 	 * @throws IllegalArgumentException If the string is null, if it contains more than one colon or if the group or the name is invalid.
 	 * @since 0.1.0
 	 */
-	public static @NotNull Identifier fromString(@Nullable String string) throws IllegalArgumentException {
+	static @NotNull Identifier fromString(@Nullable String string) throws IllegalArgumentException {
 		if(string == null) {
 			throw new IllegalArgumentException("Input string cannot be null!");
 		}
@@ -87,7 +87,7 @@ public interface Identifier {
 	 * @throws IllegalArgumentException If the group or the name is invalid
 	 * @since 0.1.0
 	 */
-	public static @NotNull Identifier fromString(@Nullable String group, @Nullable String name) {
+	static @NotNull Identifier fromString(@Nullable String group, @Nullable String name) {
 		if(isValidGroup(group) && isValidName(name)) {
 			return new StandardIdentifier(group, name);
 		}
@@ -101,7 +101,7 @@ public interface Identifier {
 	 * @see Identifier
 	 * @since 0.1.0
 	 */
-	public @NotNull String getGroup();
+	@NotNull String getGroup();
 	
 	/**
 	 * Gets the name of the identifier.
@@ -110,7 +110,7 @@ public interface Identifier {
 	 * @see Identifier
 	 * @since 0.1.0
 	 */
-	public @NotNull String getName();
+	@NotNull String getName();
 	
 	/**
 	 * Gets the {@link String} representation of this identifier. This consists of the group and the name separated by a colon.
@@ -119,7 +119,7 @@ public interface Identifier {
 	 * @see Identifier
 	 * @since 0.1.0
 	 */
-	public default @NotNull String getId() {
+	default @NotNull String getId() {
 		return getGroup() + ":" + getName();
 	}
 }

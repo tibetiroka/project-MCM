@@ -14,5 +14,5 @@ public interface Identified {
 	 * @return The identifier
 	 * @since 0.1.0
 	 */
-	public @NotNull Identifier getId();
+	@NotNull Identifier getId();
 }
