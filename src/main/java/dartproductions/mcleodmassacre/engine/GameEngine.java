@@ -1,8 +1,7 @@
 package dartproductions.mcleodmassacre.engine;
 
+import dartproductions.mcleodmassacre.GameState;
 import dartproductions.mcleodmassacre.Main;
-import dartproductions.mcleodmassacre.Main.GameState;
-import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.entity.Entity;
 import dartproductions.mcleodmassacre.entity.PlayerEntity;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
@@ -153,7 +152,6 @@ public class GameEngine {
 		ENGINE_THREAD = new Thread(() -> {//create engine thread
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
 			RUNNING = true;
-			Main.getExecutors().execute(ResourceManager::loadAllResources);//loading other resources asynchronously
 			LOGGER.info("Started game engine thread");
 			previous = System.nanoTime();
 			while(isRunning() && Main.isRunning()) {
@@ -227,6 +225,9 @@ public class GameEngine {
 		handleTasks();
 		handleEntities();
 		handleInput();
+		if(Main.getGameState().isPausingState()) {
+			return;
+		}
 		synchronized(ENGINE_WAIT_LOCK) {
 			for(Entity entity : ENTITIES) {//self-processing (movement etc)
 				entity.process();
@@ -306,6 +307,9 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	private static void handleEntities() {
+		if(Main.getGameState().isPausingState()) {
+			return;
+		}
 		synchronized(ENTITY_LOCK) {
 			for(Entity e : ENTITIES_TO_REMOVE) {//removing entities
 				ENTITIES.remove(e);
@@ -446,30 +450,6 @@ public class GameEngine {
 	}
 	
 	/**
-	 * Handles any changes when the application's state changes.
-	 *
-	 * @param newGameState The new state of the application
-	 * @param newNextState The expected state after the new state
-	 * @since 0.1.0
-	 */
-	public static synchronized void onStateChange(@NotNull GameState newGameState, @Nullable GameState newNextState) {
-		synchronized(ENTITY_LOCK) {//todo
-			if(newGameState == GameState.IN_GAME_PAUSED) {
-			} else {
-				ENTITIES.forEach(Entity::unregister);
-				switch(newGameState) {
-					case LOADING -> {
-						Main.getExecutors().execute(() -> {
-							ResourceManager.waitForLoading();
-							scheduleTask(1, () -> Main.setGameState(newNextState, null));
-						});
-					}
-				}
-			}
-		}
-	}
-	
-	/**
 	 * Removes an entity from the engine. The entity does NOT get removed from the rendering engine.
 	 *
 	 * @param e The entity to remove
@@ -502,8 +482,8 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	private static boolean areIntersecting(@NotNull Entity first, @NotNull Entity second) {
-		Area a = second.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
-		a.intersect((first.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
+		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
+		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
 		return !a.isEmpty();
 	}
 	
@@ -516,8 +496,14 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	private static Area getIntersection(@NotNull Entity first, @NotNull Entity second) {
-		Area a = second.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
-		a.intersect((first.getCurrentAnimation().getCurrentHitboxArea().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
+		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
+		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
 		return a;
+	}
+	
+	public static void unregisterAllEntities() {
+		synchronized(ENTITY_LOCK) {
+			ENTITIES_TO_REMOVE.addAll(ENTITIES);
+		}
 	}
 }
