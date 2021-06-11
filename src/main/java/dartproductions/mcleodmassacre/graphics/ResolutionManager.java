@@ -1,7 +1,7 @@
 package dartproductions.mcleodmassacre.graphics;
 
-import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.options.QualityOption;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -407,7 +407,6 @@ public class ResolutionManager {
 	 */
 	public static void fillLocalScreen() {
 		BUFFER_GRAPHICS.setColor(Color.BLACK);
-		//fillRectOnScreen(-getScreenOffsetX(),-getScreenOffsetY(),screenRect.width,screenRect.height);
 		BUFFER_GRAPHICS.fillRect(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
 	}
 }
