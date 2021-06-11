@@ -10,6 +10,7 @@ import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
+import dartproductions.mcleodmassacre.resources.tag.CustomTag;
 import dartproductions.mcleodmassacre.resources.tag.Tag;
 import dartproductions.mcleodmassacre.sound.SoundManager;
 import dartproductions.mcleodmassacre.util.MathUtils;
@@ -42,6 +43,12 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState IN_GAME_PAUSED = new Pause() {
+		/**
+		 * Tag for resources used in this state
+		 *
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/pause_resource"), (s1, s2) -> s1 == IN_GAME_PAUSED || (s1.isLoadingState() && s2 == IN_GAME_PAUSED));
 	};
 	/**
 	 * Indicates that the player is playing on a map against other characters.
@@ -49,6 +56,13 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState IN_GAME = new GameState() {
+		/**
+		 * Tag for resources used in this state
+		 *
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/ingame_resource"), (s1, s2) -> s1 == IN_GAME || (s1.isLoadingState() && s2 == IN_GAME));
+		
 		@Override
 		public @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
 			return null;
@@ -65,6 +79,12 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState GALLERY = new GameState() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/gallery_resource"), (s1, s2) -> s1 == GALLERY || (s1.isLoadingState() && s2 == GALLERY));
+		
 		@Override
 		public @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
 			return null;
@@ -81,6 +101,13 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState LOADING = new Loading() {
+		/**
+		 * Tag for resources used in this state
+		 *
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/loading_resource"), (s1, s2) -> s1 == LOADING || (s1.isLoadingState() && s2 == LOADING));
+		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Loading.super.onStateActivation(previousState, previousNextState, nextState);
@@ -94,6 +121,12 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState ROSTER = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/roster_resource"), (s1, s2) -> s1 == ROSTER || (s1.isLoadingState() && s2 == ROSTER));
+		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
@@ -144,6 +177,11 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState SETTINGS_MENU = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/settings_resource"), (s1, s2) -> s1 == SETTINGS_MENU || (s1.isLoadingState() && s2 == SETTINGS_MENU));
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -158,6 +196,11 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState CONTROL_SETTINGS = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/control_settings_resource"), (s1, s2) -> s1 == CONTROL_SETTINGS || (s1.isLoadingState() && s2 == CONTROL_SETTINGS));
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -172,6 +215,11 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState QUALITY_SETTINGS = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/quality_settings_resource"), (s1, s2) -> s1 == QUALITY_SETTINGS || (s1.isLoadingState() && s2 == QUALITY_SETTINGS));
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -186,6 +234,11 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState SOUND_SETTINGS = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/sound_settings_resource"), (s1, s2) -> s1 == SOUND_SETTINGS || (s1.isLoadingState() && s2 == SOUND_SETTINGS));
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -200,6 +253,11 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState VERSUS_MENU = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/versus_menu_resource"), (s1, s2) -> s1 == VERSUS_MENU || (s1.isLoadingState() && s2 == VERSUS_MENU));
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -214,6 +272,12 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState MAIN_MENU = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/main_menu_resource"), (s1, s2) -> s1 == MAIN_MENU || (s1.isLoadingState() && s2 == MAIN_MENU));
+		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
@@ -237,6 +301,12 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	@NotNull GameState DATA_MENU = new Menu() {
+		/**
+		 * Tag for resources used in this state
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/data_menu_resource"), (s1, s2) -> s1 == DATA_MENU || (s1.isLoadingState() && s2 == DATA_MENU));
+		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
@@ -330,11 +400,12 @@ public interface GameState {
 	}
 	
 	/**
-	 * A game state interface for menus. Implements {@link #getBackgroundMusicTag(GameState)} to return {@link Tag#MENU_BACKGROUND_MUSIC}.
+	 * A game state interface for menus. Implements {@link #getBackgroundMusicTag(GameState)} to return {@link Tag#MENU_RESOURCE}.
 	 *
 	 * @since 0.1.0
 	 */
 	interface Menu extends GameState {
+		
 		/**
 		 * Adds the 'previous menu' button.
 		 *
@@ -342,13 +413,13 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		static void addBackButton(@NotNull GameState state) {
-			new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(state, null)).register();
+			new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, state)).register();
 		}
 		
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return Tag.MENU_BACKGROUND_MUSIC.getId();
+			return Tag.MENU_RESOURCE.getId();
 		}
 		
 		@Override
@@ -366,7 +437,7 @@ public interface GameState {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return Tag.MENU_BACKGROUND_MUSIC.getId();
+			return Tag.MENU_RESOURCE.getId();
 		}
 		
 		@Override

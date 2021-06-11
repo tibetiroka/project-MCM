@@ -40,11 +40,11 @@ public interface Tag extends Identified {
 	@NotNull Tag HITBOX_SOURCE = new IgnorantTag(Identifier.fromString("tags/hitboxed"));
 	
 	/**
-	 * Tag that indicates an audio resource that is valid for background music on menu game states. Doesn't change the loading/unloading methods specified by other tags.
+	 * Tag that indicates a resource usable in menus.
 	 *
 	 * @since 0.1.0
 	 */
-	@NotNull Tag MENU_BACKGROUND_MUSIC = new GameStateTag(Identifier.fromString("tags/menu_background"), GameState.Menu.class);
+	@NotNull Tag MENU_RESOURCE = new GameStateTag(Identifier.fromString("tags/menu_resource"), GameState.Menu.class);
 	
 	/**
 	 * Checks if the resource is required for the specified game state. If a resource is not required, it might get unloaded. Any required resource will be loaded.
