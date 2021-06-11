@@ -1,6 +1,7 @@
 package dartproductions.mcleodmassacre.graphics;
 
-import dartproductions.mcleodmassacre.ResourceManager;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
+import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.image.AffineTransformOp;
@@ -35,7 +35,7 @@ public interface Animation extends Cloneable {
 	 * @return The current frame
 	 * @since 0.1.0
 	 */
-	public @NotNull Image getCurrentFrame();
+	@NotNull Image getCurrentFrame();
 	
 	/**
 	 * Gets the current hitbox of this animation.
@@ -43,15 +43,7 @@ public interface Animation extends Cloneable {
 	 * @return The hitbox
 	 * @since 0.1.0
 	 */
-	public @Nullable Shape getCurrentHitbox();
-	
-	/**
-	 * Gets the current hitbox of this animation as an {@link Area}.
-	 *
-	 * @return The hitbox
-	 * @since 0.1.0
-	 */
-	public @Nullable Area getCurrentHitboxArea();
+	@Nullable Area getCurrentHitbox();
 	
 	/**
 	 * Gets the name of this animation. The returned value doesn't have to match the base name for the images or hitboxes used.
@@ -59,31 +51,31 @@ public interface Animation extends Cloneable {
 	 * @return The name of this animation
 	 * @since 0.1.0
 	 */
-	public @NotNull String getAnimationName();
+	@NotNull String getAnimationName();
 	
 	/**
-	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes} / {@link #getCurrentHitboxArea() hitbox areas}.
+	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes}.
 	 *
 	 * @return True if over
 	 * @since 0.1.0
 	 */
-	public boolean isOver();
+	boolean isOver();
 	
 	/**
 	 * Resets this animation. The animation must return to its first frame.
 	 *
 	 * @since 0.1.0
 	 */
-	public void reset();
+	void reset();
 	
 	/**
 	 * Changes the animation to show its next frame and the corresponding hitboxes.
 	 *
 	 * @since 0.1.0
 	 */
-	public void next();
+	void next();
 	
-	public @Nullable Animation clone();
+	@Nullable Animation clone();
 	
 	/**
 	 * Gets the unique id of this animation.
@@ -91,7 +83,7 @@ public interface Animation extends Cloneable {
 	 * @return The animation's id
 	 * @since 0.1.0
 	 */
-	public @NotNull UUID getId();
+	@NotNull UUID getId();
 	
 	/**
 	 * Gets the length of the animation. The length is the amount of frames an animation can show without being reset.
@@ -99,7 +91,7 @@ public interface Animation extends Cloneable {
 	 * @return The length
 	 * @since 0.1.0
 	 */
-	public int getLength();
+	int getLength();
 	
 	/**
 	 * Gets the offset of this animation. This is the distance between any 'p' point on the screen (for example, an entity's location which has this animation) and the point where this animation should be drawn.
@@ -107,14 +99,14 @@ public interface Animation extends Cloneable {
 	 * @return The offset of the animation
 	 * @since 0.1.0
 	 */
-	public @NotNull Dimension getOffset();
+	@NotNull Dimension getOffset();
 	
 	/**
 	 * Animation implementation for simple animations. The images and hitboxes are automatically queried based on the animation's name.
 	 *
 	 * @since 0.1.0
 	 */
-	public static class StandardAnimation implements Animation {
+	class StandardAnimation implements Animation {
 		/**
 		 * The name of the animation
 		 *
@@ -130,19 +122,11 @@ public interface Animation extends Cloneable {
 		 */
 		protected final @NotNull Image[] frames;
 		/**
-		 * The hitboxes of the animation
-		 *
-		 * @see #getCurrentHitbox()
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Shape[] frameShapes;
-		/**
 		 * The hitboxes as areas
 		 *
-		 * @see #getCurrentHitboxArea()
 		 * @since 0.1.0
 		 */
-		protected final @NotNull Area[] frameAreas;
+		protected final @NotNull Area[] hitboxes;
 		/**
 		 * The id of the animation
 		 *
@@ -190,8 +174,7 @@ public interface Animation extends Cloneable {
 			this.offset = offset;
 			int frameCount = countFrames();
 			frames = new Image[frameCount];
-			frameShapes = new Shape[frameCount];
-			frameAreas = new Area[frameCount];
+			hitboxes = new Area[frameCount];
 			fetchFrames();
 		}
 		
@@ -203,27 +186,25 @@ public interface Animation extends Cloneable {
 		 */
 		protected int countFrames() {
 			int current = 0;
-			while(ResourceManager.getImage(name + "#" + current) != null) {
+			while(ResourceManager.getImage(Identifier.fromString(name + "#" + current)) != null) {
 				current++;
 			}
 			return current == 0 ? 1 : current;
 		}
 		
 		/**
-		 * Sets the values in the {@link #frames}, {@link #frameShapes} and {@link #frameAreas} arrays.
+		 * Sets the values in the {@link #frames} and {@link #hitboxes} arrays.
 		 *
 		 * @since 0.1.0
 		 */
 		protected void fetchFrames() {
 			if(frames.length == 1) {
-				frames[0] = ResourceManager.getImage(name);
-				frameShapes[0] = ResourceManager.getHitbox(name);
-				frameAreas[0] = ResourceManager.getHitboxArea(name);
+				frames[0] = ResourceManager.getImage(Identifier.fromString(name));
+				hitboxes[0] = ResourceManager.getHitbox(Identifier.fromString(name + "/hitbox")).getArea();
 			} else {
 				for(int i = 0; i < frames.length; i++) {
-					frames[i] = ResourceManager.getImage(name + "#" + i);
-					frameShapes[i] = ResourceManager.getHitbox(name + "#" + i);
-					frameAreas[i] = ResourceManager.getHitboxArea(name + "#" + i);
+					frames[i] = ResourceManager.getImage(Identifier.fromString(name + "#" + i));
+					hitboxes[i] = ResourceManager.getHitbox(Identifier.fromString(name + "#" + i + "/hitbox")).getArea();
 				}
 			}
 		}
@@ -234,13 +215,8 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public @Nullable Shape getCurrentHitbox() {
-			return frameShapes[frame];
-		}
-		
-		@Override
-		public @Nullable Area getCurrentHitboxArea() {
-			return frameAreas[frame];
+		public @Nullable Area getCurrentHitbox() {
+			return hitboxes[frame];
 		}
 		
 		@Override
@@ -295,7 +271,7 @@ public interface Animation extends Cloneable {
 	 *
 	 * @since 0.1.0
 	 */
-	public static class LoopingAnimation extends StandardAnimation {
+	class LoopingAnimation extends StandardAnimation {
 		/**
 		 * Creates a new animation with the given name and no offset.
 		 *
@@ -331,7 +307,7 @@ public interface Animation extends Cloneable {
 	 *
 	 * @since 0.1.0
 	 */
-	public static class AnimationWithText extends LoopingAnimation {
+	class AnimationWithText extends LoopingAnimation {
 		/**
 		 * The text to show
 		 *
@@ -417,7 +393,7 @@ public interface Animation extends Cloneable {
 	 *
 	 * @since 0.1.0
 	 */
-	public static class MirrorableAnimation implements Animation {
+	class MirrorableAnimation implements Animation {
 		/**
 		 * The underlying animation instance
 		 *
@@ -431,17 +407,11 @@ public interface Animation extends Cloneable {
 		 */
 		protected final @NotNull BufferedImage[] mirroredFrames;
 		/**
-		 * The mirrored hitboxes of the animation
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Shape[] mirroredHitboxes;
-		/**
 		 * The mirrored hitbox areas
 		 *
 		 * @since 0.1.0
 		 */
-		protected final @NotNull Area[] mirroredAreas;
+		protected final @NotNull Area[] mirroredHitboxes;
 		/**
 		 * True if the animation is mirrored
 		 *
@@ -476,8 +446,7 @@ public interface Animation extends Cloneable {
 			this.animation = animation;
 			this.mirrored = mirrored;
 			mirroredFrames = new BufferedImage[animation.getLength()];
-			mirroredAreas = new Area[animation.getLength()];
-			mirroredHitboxes = new Shape[animation.getLength()];
+			mirroredHitboxes = new Area[animation.getLength()];
 			
 			animation.reset();
 			for(int i = 0; i < animation.getLength(); i++) {
@@ -495,8 +464,7 @@ public interface Animation extends Cloneable {
 					g2d.dispose();
 				}
 				mirroredFrames[i] = op.filter(image, dest);
-				mirroredHitboxes[i] = tx.createTransformedShape(animation.getCurrentHitbox());
-				mirroredAreas[i] = new Area(mirroredHitboxes[i]);
+				mirroredHitboxes[i] = new Area(tx.createTransformedShape(animation.getCurrentHitbox()));
 			}
 		}
 		
@@ -526,13 +494,8 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public @Nullable Shape getCurrentHitbox() {
+		public @Nullable Area getCurrentHitbox() {
 			return isMirrored() ? mirroredHitboxes[currentFrame] : animation.getCurrentHitbox();
-		}
-		
-		@Override
-		public @Nullable Area getCurrentHitboxArea() {
-			return isMirrored() ? mirroredAreas[currentFrame] : animation.getCurrentHitboxArea();
 		}
 		
 		@Override
@@ -588,7 +551,7 @@ public interface Animation extends Cloneable {
 	 *
 	 * @since 0.1.0
 	 */
-	public static class FormattedTextAnimation implements Animation {
+	class FormattedTextAnimation implements Animation {
 		/**
 		 * The empty area used as hitbox.
 		 *
@@ -722,12 +685,7 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public @Nullable Shape getCurrentHitbox() {
-			return EMPTY;
-		}
-		
-		@Override
-		public @Nullable Area getCurrentHitboxArea() {
+		public @Nullable Area getCurrentHitbox() {
 			return EMPTY;
 		}
 		
