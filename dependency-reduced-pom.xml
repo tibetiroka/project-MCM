@@ -31,18 +31,18 @@
                 <version>3.2.4</version>
                 <executions>
                     <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <transformers>
-                <transformer>
-                  <manifestEntries>
-                    <Multi-Release>true</Multi-Release>
-                  </manifestEntries>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer>
+                                    <manifestEntries>
+                                        <Multi-Release>true</Multi-Release>
+                                    </manifestEntries>
                 </transformer>
-                  <transformer/>
+                                <transformer/>
               </transformers>
             </configuration>
           </execution>
@@ -68,15 +68,15 @@
       <plugin>
         <groupId>com.googlecode.mavennatives</groupId>
         <artifactId>maven-nativedependencies-plugin</artifactId>
-        <version>0.0.7</version>
-        <executions>
-            <execution>
-                <id>unpacknatives</id>
-                <goals>
-                    <goal>copy</goal>
-                </goals>
-            </execution>
-        </executions>
+          <version>0.0.7</version>
+          <executions>
+              <execution>
+                  <id>unpacknatives</id>
+                  <goals>
+                      <goal>copy</goal>
+                  </goals>
+              </execution>
+          </executions>
       </plugin>
         </plugins>
     </build>
@@ -107,16 +107,16 @@
                 <exclusion>
                     <artifactId>junit-jupiter-api</artifactId>
                     <groupId>org.junit.jupiter</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>junit-jupiter-params</artifactId>
-          <groupId>org.junit.jupiter</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>junit-jupiter-engine</artifactId>
-          <groupId>org.junit.jupiter</groupId>
-        </exclusion>
-      </exclusions>
+                </exclusion>
+                <exclusion>
+                    <artifactId>junit-jupiter-params</artifactId>
+                    <groupId>org.junit.jupiter</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>junit-jupiter-engine</artifactId>
+                    <groupId>org.junit.jupiter</groupId>
+                </exclusion>
+            </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
