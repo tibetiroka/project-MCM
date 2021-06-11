@@ -46,6 +46,7 @@ public class Main {
 			t.setUncaughtExceptionHandler((t1, e) -> {
 				LOGGER.error("Uncaught exception in " + t1.getName(), e);
 				Main.panic();
+				System.exit(0);
 			});
 			return t;
 		}
@@ -253,7 +254,7 @@ public class Main {
 					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
 				}
 				//
-				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
+				//LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
 				//
 				EXECUTORS.execute(() -> {
 					ResourceManager.onStateChange(newGameState, newNextState);
