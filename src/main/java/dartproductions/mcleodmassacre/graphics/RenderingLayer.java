@@ -64,13 +64,13 @@ public class RenderingLayer {
 	 */
 	public @Nullable Entity getEntity(@NotNull Point location) {
 		for(Entity entity : entities) {
-			if(entity.hasMouseCollision() && entity.getCurrentAnimation().getCurrentHitboxArea() != null) {
+			if(entity.hasMouseCollision() && entity.getCurrentAnimation().getCurrentHitbox() != null) {
 				double x = location.x, y = location.y;
 				x -= entity.getLocation().x;
 				y -= entity.getLocation().y;
 				x -= entity.getCurrentAnimation().getOffset().width;
 				y -= entity.getCurrentAnimation().getOffset().height;
-				if(entity.getCurrentAnimation().getCurrentHitboxArea().contains(x, y)) {
+				if(entity.getCurrentAnimation().getCurrentHitbox().contains(x, y)) {
 					return entity;
 				}
 			}
