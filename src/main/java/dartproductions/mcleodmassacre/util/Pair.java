@@ -19,7 +19,7 @@ public interface Pair<First, Second> {
 	 * @return The first value
 	 * @since 0.1.0
 	 */
-	public default @Nullable First getFirst() {
+	default @Nullable First getFirst() {
 		return first();
 	}
 	
@@ -29,7 +29,7 @@ public interface Pair<First, Second> {
 	 * @return The first value
 	 * @since 0.1.0
 	 */
-	public default @Nullable Second getSecond() {
+	default @Nullable Second getSecond() {
 		return second();
 	}
 	
@@ -39,7 +39,7 @@ public interface Pair<First, Second> {
 	 * @return The first value
 	 * @since 0.1.0
 	 */
-	public @Nullable First first();
+	@Nullable First first();
 	
 	/**
 	 * Gets the second value of the pair
@@ -47,14 +47,14 @@ public interface Pair<First, Second> {
 	 * @return The first value
 	 * @since 0.1.0
 	 */
-	public @Nullable Second second();
+	@Nullable Second second();
 	
 	/**
 	 * Mutable pair implementation
 	 *
 	 * @since 0.1.0
 	 */
-	public static class MutablePair<First, Second> implements Pair<First, Second> {
+	class MutablePair<First, Second> implements Pair<First, Second> {
 		/**
 		 * The first value
 		 *
@@ -182,7 +182,7 @@ public interface Pair<First, Second> {
 	 *
 	 * @since 0.1.0
 	 */
-	public static class ImmutablePair<First, Second> implements Pair<First, Second> {
+	class ImmutablePair<First, Second> implements Pair<First, Second> {
 		/**
 		 * The first value
 		 *
@@ -224,6 +224,19 @@ public interface Pair<First, Second> {
 		@Override
 		public @Nullable Second second() {
 			return second;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(this == o) return true;
+			if(o == null || getClass() != o.getClass()) return false;
+			ImmutablePair<?, ?> that = (ImmutablePair<?, ?>) o;
+			return Objects.equals(getFirst(), that.getFirst()) && Objects.equals(getSecond(), that.getSecond());
+		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(getFirst(), getSecond());
 		}
 		
 		/**
