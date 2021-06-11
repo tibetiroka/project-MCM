@@ -15,14 +15,14 @@ import java.util.ArrayList;
 public interface PlayerEntity extends Entity {//todo
 	
 	@Override
-	public @NotNull Animation.MirrorableAnimation getCurrentAnimation();
+	@NotNull Animation.MirrorableAnimation getCurrentAnimation();
 	
 	/**
 	 * Moves this player to the left.
 	 *
 	 * @since 0.1.0
 	 */
-	public default void moveLeft() {
+	default void moveLeft() {
 		if(hasState(PlayerState.STANDING) || hasState(PlayerState.FALLING)) {
 			if(getMovementDelay() <= 0) {
 				setFacingLeft(true);
@@ -37,7 +37,7 @@ public interface PlayerEntity extends Entity {//todo
 	 *
 	 * @since 0.1.0
 	 */
-	public default void moveRight() {
+	default void moveRight() {
 		if(hasState(PlayerState.STANDING) || hasState(PlayerState.FALLING)) {
 			if(getMovementDelay() <= 0) {
 				setFacingLeft(false);
@@ -52,14 +52,14 @@ public interface PlayerEntity extends Entity {//todo
 	 *
 	 * @since 0.1.0
 	 */
-	public void shield();
+	void shield();
 	
 	/**
 	 * Moves this player upwards
 	 *
 	 * @since 0.1.0
 	 */
-	public default void moveUp() {
+	default void moveUp() {
 		if(hasState(PlayerState.STANDING) || (hasState(PlayerState.FALLING) && !hasState(PlayerState.VOID_JUMPED))) {
 			if(getJumpDelay() <= 0) {
 				accelerate(0, -getJumpSpeed());
@@ -78,7 +78,7 @@ public interface PlayerEntity extends Entity {//todo
 	 *
 	 * @since 0.1.0
 	 */
-	public default void moveDown() {
+	default void moveDown() {
 		if(hasState(PlayerState.STANDING)) {
 			accelerate(0, getJumpSpeed());
 			setCollisionMovable(false);
@@ -94,35 +94,35 @@ public interface PlayerEntity extends Entity {//todo
 	 *
 	 * @since 0.1.0
 	 */
-	public void attack();
+	void attack();
 	
 	/**
 	 * Activates the player's special ability
 	 *
 	 * @since 0.1.0
 	 */
-	public void special();
+	void special();
 	
 	/**
 	 * Makes the player use its grab ability
 	 *
 	 * @since 0.1.0
 	 */
-	public void grab();
+	void grab();
 	
 	/**
 	 * Activates the player's taunt ability
 	 *
 	 * @since 0.1.0
 	 */
-	public void taunt();
+	void taunt();
 	
 	/**
 	 * Makes this player walk in the direction it is facing.
 	 *
 	 * @since 0.1.0
 	 */
-	public default void walk() {
+	default void walk() {
 		if(isFacingLeft()) {
 			moveLeft();
 		} else {
@@ -136,7 +136,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The movement speed
 	 * @since 0.1.0
 	 */
-	public int getMovementSpeed();
+	int getMovementSpeed();
 	
 	/**
 	 * Gets the vertical movement speed of the player.
@@ -144,7 +144,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The jump speed
 	 * @since 0.1.0
 	 */
-	public int getJumpSpeed();
+	int getJumpSpeed();
 	
 	/**
 	 * Gets the current states of the player.
@@ -152,7 +152,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The states
 	 * @since 0.1.0
 	 */
-	public @NotNull ArrayList<PlayerState> getStates();
+	@NotNull ArrayList<PlayerState> getStates();
 	
 	/**
 	 * Sets whether the player has the specified state.
@@ -161,7 +161,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param value True if the player should have it
 	 * @since 0.1.0
 	 */
-	public void setState(@NotNull PlayerState state, boolean value);
+	void setState(@NotNull PlayerState state, boolean value);
 	
 	/**
 	 * Checks if the player has the specified state.
@@ -170,7 +170,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return True if the player has it
 	 * @since 0.1.0
 	 */
-	public default boolean hasState(@Nullable PlayerState state) {
+	default boolean hasState(@Nullable PlayerState state) {
 		return getStates().contains(state);
 	}
 	
@@ -180,7 +180,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The movement delay
 	 * @since 0.1.0
 	 */
-	public int getMovementDelay();
+	int getMovementDelay();
 	
 	/**
 	 * Sets the delay before the player can move again.
@@ -188,7 +188,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new movement delay
 	 * @since 0.1.0
 	 */
-	public void setMovementDelay(int delay);
+	void setMovementDelay(int delay);
 	
 	/**
 	 * Gets the delay before the player can jump again. The player can jump if this value is not positive.
@@ -196,7 +196,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The jump delay
 	 * @since 0.1.0
 	 */
-	public int getJumpDelay();
+	int getJumpDelay();
 	
 	/**
 	 * Sets the delay before the player can jump again.
@@ -204,7 +204,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new jump delay
 	 * @since 0.1.0
 	 */
-	public void setJumpDelay(int delay);
+	void setJumpDelay(int delay);
 	
 	/**
 	 * Gets the delay before the player can attack again. The player can attack if this value is not positive.
@@ -212,7 +212,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The attack delay
 	 * @since 0.1.0
 	 */
-	public int getAttackDelay();
+	int getAttackDelay();
 	
 	/**
 	 * Sets the delay before the player can attack again.
@@ -220,7 +220,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new attack delay
 	 * @since 0.1.0
 	 */
-	public void setAttackDelay(int delay);
+	void setAttackDelay(int delay);
 	
 	/**
 	 * Gets the delay before the player can use its special ability again. The player can uts it if this value is not positive.
@@ -228,7 +228,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The special delay
 	 * @since 0.1.0
 	 */
-	public int getSpecialDelay();
+	int getSpecialDelay();
 	
 	/**
 	 * Sets the delay before the player can use its special ability again.
@@ -236,7 +236,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new special ability delay
 	 * @since 0.1.0
 	 */
-	public void setSpecialDelay(int delay);
+	void setSpecialDelay(int delay);
 	
 	/**
 	 * Gets the delay before the player can grab again. The player can grab if this value is not positive.
@@ -244,7 +244,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The grab delay
 	 * @since 0.1.0
 	 */
-	public int getGrabDelay();
+	int getGrabDelay();
 	
 	/**
 	 * Sets the delay before the player can grab again.
@@ -252,7 +252,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new grab delay
 	 * @since 0.1.0
 	 */
-	public void setGrabDelay(int delay);
+	void setGrabDelay(int delay);
 	
 	/**
 	 * Gets the delay before the player can taunt again. The player can taunt if this value is not positive.
@@ -260,7 +260,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The taunt delay
 	 * @since 0.1.0
 	 */
-	public int getTauntDelay();
+	int getTauntDelay();
 	
 	/**
 	 * Sets the delay before the player can taunt again.
@@ -268,7 +268,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param delay The new taunt delay
 	 * @since 0.1.0
 	 */
-	public void setTauntDelay(int delay);
+	void setTauntDelay(int delay);
 	
 	/**
 	 * Checks if the player is facing towards the left side of the map.
@@ -276,7 +276,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return True if left, false if right
 	 * @since 0.1.0
 	 */
-	public boolean isFacingLeft();
+	boolean isFacingLeft();
 	
 	/**
 	 * Sets whether the player is facing towards the left or the right of the map.
@@ -284,7 +284,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param isLeft True if left, false if right
 	 * @since 0.1.0
 	 */
-	public void setFacingLeft(boolean isLeft);
+	void setFacingLeft(boolean isLeft);
 	
 	/**
 	 * Gets the maximum (default) health of this player.
@@ -292,7 +292,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The max health
 	 * @since 0.1.0
 	 */
-	public int getMaxHealth();
+	int getMaxHealth();
 	
 	/**
 	 * Gets the current health of this player.
@@ -300,7 +300,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @return The current health
 	 * @since 0.1.0
 	 */
-	public int getHealth();
+	int getHealth();
 	
 	/**
 	 * Sets the current health of the player.
@@ -308,7 +308,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param i The player's new health
 	 * @since 0.1.0
 	 */
-	public void setHealth(int i);
+	void setHealth(int i);
 	
 	/**
 	 * Deals damage to the player.
@@ -316,7 +316,7 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param i The amount of health to lose
 	 * @since 0.1.0
 	 */
-	public default void damage(int i) {
+	default void damage(int i) {
 		setHealth(getHealth() - i);
 	}
 	
@@ -326,17 +326,17 @@ public interface PlayerEntity extends Entity {//todo
 	 * @param value True if the entity can be moved; false otherwise
 	 * @since 0.1.0
 	 */
-	public void setCollisionMovable(boolean value);
+	void setCollisionMovable(boolean value);
 	
 	@Override
-	public default boolean onCollision(@NotNull Entity e) {
+	default boolean onCollision(@NotNull Entity e) {
 		return getVelocity().height <= 0;
 	}
 	
 	/**
 	 * The possible states of a player
 	 */
-	public static enum PlayerState {
+	enum PlayerState {
 		/**
 		 * Indicates a standing player. A standing player is actively colliding with ground below it, and has no special animations showing (e.g. not being grabbed).
 		 */

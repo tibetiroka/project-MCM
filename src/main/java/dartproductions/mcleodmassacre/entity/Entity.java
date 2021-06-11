@@ -22,7 +22,7 @@ public interface Entity {
 	 * @return The animation
 	 * @since 0.1.0
 	 */
-	public @NotNull Animation getCurrentAnimation();
+	@NotNull Animation getCurrentAnimation();
 	
 	/**
 	 * Gets the layer where this entity is rendered by default.
@@ -30,14 +30,14 @@ public interface Entity {
 	 * @return The rendering layer
 	 * @since 0.1.0
 	 */
-	public @NotNull RenderingLayer getDefaultLayer();
+	@NotNull RenderingLayer getDefaultLayer();
 	
 	/**
 	 * Runs whenever this entity is hovered. Doesn't run if the entity was hovered in the previous frame.
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onHover() {
+	default void onHover() {
 	}
 	
 	/**
@@ -45,7 +45,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onHoverStop() {
+	default void onHoverStop() {
 	}
 	
 	/**
@@ -54,14 +54,14 @@ public interface Entity {
 	 * @return True if hovered
 	 * @since 0.1.0
 	 */
-	public boolean isHovered();
+	boolean isHovered();
 	
 	/**
 	 * Runs whenever the mouse has pressed this entity.
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onMousePress() {
+	default void onMousePress() {
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onMouseRelease() {
+	default void onMouseRelease() {
 	}
 	
 	/**
@@ -78,7 +78,7 @@ public interface Entity {
 	 * @return True if has mouse collision
 	 * @since 0.1.0
 	 */
-	public default boolean hasMouseCollision() {
+	default boolean hasMouseCollision() {
 		return true;
 	}
 	
@@ -88,7 +88,7 @@ public interface Entity {
 	 * @return The location
 	 * @since 0.1.0
 	 */
-	public @NotNull Point getLocation();
+	@NotNull Point getLocation();
 	
 	/**
 	 * Gets the velocity of this entity.
@@ -96,7 +96,7 @@ public interface Entity {
 	 * @return The velocity
 	 * @since 0.1.0
 	 */
-	public default @NotNull Dimension getVelocity() {
+	default @NotNull Dimension getVelocity() {
 		return new Dimension(0, 0);
 	}
 	
@@ -105,7 +105,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void process() {
+	default void process() {
 		if(isMovable()) {
 			move();
 		}
@@ -120,7 +120,7 @@ public interface Entity {
 	 * @return True if can move
 	 * @since 0.1.0
 	 */
-	public default boolean isMovable() {
+	default boolean isMovable() {
 		return false;
 	}
 	
@@ -131,7 +131,7 @@ public interface Entity {
 	 * @param moveByY The distance on the y axis
 	 * @since 0.1.0
 	 */
-	public default void move(int moveByX, int moveByY) {
+	default void move(int moveByX, int moveByY) {
 		getLocation().translate(moveByX, moveByY);
 	}
 	
@@ -142,7 +142,7 @@ public interface Entity {
 	 * @param accY The change along the y axis
 	 * @since 0.1.0
 	 */
-	public default void accelerate(int accX, int accY) {
+	default void accelerate(int accX, int accY) {
 		getVelocity().width += accX;
 		getVelocity().height += accY;
 	}
@@ -152,7 +152,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void move() {
+	default void move() {
 		{
 			int maxX = getMaxSpeedX();
 			int maxY = getMaxSpeedY();
@@ -204,7 +204,7 @@ public interface Entity {
 	 * @return The horizontal deceleration
 	 * @since 0.1.0
 	 */
-	public default int getDecelerationX() {
+	default int getDecelerationX() {
 		return 0;
 	}
 	
@@ -214,7 +214,7 @@ public interface Entity {
 	 * @return The vertical deceleration
 	 * @since 0.1.0
 	 */
-	public default int getDecelerationY() {
+	default int getDecelerationY() {
 		return 0;
 	}
 	
@@ -224,7 +224,7 @@ public interface Entity {
 	 * @return The maximum horizontal speed
 	 * @since 0.1.0
 	 */
-	public default int getMaxSpeedX() {
+	default int getMaxSpeedX() {
 		return isMovable() ? -1 : 0;
 	}
 	
@@ -234,7 +234,7 @@ public interface Entity {
 	 * @return The maximum vertical speed
 	 * @since 0.1.0
 	 */
-	public default int getMaxSpeedY() {
+	default int getMaxSpeedY() {
 		return isMovable() ? -1 : 0;
 	}
 	
@@ -244,7 +244,7 @@ public interface Entity {
 	 * @return The entity's gravity
 	 * @since 0.1.0
 	 */
-	public default int getGravity() {
+	default int getGravity() {
 		return 0;
 	}
 	
@@ -253,7 +253,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onSelect() {
+	default void onSelect() {
 	}
 	
 	/**
@@ -261,7 +261,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void onUnselect() {
+	default void onUnselect() {
 	}
 	
 	/**
@@ -270,7 +270,7 @@ public interface Entity {
 	 * @return True if can be selected
 	 * @since 0.1.0
 	 */
-	public default boolean isSelectable() {
+	default boolean isSelectable() {
 		return false;
 	}
 	
@@ -280,7 +280,7 @@ public interface Entity {
 	 * @return True if selected
 	 * @since 0.1.0
 	 */
-	public boolean isSelected();
+	boolean isSelected();
 	
 	/**
 	 * Checks if this entity can collide with other entities.
@@ -288,7 +288,7 @@ public interface Entity {
 	 * @return True if can collide
 	 * @since 0.1.0
 	 */
-	public default boolean hasCollision() {
+	default boolean hasCollision() {
 		return false;
 	}
 	
@@ -298,7 +298,7 @@ public interface Entity {
 	 * @return True if can be moved
 	 * @since 0.1.0
 	 */
-	public default boolean isCollisionMovable() {
+	default boolean isCollisionMovable() {
 		return hasCollision();
 	}
 	
@@ -309,7 +309,7 @@ public interface Entity {
 	 * @return True if the engine should process this collision, false otherwise
 	 * @since 0.1.0
 	 */
-	public default boolean onCollision(@NotNull Entity e) {
+	default boolean onCollision(@NotNull Entity e) {
 		return true;
 	}
 	
@@ -318,7 +318,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void register() {
+	default void register() {
 		getDefaultLayer().add(this);
 		GameEngine.registerEntity(this);
 	}
@@ -328,7 +328,7 @@ public interface Entity {
 	 *
 	 * @since 0.1.0
 	 */
-	public default void unregister() {
+	default void unregister() {
 		getDefaultLayer().remove(this);
 		GameEngine.unregisterEntity(this);
 	}

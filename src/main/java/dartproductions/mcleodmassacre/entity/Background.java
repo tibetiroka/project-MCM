@@ -109,37 +109,4 @@ public class Background implements Entity {
 		return false;
 	}
 	
-	/**
-	 * Same as the background but appears on high priority rendering layers ({@link GraphicsManager#LAYER_GUI}).
-	 *
-	 * @since 0.1.0
-	 */
-	public static class Foreground extends Background {
-		
-		/**
-		 * Creates a new foreground entity.
-		 *
-		 * @param animation The animation to show
-		 * @param location  The location of the entity
-		 * @since 0.1.0
-		 */
-		public Foreground(@NotNull Animation animation, @NotNull Point location) {
-			super(animation, location);
-		}
-		
-		/**
-		 * Creates a new foreground entity at the default location.
-		 *
-		 * @param animation The animation to show
-		 * @since 0.1.0
-		 */
-		public Foreground(@NotNull Animation animation) {
-			super(animation);
-		}
-		
-		@Override
-		public @NotNull RenderingLayer getDefaultLayer() {
-			return GraphicsManager.getLayer(GraphicsManager.LAYER_GUI);
-		}
-	}
 }
