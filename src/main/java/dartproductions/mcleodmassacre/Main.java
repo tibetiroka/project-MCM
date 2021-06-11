@@ -151,8 +151,8 @@ public class Main {
 		configureLogger();
 		parseArgs(args);
 		loadAppData();
-		startGameLoops();
 		ResourceManager.onStateChange(GameState.LOADING, GameState.MAIN_MENU);//synchronous resource loading initially
+		startGameLoops();
 		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
@@ -256,14 +256,14 @@ public class Main {
 				//
 				//LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
 				//
+				//
+				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
 				EXECUTORS.execute(() -> {
 					ResourceManager.onStateChange(newGameState, newNextState);
 					if(newGameState.isLoadingState()) {
 						setGameState(newNextState, null);
 					}
 				});
-				//
-				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
 			}
 		}
 	}
