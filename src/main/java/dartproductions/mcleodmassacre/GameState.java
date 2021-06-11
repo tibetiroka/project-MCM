@@ -10,6 +10,7 @@ import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
+import dartproductions.mcleodmassacre.resources.plugin.Plugin;
 import dartproductions.mcleodmassacre.resources.tag.CustomTag;
 import dartproductions.mcleodmassacre.resources.tag.Tag;
 import dartproductions.mcleodmassacre.sound.SoundManager;
@@ -25,6 +26,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Point;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
@@ -323,7 +325,19 @@ public interface GameState {
 				List<String> credits = ResourceManager.readTextFile("credits.txt");
 				Animation creditsAnim = new FormattedTextAnimation("credits", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> credits, i -> new Dimension(0, 0));
 				MathUtils.setToCenter(new Foreground(creditsAnim)).register();
-				//Animation pluginsAnim=new FormattedTextAnimation("plugins",new Font(Font.SERIF,Font.PLAIN,12),1,true,i->Color.BLACK,i->)
+				Animation pluginsAnim = new FormattedTextAnimation("plugins", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> {
+					ArrayList<String> list = new ArrayList<>();
+					list.add("» Plugins");
+					for(Identifier id : ResourceManager.getRegisteredPlugins()) {
+						Plugin plugin = ResourceManager.getPlugin(id);
+						list.add(plugin.getName() + " " + plugin.getVersion());
+					}
+					return list;
+				}, i -> new Dimension(0, 0));
+				Foreground plugins = new Foreground(pluginsAnim);
+				MathUtils.setToCenter(plugins);
+				plugins.getLocation().x = getDefaultScreenSize().width - plugins.getCurrentAnimation().getCurrentFrame().getWidth(GraphicsManager.WINDOW) - 20;
+				plugins.register();
 			} catch(IOException e) {
 				LOGGER.error("Could not read credits file", e);
 			}
