@@ -22,7 +22,7 @@ public interface Identifier {
 	 *
 	 * @since 0.1.0
 	 */
-	String DEFAULT_GROUP = "mcm";
+	String DEFAULT_GROUP = "mcleod_massacre";
 	/**
 	 * The default group for a plugin's identifier.
 	 *
