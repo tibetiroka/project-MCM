@@ -330,7 +330,7 @@ public interface GameState {
 	}
 	
 	/**
-	 * A game state interface for menus. Implements {@link #getBackgroundMusicTag(GameState)} to return {@link Tag#MENU_BACKGROUN_MUSIC}.
+	 * A game state interface for menus. Implements {@link #getBackgroundMusicTag(GameState)} to return {@link Tag#MENU_BACKGROUND_MUSIC}.
 	 *
 	 * @since 0.1.0
 	 */
@@ -348,7 +348,7 @@ public interface GameState {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return Tag.MENU_BACKGROUN_MUSIC.getId();
+			return Tag.MENU_BACKGROUND_MUSIC.getId();
 		}
 		
 		@Override
@@ -366,7 +366,7 @@ public interface GameState {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return Tag.MENU_BACKGROUN_MUSIC.getId();
+			return Tag.MENU_BACKGROUND_MUSIC.getId();
 		}
 		
 		@Override

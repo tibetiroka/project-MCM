@@ -44,7 +44,7 @@ public interface Tag extends Identified {
 	 *
 	 * @since 0.1.0
 	 */
-	@NotNull Tag MENU_BACKGROUN_MUSIC = new GameStateTag(Identifier.fromString("tags/menu_background"), GameState.Menu.class);
+	@NotNull Tag MENU_BACKGROUND_MUSIC = new GameStateTag(Identifier.fromString("tags/menu_background"), GameState.Menu.class);
 	
 	/**
 	 * Checks if the resource is required for the specified game state. If a resource is not required, it might get unloaded. Any required resource will be loaded.
