@@ -1,19 +1,13 @@
 package dartproductions.mcleodmassacre.graphics;
 
 import dartproductions.mcleodmassacre.Main;
-import dartproductions.mcleodmassacre.Main.GameState;
-import dartproductions.mcleodmassacre.ResourceManager;
-import dartproductions.mcleodmassacre.entity.Background;
-import dartproductions.mcleodmassacre.entity.Background.Foreground;
-import dartproductions.mcleodmassacre.entity.Button;
-import dartproductions.mcleodmassacre.graphics.Animation.FormattedTextAnimation;
-import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
 import dartproductions.mcleodmassacre.options.Options.StandardOptions;
 import dartproductions.mcleodmassacre.options.QualityOption;
-import dartproductions.mcleodmassacre.util.MathUtils;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
+import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,22 +19,16 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
-import static dartproductions.mcleodmassacre.util.MathUtils.*;
 
 /**
  * Class for managing graphics-related locks and paint operations.
@@ -168,7 +156,7 @@ public class GraphicsManager extends JPanel {
 		Options options = ResourceManager.getOptions();
 		WINDOW = new JFrame("McLeod Massacre");
 		//
-		WINDOW.setIconImage(ResourceManager.getImage("icon"));
+		WINDOW.setIconImage(ResourceManager.getImage(Identifier.fromString("icon")));
 		WINDOW.setSize(((IntOption) options.getSetting(StandardOptions.WIDTH)).getValue(), ((IntOption) options.getSetting(StandardOptions.HEIGHT)).getValue());
 		WINDOW.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WINDOW.addWindowListener(new WindowAdapter() {
@@ -196,7 +184,7 @@ public class GraphicsManager extends JPanel {
 		//
 		//setting cursor
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		BufferedImage image = ResourceManager.getBufferedImage("cursor");
+		BufferedImage image = ResourceManager.getBufferedImage(Identifier.fromString("cursor"));
 		Cursor c = toolkit.createCustomCursor(image, new Point(0, toolkit.getBestCursorSize(image.getWidth(), image.getHeight()).height - 1), "MCM standard");
 		WINDOW.setCursor(c);
 		//
@@ -340,140 +328,6 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static void clearLayer(int i) {
 		getLayer(i).entities.clear();
-	}
-	
-	/**
-	 * Handles any changes when the application's state changes.
-	 *
-	 * @param newGameState The new state of the application
-	 * @param newNextState The expected state after the new state
-	 * @since 0.1.0
-	 */
-	public static synchronized void onStateChange(@NotNull GameState newGameState, @Nullable GameState newNextState) {
-		synchronized(GRAPHICS_LOCK) {
-			switch(newGameState) {
-				case ROSTER -> {
-					addMenuBackground();
-					addRoster();
-					addBackButton(GameState.MAIN_MENU);
-				}
-				case MAIN_MENU -> {
-					addMenuBackground();
-					addGameMenu();
-				}
-				case CREDITS -> {
-					addMenuBackground();
-					addCredits();
-				}
-				case DATA_MENU -> {
-					addMenuBackground();
-					addCredits();//temp
-					addBackButton(GameState.MAIN_MENU);
-				}
-				case LOADING -> {
-					setToCenter(new Background(new LoopingAnimation("loading"))).register();
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Adds the standard visuals for the credits screen.
-	 *
-	 * @since 0.1.0
-	 */
-	private static void addCredits() {
-		{
-			try {
-				List<String> credits = ResourceManager.readTextFile("credits.txt");
-				Animation creditsAnim = new FormattedTextAnimation("credits", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> credits, i -> new Dimension(0, 0));
-				MathUtils.setToCenter(new Foreground(creditsAnim)).register();
-			} catch(IOException e) {
-				LOGGER.error("Could not read credits file", e);
-			}
-		}
-	}
-	
-	/**
-	 * Adds the 'previous menu' button.
-	 *
-	 * @param state The state to change to when the button is pressed
-	 * @since 0.1.0
-	 */
-	private static void addBackButton(@NotNull GameState state) {
-		new Button(new LoopingAnimation("mm_back_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(state, null)).register();
-	}
-	
-	/**
-	 * Adds the standard visuals for the roster.
-	 *
-	 * @since 0.1.0
-	 */
-	private static void addRoster() {
-		new Background(new LoopingAnimation("css_playerboxes")).register();
-		new Foreground(new LoopingAnimation("css_top")).register();
-		//
-		{
-			final String[] characters = {"blade", "blue", "azrael", "spikeman", "ronin", "korah", "TODO", "ryder", "TODO", "LS", "terro", "sab", "eton", "mitsu", "daichi", "glitch", "pat", "damaus", "meikiru", "TODO", "internet", "sakuro", "hackensaw", "yjf", "ycoldsteel", "redwolf", "random", "boner", "kfm"};
-			final int rowSize = 8;
-			final int imageWidth = ResourceManager.getBufferedImage("roster_character_background").getWidth();
-			final int imageHeight = ResourceManager.getBufferedImage("roster_character_background").getHeight();
-			final int topOffset = (int) (imageHeight * 1.5);
-			final int spacingHeight = 10;
-			final int spacingWidth = -10;
-			for(int i = 0; i < characters.length; i++) {
-				final String name = characters[i];
-				int row = i / rowSize;
-				int col = i % rowSize;
-				int rowCharacters = Math.min(rowSize, characters.length - row * rowSize);
-				int offsetY = topOffset + imageHeight * row + spacingHeight * row;
-				int offsetX;
-				{
-					int rowWidth = rowCharacters * (spacingWidth + imageWidth) - spacingWidth;//one less spacing than image
-					int firstOffsetX = (getDefaultScreenSize().width - rowWidth) / 2;
-					offsetX = firstOffsetX + col * (spacingWidth + imageWidth);
-				}
-				Image image = ResourceManager.getImage("roster_mug" + name);
-				Foreground character = new Foreground(new LoopingAnimation("roster_mug" + (image == null ? "random" : name), new Dimension(offsetX, offsetY)));
-				Foreground border = new Foreground(new LoopingAnimation("roster_character_border", new Dimension(offsetX, offsetY)));
-				Button button = new Button(new LoopingAnimation("roster_character_background"), null, null, null, new Point(offsetX, offsetY), () -> {
-					//todo
-					System.out.println(name);
-				});
-				button.register();
-				character.register();
-				border.register();
-			}
-		}
-	}
-	
-	/**
-	 * Adds the standard buttons and visuals for the main menu.
-	 *
-	 * @since 0.1.0
-	 */
-	private static void addGameMenu() {
-		new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.ROSTER, null)).register();
-		new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.GALLERY, null)).register();
-		new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.SETTINGS_MENU, null)).register();
-		new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.DATA_MENU, null)).register();
-		new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.VERSUS_MENU, null)).register();
-		//
-		new Foreground(new LoopingAnimation("mm_data")).register();
-		new Foreground(new LoopingAnimation("mm_gallery")).register();
-		new Foreground(new LoopingAnimation("mm_options")).register();
-		new Foreground(new LoopingAnimation("mm_solo_placeholder")).register();
-		new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
-	}
-	
-	/**
-	 * Adds the standard menu backgrounds to the rendering engine and the game engine.
-	 *
-	 * @since 0.1.0
-	 */
-	private static void addMenuBackground() {
-		new Background(new LoopingAnimation("menu_background")).register();
-		new Background(new LoopingAnimation("mm_border")).register();
 	}
 	
 	@Override
