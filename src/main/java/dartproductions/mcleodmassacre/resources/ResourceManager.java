@@ -428,6 +428,9 @@ public class ResourceManager {
 					try {
 						for(String line : Files.readAllLines(path)) {
 							line = line.strip().trim();
+							if(line.isEmpty()) {
+								continue;
+							}
 							if(Pattern.matches(".*\\s+.*", line)) {//contains whitespace -> not just a tag entry
 								String[] parts = line.split("\\s+");
 								switch(parts[0]) {//the operation or something
