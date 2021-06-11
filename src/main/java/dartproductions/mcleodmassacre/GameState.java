@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.List;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
-import static dartproductions.mcleodmassacre.util.MathUtils.*;
 
 /**
  * All of the supported states of the application
@@ -111,7 +110,15 @@ public interface GameState {
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Loading.super.onStateActivation(previousState, previousNextState, nextState);
-			setToCenter(new Background(new LoopingAnimation("loading"))).register();
+			/*setToCenter(new Background(new LoopingAnimation("loading"))).register();
+			synchronized(GraphicsManager.GRAPHICS_LOCK) {
+				ResolutionManager.fillLocalScreen();
+			}*/
+		}
+		
+		@Override
+		public void onStateDeactivation(@Nullable GameState previousNextState, @NotNull GameState newGameState, @Nullable GameState newNextState) {
+		
 		}
 	};
 	@NotNull Logger LOGGER = LogManager.getLogger(GameState.class);
@@ -282,11 +289,11 @@ public interface GameState {
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
 			//
-			new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.ROSTER, null)).register();
-			new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.GALLERY, null)).register();
-			new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.SETTINGS_MENU, null)).register();
-			new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.DATA_MENU, null)).register();
-			new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.VERSUS_MENU, null)).register();
+			new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, ROSTER)).register();
+			new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, GALLERY)).register();
+			new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, SETTINGS_MENU)).register();
+			new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, DATA_MENU)).register();
+			new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(LOADING, VERSUS_MENU)).register();
 			//
 			new Foreground(new LoopingAnimation("mm_data")).register();
 			new Foreground(new LoopingAnimation("mm_gallery")).register();
