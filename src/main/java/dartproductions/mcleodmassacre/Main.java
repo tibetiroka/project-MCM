@@ -2,9 +2,9 @@ package dartproductions.mcleodmassacre;
 
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
-import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.input.InputManager;
-import dartproductions.mcleodmassacre.sound.SoundManager;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
+import dartproductions.mcleodmassacre.resources.plugin.PluginManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +44,7 @@ public class Main {
 		public Thread newThread(@NotNull Runnable r) {
 			Thread t = new Thread(r, "Executor " + (count++));
 			t.setUncaughtExceptionHandler((t1, e) -> {
-				LOGGER.error("Uncaught exception in async executor thread (" + t1.getName() + ")", e);
+				LOGGER.error("Uncaught exception in " + t1.getName(), e);
 				Main.panic();
 			});
 			return t;
@@ -86,6 +86,7 @@ public class Main {
 		parseArgs(args);
 		loadAppData();
 		startGameLoops();
+		ResourceManager.onStateChange(GameState.LOADING, GameState.MAIN_MENU);//synchronous resource loading initially
 		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
@@ -96,7 +97,7 @@ public class Main {
 	 */
 	private static void startGameLoops() {
 		InputManager.initialize();
-		ImageHitbox.waitForProcessing();
+		ResourceManager.waitForLoading();
 		GraphicsManager.startGameLoop();
 		GameEngine.start();
 	}
@@ -108,9 +109,11 @@ public class Main {
 	 */
 	private static void loadAppData() {
 		ResourceManager.extractResources();
+		PluginManager.findPlugins();
+		ResourceManager.waitForLoading();
+		PluginManager.loadPlugins();
 		ResourceManager.getOptions();
-		ResourceManager.loadStandardGraphics();
-		ResourceManager.loadStandardMusic();
+		ResourceManager.waitForLoading();
 	}
 	
 	/**
@@ -161,7 +164,7 @@ public class Main {
 	 * @param args The arguments
 	 * @since 0.1.0
 	 */
-	private static void parseArgs(String[] args) {
+	private static void parseArgs(@NotNull String[] args) {
 		for(String arg : args) {
 			switch(arg) {
 				case "--debug" -> {
@@ -244,12 +247,30 @@ public class Main {
 	 * @since 0.1.0
 	 */
 	public static synchronized void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
-		GAME_STATE = newGameState;
-		NEXT_STATE = newNextState;
-		LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
-		GameEngine.onStateChange(newGameState, newNextState);
-		GraphicsManager.onStateChange(newGameState, newNextState);
-		SoundManager.onStateChange(newGameState, newNextState);
+		synchronized(GameEngine.ENGINE_WAIT_LOCK) {
+			synchronized(GraphicsManager.GRAPHICS_LOCK) {
+				GameState previous = GAME_STATE;
+				GameState previousNext = NEXT_STATE;
+				//
+				GAME_STATE = newGameState;
+				NEXT_STATE = newNextState;
+				//
+				if(previous != null) {
+					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
+				}
+				//
+				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
+				//
+				EXECUTORS.execute(() -> {
+					ResourceManager.onStateChange(newGameState, newNextState);
+					if(newGameState.isLoadingState()) {
+						setGameState(newNextState, null);
+					}
+				});
+				//
+				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
+			}
+		}
 	}
 	
 	/**
@@ -330,89 +351,4 @@ public class Main {
 		printThreadDump();
 	}
 	
-	/**
-	 * All of the supported states of the application
-	 *
-	 * @since 0.1.0
-	 */
-	public static enum GameState {
-		/**
-		 * Loading state between two 'normal' states. The next game state should be specified when changing state to loading.
-		 *
-		 * @since 0.1.0
-		 */
-		LOADING,
-		/**
-		 * State for the main menu. This is the first screen the player sees after the initial loading.
-		 *
-		 * @since 0.1.0
-		 */
-		MAIN_MENU,
-		/**
-		 * This state is used when the game is paused while on a map, fighting with other characters.
-		 *
-		 * @since 0.1.0
-		 */
-		IN_GAME_PAUSED,
-		/**
-		 * The general settings menu
-		 *
-		 * @since 0.1.0
-		 */
-		SETTINGS_MENU,
-		/**
-		 * The sound settings menu
-		 *
-		 * @since 0.1.0
-		 */
-		SOUND_SETTINGS,
-		/**
-		 * The control settings menu
-		 *
-		 * @since 0.1.0
-		 */
-		CONTROL_SETTINGS,
-		/**
-		 * The quality settings menu
-		 *
-		 * @since 0.1.0
-		 */
-		QUALITY_SETTINGS,
-		/**
-		 * The roster screen
-		 *
-		 * @since 0.1.0
-		 */
-		ROSTER,
-		/**
-		 * Indicates that the player is playing on a map against other characters.
-		 *
-		 * @since 0.1.0
-		 */
-		IN_GAME,
-		/**
-		 * The gallery menu
-		 *
-		 * @since 0.1.0
-		 */
-		GALLERY,
-		/**
-		 * The data menu
-		 *
-		 * @since 0.1.0
-		 */
-		DATA_MENU,
-		/**
-		 * The menu for playing agains other players
-		 *
-		 * @since 0.1.0
-		 */
-		VERSUS_MENU,
-		/**
-		 * The credits screen
-		 *
-		 * @since 0.1.0
-		 */
-		CREDITS
-	}
 }
