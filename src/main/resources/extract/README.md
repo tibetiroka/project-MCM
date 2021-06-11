@@ -25,10 +25,10 @@ your machine, or fight against anyone on your local network.
 |Storage space|200 MB|500 MB|
 
 (Please note that the actual requirements will depend on your OS. The game generally doesn't use more than 700 MB RAM at
-any time, but if your OS takes up a lot of the available memory you might need 4GB to actually have enough for the game.
-The OpenGL version is just an estimation, you will probably be able to run the game on older systems at the cost of
-performance. The storage space used also depends on the file system of your OS, and it keeps changing as we are adding
-more and more assets to the game.)
+any time, but if your OS takes up a lot of the available memory you might need 4 GB to actually have enough for the
+game. The OpenGL version is just an estimation, you will probably be able to run the game on older systems at the cost
+of performance. The storage space used also depends on the file system of your OS, and it keeps changing as we are
+adding more and more assets to the game.)
 
 # Installing
 
@@ -40,7 +40,7 @@ planning to take this game to other platforms as well.
 #### **Via the McLeodMassacre.zip file**
 
 1. Go to the [releases](https://github.com/DartProductions/project-MCM/releases), and choose the version you want to
-   install. We recommend to use the latest stable release.
+   install. We recommend using the latest stable release.
 
 2. Download the file and extract it to any location on your machine.
 
@@ -52,19 +52,19 @@ planning to take this game to other platforms as well.
 
    - For AArch64 Linux systems, use the `run-linux-aarch64` file.
 
-   - For MacOS systems, use the `run-macos` file.
+   - For macOS systems, use the `run-macos` file.
 
-   You can probably run the game on other operating systems as well, but they are not supported and the game isn't
+   You can probably run the game on other operating systems as well, but they are not supported, and the game isn't
    guaranteed to work properly on them.
 
-   On Linux and Mac, you migth need to make the launcher file executable via `chmod +x`.
+   On Linux and Mac, you might need to make the launcher file executable via `chmod +x`.
 
 #### **Via unzipped release files**
 
 1. Go to the [releases](https://github.com/DartProductions/project-MCM/releases), and choose the version you want to
-   install. We recommend to use the latest stable release.
+   install. We recommend using the latest stable release.
 
-*Steps 2 and 3 are for Windows users only. Any Linux or MacOS users have to use the provided java files (Step 3/b).*
+*Steps 2 and 3 are for Windows users only. Any Linux or macOS users have to use the provided java files (Step 3/b).*
 
 2. Check your Java version by running the command `java -version` in your console/command line. You can skip this option
    if you are unsure how to do this.
@@ -74,8 +74,8 @@ planning to take this game to other platforms as well.
    - Download official releases from [Oracle](https://www.oracle.com/java/technologies/javase-jdk16-downloads.html).
 
    - Alternatively, you can use the java files provided with the release. Make sure you choose the correct version for
-     your operating system (you can download all of the files if you are not sure which one to use). Place the
-     downloaded file(s) in your game installation folder.
+     your operating system (you can download all the files if you are not sure which one to use). Place the downloaded
+     file(s) in your game installation folder.
 
 4. Download the game jar file into your installation folder. It should be named `McLeodMassacre.jar`.
 
@@ -88,9 +88,9 @@ planning to take this game to other platforms as well.
 
    - For AArch64 Linux systems, download the `run-linux-aarch64` file.
 
-   - For MacOS systems, download the `run-macos` file.
+   - For macOS systems, download the `run-macos` file.
 
-   If you are unsure, you can download all of the files and try which one launches the game correctly.
+   If you are unsure, you can download all the files and try which one launches the game correctly.
 
 #### **Building from source**
 
@@ -124,22 +124,21 @@ There are some files that are _not_ distributed under that license by us.
 
    - `linux64-java` (the `java` file from the Linux/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
-   - `osx-java` (the `java` file from the macOs/x64 release of OpenJDK 16.0.1 General-Availability Release)
+   - `osx-java` (the `java` file from the macOS/x64 release of OpenJDK 16.0.1 General-Availability Release)
 
    The data of these files have not been modified, and we are not claiming any rights for them.
 
 2. Contents of the [lib](https://github.com/DartProductions/project-MCM/tree/engine-dev/src/main/resources/extract/lib)
    folder
 
-   These files belong to other projects we used during the devolopment of this game. Please check the license
+   These files belong to other projects we used during the development of this game. Please check the license
    of [JInput](https://jinput.github.io/jinput/) for the license used for these files.
 
-   We are distributing these files under their original license. They are unmodified and we are not claiming and rights
+   We are distributing these files under their original license. They are unmodified, and we are not claiming and rights
    to them.
 
 # Contributing
 
-As a free and open-spource game, McLeod Massacre was created by the fan community, and we are hoping to keep it that
-way. You are allowed to create your own extensions that can make it into this game after they complete the review
-process.
+As a free and open-source game, McLeod Massacre was created by the fan community, and we are hoping to keep it that way.
+You are allowed to create your own extensions that can make it into this game after they complete the review process.
 
