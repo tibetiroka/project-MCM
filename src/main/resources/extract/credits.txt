@@ -1,13 +1,17 @@
 » Programming
-tibetiroka (https://github.com/tibetiroka)
+tibetiroka#8667
 
 » UI and portraits
-Dart (dartboi#9671)
+dartboi#9671
 
 » Gameplay
-Phazer (Phazer#2286)
+Phazer#2286
 
-» Other credits
-Main music theme: RedWolfStudios
-Minor music/sfx: Justonemorecupofcoffee#8399
-Minor sprites: Kined#3939
+» Sprites
+Mr.PresttoSauce#8410
+Kined#3939
+Dracobot#5488
+keil#6868
+
+» Music
+Justonemorecupofcoffee#8399
