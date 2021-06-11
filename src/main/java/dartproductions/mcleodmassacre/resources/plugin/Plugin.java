@@ -58,6 +58,7 @@ public class Plugin implements Identified {
 	 * @since 0.1.0
 	 */
 	public Plugin(@NotNull File directory) throws IOException {
+		PluginManager.LOGGER.info("Registering plugin from directory " + directory);
 		this.directory = directory;
 		config = new Gson().fromJson(Files.readString(new File(directory, "PLUGIN").toPath()), PluginConfiguration.class);
 		config.verify();
@@ -76,6 +77,7 @@ public class Plugin implements Identified {
 				loadbefore.add(Identifier.fromString(Identifier.DEFAULT_PLUGIN_GROUP, s));
 			}
 		}
+		PluginManager.LOGGER.info("Read config for plugin " + this);
 	}
 	
 	/**

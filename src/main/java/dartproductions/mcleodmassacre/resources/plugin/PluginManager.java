@@ -31,7 +31,8 @@ public class PluginManager {
 	 * @since 0.1.0
 	 */
 	public static void findPlugins() {
-		File root = new File("");
+		LOGGER.info("Searching for plugins...");
+		File root = new File(".");
 		if(root.exists()) {
 			for(File folder : root.listFiles()) {
 				if(folder.isDirectory()) {
@@ -40,6 +41,7 @@ public class PluginManager {
 						try {
 							Plugin plugin = new Plugin(folder);
 							ResourceManager.registerPlugin(plugin);
+							LOGGER.info("Registered plugin " + plugin);
 						} catch(IOException e) {
 							LOGGER.warn("Could not load plugin in folder " + folder.getPath(), e);
 						}
@@ -47,6 +49,7 @@ public class PluginManager {
 				}
 			}
 		}
+		ResourceManager.waitForLoading();
 	}
 	
 	/**
