@@ -47,13 +47,13 @@ public interface Identifier {
 		if(parts.length == 1) {
 			parts = new String[]{DEFAULT_GROUP, parts[0]};
 		} else if(parts.length != 2) {
-			throw new IllegalArgumentException("Input string cannot contain more that one colon!");
+			throw new IllegalArgumentException("Input string cannot contain more that one colon (input: '" + string + "')!");
 		}
 		
 		if(isValidGroup(parts[0]) && isValidName(parts[1])) {
 			return new StandardIdentifier(parts[0], parts[1]);
 		}
-		throw new IllegalArgumentException("Illegal group or name specified for tag");
+		throw new IllegalArgumentException("Illegal group or name specified for tag (input: '" + string + "')");
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public interface Identifier {
 		if(isValidGroup(group) && isValidName(name)) {
 			return new StandardIdentifier(group, name);
 		}
-		throw new IllegalArgumentException("The group or the name is invalid");
+		throw new IllegalArgumentException("The group or the name is invalid (group: '" + group + "', name: '" + name + "'");
 	}
 	
 	/**
