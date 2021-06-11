@@ -44,20 +44,12 @@ planning to take this game to other platforms as well.
 
 2. Download the file and extract it to any location on your machine.
 
-3. Run the appropriate launcher file depending on your operating system:
-
-   - For Windows systems (both 32 and 64 bits), use the `run.bat` or `run.exe` files.
-
-   - For 64-bit Linux systems, use the `run-linux64` file.
-
-   - For AArch64 Linux systems, use the `run-linux-aarch64` file.
-
-   - For macOS systems, use the `run-macos` file.
+3. Run the appropriate launcher file depending on your operating system.
 
    You can probably run the game on other operating systems as well, but they are not supported, and the game isn't
    guaranteed to work properly on them.
 
-   On Linux and Mac, you might need to make the launcher file executable via `chmod +x`.
+   On Linux and Mac, you might need to make the launcher file executable via `chmod +x`, or launch them from the terminal.
 
 #### **Via unzipped release files**
 
@@ -80,15 +72,7 @@ planning to take this game to other platforms as well.
 4. Download the game jar file into your installation folder. It should be named `McLeodMassacre.jar`.
 
 5. You have to use a launcher file specific to your operating system. Download the launcher file into your game
-   installation folder.
-
-   - For Windows systems (both 32 and 64 bits), download the `run.bat` or `run.exe` files.
-
-   - For 64-bit Linux systems, download the `run-linux64` file.
-
-   - For AArch64 Linux systems, download the `run-linux-aarch64` file.
-
-   - For macOS systems, download the `run-macos` file.
+   installation folder. It is called `McLeod Massacre - Your OS .fileExtension`.
 
    If you are unsure, you can download all the files and try which one launches the game correctly.
 
