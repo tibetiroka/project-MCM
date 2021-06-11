@@ -19,7 +19,7 @@ import java.util.function.BiPredicate;
  * @since 0.1.0
  */
 public interface Cache<T> extends Identified {
-	Logger LOGGER = LogManager.getLogger(Cache.class);
+	@NotNull Logger LOGGER = LogManager.getLogger(Cache.class);
 	
 	/**
 	 * Loads all registered resources.
