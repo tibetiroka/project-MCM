@@ -44,30 +44,18 @@ public class SoundManager {
 	 */
 	public static final Object AUDIO_LOCK = new Object();
 	/**
-	 * The created but inactive audio clips. These clips are not playing audio.
-	 *
-	 * @since 0.1.0
-	 */
-	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<ResumableClip>> INACTIVE_SFX = new ConcurrentHashMap<>();
-	/**
 	 * The active audio clips. These clips are playing audio.
 	 *
 	 * @since 0.1.0
 	 */
 	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<Pair<Entity, ResumableClip>>> ACTIVE_SFX = new ConcurrentHashMap<>();
+	/**
+	 * The created but inactive audio clips. These clips are not playing audio.
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<ResumableClip>> INACTIVE_SFX = new ConcurrentHashMap<>();
 	private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
-	/**
-	 * The volume of sound effects on a linear scale between 0 and 1.
-	 *
-	 * @since 0.1.0
-	 */
-	private static float SFX_VOLUME = 0.8f;
-	/**
-	 * The volume of sound effects on a linear scale between 0 and 1.
-	 *
-	 * @since 0.1.0
-	 */
-	private static float MUSIC_VOLUME = 0.8f;
 	/**
 	 * The clip used for playing background music
 	 *
@@ -80,6 +68,18 @@ public class SoundManager {
 	 * @since 0.1.0
 	 */
 	private static volatile @Nullable Identifier BACKGROUND_MUSIC_NAME;
+	/**
+	 * The volume of sound effects on a linear scale between 0 and 1.
+	 *
+	 * @since 0.1.0
+	 */
+	private static float MUSIC_VOLUME = 0.8f;
+	/**
+	 * The volume of sound effects on a linear scale between 0 and 1.
+	 *
+	 * @since 0.1.0
+	 */
+	private static float SFX_VOLUME = 0.8f;
 	
 	static {//starting sound engine
 		Thread thread = new Thread(() -> {
@@ -111,6 +111,67 @@ public class SoundManager {
 			LOGGER.error("Uncaught exception in audio thread", e);
 			Main.panic();
 		});
+	}
+	
+	/**
+	 * Changes the volume of all background music. The new value will also become the default volume for background music played in the future.
+	 *
+	 * @param volume The new volume between 0 and 1
+	 * @since 0.1.0
+	 */
+	public static void changeMusicVolume(float volume) {
+		MUSIC_VOLUME = volume;
+		if(BACKGROUND_MUSIC != null) {
+			setVolume(BACKGROUND_MUSIC, false);
+		}
+	}
+	
+	/**
+	 * Changes the volume of all sound effects. The new value will also become the default volume for sound effects played in the future.
+	 *
+	 * @param volume The new volume between 0 and 1
+	 * @since 0.1.0
+	 */
+	public static void changeSfxVolume(float volume) {
+		SFX_VOLUME = volume;
+		synchronized(ACTIVE_SFX) {
+			for(ArrayList<Pair<Entity, ResumableClip>> value : ACTIVE_SFX.values()) {
+				for(Pair<Entity, ResumableClip> sfx : value) {
+					setVolume(sfx.getSecond(), true);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Releases all audio resources cached in this class. This includes both the curently active and inactive clips. All audio output is stopped.
+	 *
+	 * @since 0.1.0.
+	 */
+	public static void clear() {
+		synchronized(INACTIVE_SFX) {
+			INACTIVE_SFX.clear();
+		}
+		synchronized(ACTIVE_SFX) {
+			stopAllSfx();
+			ACTIVE_SFX.clear();
+		}
+		stopAllMusic();
+		BACKGROUND_MUSIC = null;
+	}
+	
+	/**
+	 * Pauses all sound effects and background music.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void pause() {
+		synchronized(ACTIVE_SFX) {
+			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().pause()));
+		}
+		if(BACKGROUND_MUSIC != null) {
+			BACKGROUND_MUSIC.pause();
+		}
 	}
 	
 	/**
@@ -177,114 +238,6 @@ public class SoundManager {
 	}
 	
 	/**
-	 * Pauses all sound effects and background music.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void pause() {
-		synchronized(ACTIVE_SFX) {
-			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().pause()));
-		}
-		if(BACKGROUND_MUSIC != null) {
-			BACKGROUND_MUSIC.pause();
-		}
-	}
-	
-	/**
-	 * Continues playing all paused sound effects and background music.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void resume() {
-		synchronized(ACTIVE_SFX) {
-			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().resume()));
-		}
-		if(BACKGROUND_MUSIC != null) {
-			BACKGROUND_MUSIC.resume();
-		}
-	}
-	
-	/**
-	 * Sets the volume of the specified clip to match the value of {@link #SFX_VOLUME}. Please note that while {@link #SFX_VOLUME} is between 0 and 1 in a linear scale, the volume of the clip is measured by its offset in decibels.
-	 *
-	 * @param clip The clip
-	 * @param sfx  True if the clip is a sound effect, false for music
-	 * @since 0.1.0
-	 */
-	private static void setVolume(@NotNull Clip clip, boolean sfx) {
-		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-		float range = gainControl.getMaximum() - gainControl.getMinimum();
-		float gain = (range * (sfx ? SFX_VOLUME : MUSIC_VOLUME)) + gainControl.getMinimum();
-		gainControl.setValue(gain);
-	}
-	
-	/**
-	 * Changes the volume of all sound effects. The new value will also become the default volume for sound effects played in the future.
-	 *
-	 * @param volume The new volume between 0 and 1
-	 * @since 0.1.0
-	 */
-	public static void changeSfxVolume(float volume) {
-		SFX_VOLUME = volume;
-		synchronized(ACTIVE_SFX) {
-			for(ArrayList<Pair<Entity, ResumableClip>> value : ACTIVE_SFX.values()) {
-				for(Pair<Entity, ResumableClip> sfx : value) {
-					setVolume(sfx.getSecond(), true);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Changes the volume of all background music. The new value will also become the default volume for background music played in the future.
-	 *
-	 * @param volume The new volume between 0 and 1
-	 * @since 0.1.0
-	 */
-	public static void changeMusicVolume(float volume) {
-		MUSIC_VOLUME = volume;
-		if(BACKGROUND_MUSIC != null) {
-			setVolume(BACKGROUND_MUSIC, false);
-		}
-	}
-	
-	/**
-	 * Stops all audio output.
-	 *
-	 * @see #stopAllMusic()
-	 * @see #stopAllSfx()
-	 * @since 0.1.0
-	 */
-	public static void stopAll() {
-		stopAllSfx();
-		stopAllMusic();
-	}
-	
-	/**
-	 * Stops all active sound effects.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void stopAllSfx() {
-		synchronized(ACTIVE_SFX) {
-			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().stop()));
-		}
-	}
-	
-	/**
-	 * Stops the background music.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void stopAllMusic() {
-		if(BACKGROUND_MUSIC != null) {
-			BACKGROUND_MUSIC.stop();
-			BACKGROUND_MUSIC = null;
-			BACKGROUND_MUSIC_NAME = null;
-		}
-	}
-	
-	/**
 	 * Plays a random audio resource that has the specified tag as background music.
 	 *
 	 * @param category The identifier of the tag
@@ -314,20 +267,53 @@ public class SoundManager {
 	}
 	
 	/**
-	 * Releases all audio resources cached in this class. This includes both the curently active and inactive clips. All audio output is stopped.
+	 * Continues playing all paused sound effects and background music.
 	 *
-	 * @since 0.1.0.
+	 * @since 0.1.0
 	 */
-	public static void clear() {
-		synchronized(INACTIVE_SFX) {
-			INACTIVE_SFX.clear();
-		}
+	public static void resume() {
 		synchronized(ACTIVE_SFX) {
-			stopAllSfx();
-			ACTIVE_SFX.clear();
+			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().resume()));
 		}
+		if(BACKGROUND_MUSIC != null) {
+			BACKGROUND_MUSIC.resume();
+		}
+	}
+	
+	/**
+	 * Stops all audio output.
+	 *
+	 * @see #stopAllMusic()
+	 * @see #stopAllSfx()
+	 * @since 0.1.0
+	 */
+	public static void stopAll() {
+		stopAllSfx();
 		stopAllMusic();
-		BACKGROUND_MUSIC = null;
+	}
+	
+	/**
+	 * Stops the background music.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void stopAllMusic() {
+		if(BACKGROUND_MUSIC != null) {
+			BACKGROUND_MUSIC.stop();
+			BACKGROUND_MUSIC = null;
+			BACKGROUND_MUSIC_NAME = null;
+		}
+	}
+	
+	/**
+	 * Stops all active sound effects.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void stopAllSfx() {
+		synchronized(ACTIVE_SFX) {
+			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().stop()));
+		}
 	}
 	
 	/**
@@ -344,6 +330,20 @@ public class SoundManager {
 	}
 	
 	/**
+	 * Sets the volume of the specified clip to match the value of {@link #SFX_VOLUME}. Please note that while {@link #SFX_VOLUME} is between 0 and 1 in a linear scale, the volume of the clip is measured by its offset in decibels.
+	 *
+	 * @param clip The clip
+	 * @param sfx  True if the clip is a sound effect, false for music
+	 * @since 0.1.0
+	 */
+	private static void setVolume(@NotNull Clip clip, boolean sfx) {
+		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		float range = gainControl.getMaximum() - gainControl.getMinimum();
+		float gain = (range * (sfx ? SFX_VOLUME : MUSIC_VOLUME)) + gainControl.getMinimum();
+		gainControl.setValue(gain);
+	}
+	
+	/**
 	 * Clip implementation that allows pausing and resuming the clip at any time.
 	 *
 	 * @since 0.1.0
@@ -357,17 +357,17 @@ public class SoundManager {
 		 */
 		protected final @NotNull Clip clip;
 		/**
-		 * The microsecond position inside the clip
-		 *
-		 * @since 0.1.0
-		 */
-		protected long position;
-		/**
 		 * True if the clip is paused
 		 *
 		 * @since 0.1.0
 		 */
 		protected boolean paused;
+		/**
+		 * The microsecond position inside the clip
+		 *
+		 * @since 0.1.0
+		 */
+		protected long position;
 		
 		/**
 		 * Creates a new resumable clip.
@@ -391,36 +391,6 @@ public class SoundManager {
 				return (ResumableClip) clip;
 			}
 			return new ResumableClip(clip);
-		}
-		
-		@Override
-		public void open(AudioFormat format, byte[] data, int offset, int bufferSize) throws LineUnavailableException {
-			clip.open(format, data, offset, bufferSize);
-		}
-		
-		@Override
-		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
-			clip.open(stream);
-		}
-		
-		@Override
-		public int getFrameLength() {
-			return clip.getFrameLength();
-		}
-		
-		@Override
-		public long getMicrosecondLength() {
-			return clip.getMicrosecondPosition();
-		}
-		
-		@Override
-		public void setLoopPoints(int start, int end) {
-			clip.setLoopPoints(start, end);
-		}
-		
-		@Override
-		public void loop(int count) {
-			clip.loop(count);
 		}
 		
 		@Override
@@ -498,6 +468,21 @@ public class SoundManager {
 			clip.setMicrosecondPosition(microseconds);
 		}
 		
+		/**
+		 * Checks if the clip is paused.
+		 *
+		 * @return True if paused
+		 * @since 0.1.0
+		 */
+		public boolean isPaused() {
+			return paused;
+		}
+		
+		@Override
+		public void open(AudioFormat format, byte[] data, int offset, int bufferSize) throws LineUnavailableException {
+			clip.open(format, data, offset, bufferSize);
+		}
+		
 		@Override
 		public float getLevel() {
 			return clip.getLevel();
@@ -548,6 +533,31 @@ public class SoundManager {
 			clip.removeLineListener(listener);
 		}
 		
+		@Override
+		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
+			clip.open(stream);
+		}
+		
+		@Override
+		public int getFrameLength() {
+			return clip.getFrameLength();
+		}
+		
+		@Override
+		public long getMicrosecondLength() {
+			return clip.getMicrosecondPosition();
+		}
+		
+		@Override
+		public void setLoopPoints(int start, int end) {
+			clip.setLoopPoints(start, end);
+		}
+		
+		@Override
+		public void loop(int count) {
+			clip.loop(count);
+		}
+		
 		/**
 		 * Pauses the clip. When the {@link #start()} method is called on a paused clip, it will continue playing from its current location.
 		 *
@@ -562,6 +572,16 @@ public class SoundManager {
 		}
 		
 		/**
+		 * Resets the position of the clip in the audio sample data to frame 0.
+		 *
+		 * @since 0.1.0
+		 */
+		public void reset() {
+			clip.setFramePosition(0);
+			position = 0;
+		}
+		
+		/**
 		 * Starts this clip if paused.
 		 *
 		 * @since 0.1.0
@@ -570,26 +590,6 @@ public class SoundManager {
 			if(isPaused()) {
 				start();
 			}
-		}
-		
-		/**
-		 * Checks if the clip is paused.
-		 *
-		 * @return True if paused
-		 * @since 0.1.0
-		 */
-		public boolean isPaused() {
-			return paused;
-		}
-		
-		/**
-		 * Resets the position of the clip in the audio sample data to frame 0.
-		 *
-		 * @since 0.1.0
-		 */
-		public void reset() {
-			clip.setFramePosition(0);
-			position = 0;
 		}
 	}
 }

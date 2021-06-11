@@ -61,37 +61,18 @@ public class Background implements Entity {
 	//oh yes, interaction
 	
 	@Override
-	public void onHover() {
-	}
-	
-	@Override
-	public void onHoverStop() {
-	}
-	
-	@Override
-	public boolean isHovered() {
-		return false;
-	}
-	
-	@Override
-	public void onMousePress() {
-	}
-	
-	@Override
-	public void onMouseRelease() {
-	}
-	
-	@Override
 	public @NotNull Point getLocation() {
 		return location;
 	}
 	
 	@Override
-	public void onSelect() {
+	public boolean hasMouseCollision() {
+		return false;
 	}
 	
 	@Override
-	public void onUnselect() {
+	public boolean isHovered() {
+		return false;
 	}
 	
 	@Override
@@ -105,8 +86,27 @@ public class Background implements Entity {
 	}
 	
 	@Override
-	public boolean hasMouseCollision() {
-		return false;
+	public void onHover() {
+	}
+	
+	@Override
+	public void onHoverStop() {
+	}
+	
+	@Override
+	public void onMousePress() {
+	}
+	
+	@Override
+	public void onMouseRelease() {
+	}
+	
+	@Override
+	public void onSelect() {
+	}
+	
+	@Override
+	public void onUnselect() {
 	}
 	
 }

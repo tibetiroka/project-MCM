@@ -43,23 +43,23 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static final @NotNull Object GRAPHICS_LOCK = new Object();
 	/**
+	 * Index of the standard rendering layer used for backgrounds
+	 *
+	 * @since 0.1.0
+	 */
+	public static final int LAYER_BACKGROUND = 4;
+	/**
 	 * The index of the lowest priority rendering layer
 	 *
 	 * @since 0.1.0
 	 */
 	public static final int LAYER_BOTTOM = 0;
 	/**
-	 * Index of the highest priority rendering layer
+	 * Index of the standard rendering layer used for game characters
 	 *
 	 * @since 0.1.0
 	 */
-	public static final int LAYER_TOP = 15;
-	/**
-	 * Index of the standard rendering layer used for backgrounds
-	 *
-	 * @since 0.1.0
-	 */
-	public static final int LAYER_BACKGROUND = 4;
+	public static final int LAYER_CHARACTERS = 11;
 	/**
 	 * Index of the standard rendering layer used for GUIs
 	 *
@@ -73,11 +73,11 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static final int LAYER_MAP = 8;
 	/**
-	 * Index of the standard rendering layer used for game characters
+	 * Index of the highest priority rendering layer
 	 *
 	 * @since 0.1.0
 	 */
-	public static final int LAYER_CHARACTERS = 11;
+	public static final int LAYER_TOP = 15;
 	/**
 	 * The rendering layers
 	 *
@@ -97,17 +97,17 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static @Nullable Thread GRAPHICS_THREAD;
 	/**
-	 * The game window
-	 *
-	 * @since 0.1.0
-	 */
-	public static @NotNull JFrame WINDOW;
-	/**
 	 * The game window's content pane used for rendering
 	 *
 	 * @since 0.1.0
 	 */
 	public static @NotNull GraphicsManager PANEL;
+	/**
+	 * The game window
+	 *
+	 * @since 0.1.0
+	 */
+	public static @NotNull JFrame WINDOW;
 	/**
 	 * The state of the main graphics thread
 	 *
@@ -119,6 +119,74 @@ public class GraphicsManager extends JPanel {
 	static {
 		//creating layers
 		Arrays.setAll(LAYERS, i -> new RenderingLayer());
+	}
+	
+	/**
+	 * Removes all entities from a rendering layer. This does NOT remove them from the game engine.
+	 *
+	 * @param i The index of the layer
+	 * @since 0.1.0
+	 */
+	public static void clearLayer(int i) {
+		getLayer(i).entities.clear();
+	}
+	
+	/**
+	 * Removes all entities from all rendering layers. This does NOT remove them from the game engine.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void clearLayers() {
+		for(RenderingLayer layer : LAYERS) {
+			layer.entities.clear();
+		}
+	}
+	
+	/**
+	 * Configures the {@link ResolutionManager#BUFFER_GRAPHICS}'s quality settings.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void configureQuality() {
+		synchronized(GRAPHICS_LOCK) {//quality settings
+			QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
+				case LOW -> RenderingHints.VALUE_RENDER_SPEED;
+				case NORMAL -> RenderingHints.VALUE_RENDER_DEFAULT;
+				case HIGH -> RenderingHints.VALUE_RENDER_QUALITY;
+			});
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
+				case LOW -> RenderingHints.VALUE_COLOR_RENDER_SPEED;
+				case NORMAL -> RenderingHints.VALUE_COLOR_RENDER_DEFAULT;
+				case HIGH -> RenderingHints.VALUE_COLOR_RENDER_QUALITY;
+			});
+			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
+				case LOW -> RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED;
+				case NORMAL -> RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT;
+				case HIGH -> RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
+			});
+		}
+	}
+	
+	/**
+	 * Gets the specified rendering layer
+	 *
+	 * @param index The index of the layer
+	 * @return The layer
+	 * @since 0.1.0
+	 */
+	public static @NotNull RenderingLayer getLayer(int index) {
+		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
+	}
+	
+	/**
+	 * Checks if the graphics thread is still running. Might keep returning 'true' if the thread didn't shut down correctly.
+	 *
+	 * @return True if running
+	 * @since 0.1.0
+	 */
+	public static boolean isRunning() {
+		return RUNNING;
 	}
 	
 	/**
@@ -145,6 +213,45 @@ public class GraphicsManager extends JPanel {
 			System.exit(-10002);
 		});
 		GRAPHICS_THREAD.start();
+	}
+	
+	/**
+	 * Closes the application window
+	 *
+	 * @since 0.1.0
+	 */
+	private static void closeWindow() {
+		WINDOW.setVisible(false);
+		WINDOW.dispose();
+	}
+	
+	/**
+	 * Rendering loop
+	 *
+	 * @since 0.1.0
+	 */
+	private static void gameLoop() {
+		while(Main.isRunning()) {
+			try {//draw on buffer
+				paintGraphics();
+			} catch(Exception e) {
+				LOGGER.error("Error during graphics painting", e);
+			}
+			WINDOW.repaint();//draw buffer to screen
+			synchronized(GRAPHICS_LOCK) {//wait for engine
+				try {
+					if(Main.isRunning()) {
+						GRAPHICS_LOCK.wait();
+					}
+				} catch(InterruptedException e) {
+					LOGGER.warn("Interrupted wait in graphics thread", e);
+				}
+			}
+		}
+		closeWindow();
+		RUNNING = false;
+		
+		LOGGER.info("Graphics thread shut down normally");
 	}
 	
 	/**
@@ -197,61 +304,6 @@ public class GraphicsManager extends JPanel {
 	}
 	
 	/**
-	 * Rendering loop
-	 *
-	 * @since 0.1.0
-	 */
-	private static void gameLoop() {
-		while(Main.isRunning()) {
-			try {//draw on buffer
-				paintGraphics();
-			} catch(Exception e) {
-				LOGGER.error("Error during graphics painting", e);
-			}
-			WINDOW.repaint();//draw buffer to screen
-			synchronized(GRAPHICS_LOCK) {//wait for engine
-				try {
-					if(Main.isRunning()) {
-						GRAPHICS_LOCK.wait();
-					}
-				} catch(InterruptedException e) {
-					LOGGER.warn("Interrupted wait in graphics thread", e);
-				}
-			}
-		}
-		closeWindow();
-		RUNNING = false;
-		
-		LOGGER.info("Graphics thread shut down normally");
-	}
-	
-	/**
-	 * Configures the {@link ResolutionManager#BUFFER_GRAPHICS}'s quality settings.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void configureQuality() {
-		synchronized(GRAPHICS_LOCK) {//quality settings
-			QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
-				case LOW -> RenderingHints.VALUE_RENDER_SPEED;
-				case NORMAL -> RenderingHints.VALUE_RENDER_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_RENDER_QUALITY;
-			});
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
-				case LOW -> RenderingHints.VALUE_COLOR_RENDER_SPEED;
-				case NORMAL -> RenderingHints.VALUE_COLOR_RENDER_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_COLOR_RENDER_QUALITY;
-			});
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
-				case LOW -> RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED;
-				case NORMAL -> RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
-			});
-		}
-	}
-	
-	/**
 	 * Paints the graphics of the rendering layers to the buffer.
 	 *
 	 * @since 0.1.0
@@ -276,58 +328,6 @@ public class GraphicsManager extends JPanel {
 			}
 			ResolutionManager.fillVisibleAreas();
 		}
-	}
-	
-	/**
-	 * Closes the application window
-	 *
-	 * @since 0.1.0
-	 */
-	private static void closeWindow() {
-		WINDOW.setVisible(false);
-		WINDOW.dispose();
-	}
-	
-	/**
-	 * Checks if the graphics thread is still running. Might keep returning 'true' if the thread didn't shut down correctly.
-	 *
-	 * @return True if running
-	 * @since 0.1.0
-	 */
-	public static boolean isRunning() {
-		return RUNNING;
-	}
-	
-	/**
-	 * Gets the specified rendering layer
-	 *
-	 * @param index The index of the layer
-	 * @return The layer
-	 * @since 0.1.0
-	 */
-	public static @NotNull RenderingLayer getLayer(int index) {
-		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
-	}
-	
-	/**
-	 * Removes all entities from all rendering layers. This does NOT remove them from the game engine.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void clearLayers() {
-		for(RenderingLayer layer : LAYERS) {
-			layer.entities.clear();
-		}
-	}
-	
-	/**
-	 * Removes all entities from a rendering layer. This does NOT remove them from the game engine.
-	 *
-	 * @param i The index of the layer
-	 * @since 0.1.0
-	 */
-	public static void clearLayer(int i) {
-		getLayer(i).entities.clear();
 	}
 	
 	@Override

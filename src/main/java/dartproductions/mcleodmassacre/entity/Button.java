@@ -21,6 +21,12 @@ public class Button implements Entity {
 	 */
 	protected final @NotNull Animation defaultAnimation;
 	/**
+	 * The location of the button
+	 *
+	 * @since 0.1.0
+	 */
+	protected final @NotNull Point location;
+	/**
 	 * The animation shown when the button is hovered
 	 *
 	 * @since 0.1.0
@@ -33,35 +39,29 @@ public class Button implements Entity {
 	 */
 	protected final @Nullable Animation onPressAnimation;
 	/**
-	 * The animation shown when the button is selected
-	 *
-	 * @since 0.1.0
-	 */
-	protected final @Nullable Animation onSelectedAnimation;
-	/**
-	 * The location of the button
-	 *
-	 * @since 0.1.0
-	 */
-	protected final @NotNull Point location;
-	/**
 	 * The action to run when the mouse is released on the button
 	 *
 	 * @since 0.1.0
 	 */
 	protected final @Nullable Runnable onRelease;
 	/**
-	 * The button's pressed state
+	 * The animation shown when the button is selected
 	 *
 	 * @since 0.1.0
 	 */
-	protected boolean pressed = false;
+	protected final @Nullable Animation onSelectedAnimation;
 	/**
 	 * The button's hovered state
 	 *
 	 * @since 0.1.0
 	 */
 	protected boolean hovered = false;
+	/**
+	 * The button's pressed state
+	 *
+	 * @since 0.1.0
+	 */
+	protected boolean pressed = false;
 	/**
 	 * The button's selected state
 	 *
@@ -107,6 +107,31 @@ public class Button implements Entity {
 	}
 	
 	@Override
+	public @NotNull Point getLocation() {
+		return location;
+	}
+	
+	@Override
+	public boolean hasMouseCollision() {
+		return true;
+	}
+	
+	@Override
+	public boolean isHovered() {
+		return false;//todo
+	}
+	
+	@Override
+	public boolean isSelectable() {
+		return true;
+	}
+	
+	@Override
+	public boolean isSelected() {
+		return false;//todo
+	}
+	
+	@Override
 	public void onHover() {
 		hovered = true;
 		if(onHoverAnimation != null) {
@@ -118,11 +143,6 @@ public class Button implements Entity {
 	public void onHoverStop() {
 		hovered = false;
 		pressed = false;
-	}
-	
-	@Override
-	public boolean isHovered() {
-		return false;//todo
 	}
 	
 	@Override
@@ -149,11 +169,6 @@ public class Button implements Entity {
 	}
 	
 	@Override
-	public @NotNull Point getLocation() {
-		return location;
-	}
-	
-	@Override
 	public void onSelect() {
 		selected = true;
 		hovered = true;
@@ -165,20 +180,5 @@ public class Button implements Entity {
 	@Override
 	public void onUnselect() {
 		selected = false;
-	}
-	
-	@Override
-	public boolean isSelectable() {
-		return true;
-	}
-	
-	@Override
-	public boolean isSelected() {
-		return false;//todo
-	}
-	
-	@Override
-	public boolean hasMouseCollision() {
-		return true;
 	}
 }

@@ -57,12 +57,6 @@ public class Main {
 	 */
 	private static boolean DEBUG;
 	/**
-	 * The state of the application: true if it is running, false if it is shutting down.
-	 *
-	 * @since 0.1.0
-	 */
-	private static volatile boolean RUNNING = true;
-	/**
 	 * The current state of the game
 	 *
 	 * @since 0.1.0
@@ -74,104 +68,41 @@ public class Main {
 	 * @since 0.1.0
 	 */
 	private static volatile @Nullable GameState NEXT_STATE = GameState.MAIN_MENU;
-	
-	public static void main(String[] args) {
-		Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
-			LOGGER.error("Uncaught exception in main thread (" + t.getName() + ")", e);
-			panic();
-			System.exit(-2);
-		});
-		checkDebugMode(args);
-		configureLogger();
-		parseArgs(args);
-		loadAppData();
-		startGameLoops();
-		ResourceManager.onStateChange(GameState.LOADING, GameState.MAIN_MENU);//synchronous resource loading initially
-		setGameState(GameState.LOADING, GameState.MAIN_MENU);
-	}
-	
 	/**
-	 * Starts the game loops and handling threads.
+	 * The state of the application: true if it is running, false if it is shutting down.
 	 *
 	 * @since 0.1.0
 	 */
-	private static void startGameLoops() {
-		InputManager.initialize();
-		ResourceManager.waitForLoading();
-		GraphicsManager.startGameLoop();
-		GameEngine.start();
+	private static volatile boolean RUNNING = true;
+	
+	/**
+	 * Gets the global executor service, used for various async tasks.
+	 *
+	 * @return The executor
+	 * @since 0.1.0
+	 */
+	public static @NotNull ExecutorService getExecutors() {
+		return EXECUTORS;
 	}
 	
 	/**
-	 * Loads the app's default data.
+	 * Gets the current state of the game
 	 *
+	 * @return {@link #GAME_STATE}
 	 * @since 0.1.0
 	 */
-	private static void loadAppData() {
-		ResourceManager.extractResources();
-		PluginManager.findPlugins();
-		ResourceManager.waitForLoading();
-		PluginManager.loadPlugins();
-		ResourceManager.getOptions();
-		ResourceManager.waitForLoading();
+	public static @NotNull GameState getGameState() {
+		return GAME_STATE;
 	}
 	
 	/**
-	 * Configures the global logger
+	 * Gets the next state of the game. Not specified for every state.
 	 *
+	 * @return {@link #NEXT_STATE}
 	 * @since 0.1.0
 	 */
-	private static void configureLogger() {
-		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-		Configurator.setAllLevels("", isDebug() ? Level.DEBUG : Level.INFO);
-		System.setOut(createLoggingProxy(System.out, Level.DEBUG));
-		System.setErr(createLoggingProxy(System.err, Level.WARN));
-		if(isDebug()) {
-			printSystemDebugInfo();
-		}
-	}
-	
-	/**
-	 * Creates a new {@link PrintStream} from the specified stream that writes to the log output.
-	 *
-	 * @param stream The original stream
-	 * @param level  The level of the logged messages
-	 * @return The new logging stream
-	 * @since 0.1.0
-	 */
-	private static PrintStream createLoggingProxy(final PrintStream stream, final Level level) {
-		return new PrintStream(stream) {
-			public void print(final String string) {
-				LOGGER.log(level, string.strip());
-			}
-		};
-	}
-	
-	/**
-	 * Checks if the application is launched in debug mode
-	 *
-	 * @param args The command line arguments
-	 * @since 0.1.0
-	 */
-	private static void checkDebugMode(@NotNull String[] args) {
-		DEBUG = Arrays.asList(args).contains("--debug");
-		LOGGER.info("Debug mode is turned " + (DEBUG ? "on" : "off"));
-	}
-	
-	/**
-	 * Parses the command line arguments
-	 *
-	 * @param args The arguments
-	 * @since 0.1.0
-	 */
-	private static void parseArgs(@NotNull String[] args) {
-		for(String arg : args) {
-			switch(arg) {
-				case "--debug" -> {
-				}
-				default -> LOGGER.warn("Unrecognised command line argument \"{}\"", arg);
-			}
-		}
+	public static @Nullable GameState getNextState() {
+		return NEXT_STATE;
 	}
 	
 	/**
@@ -209,68 +140,25 @@ public class Main {
 		}
 	}
 	
-	/**
-	 * Gets the global executor service, used for various async tasks.
-	 *
-	 * @return The executor
-	 * @since 0.1.0
-	 */
-	public static @NotNull ExecutorService getExecutors() {
-		return EXECUTORS;
+	public static void main(String[] args) {
+		Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in main thread (" + t.getName() + ")", e);
+			panic();
+			System.exit(-2);
+		});
+		checkDebugMode(args);
+		configureLogger();
+		parseArgs(args);
+		loadAppData();
+		startGameLoops();
+		ResourceManager.onStateChange(GameState.LOADING, GameState.MAIN_MENU);//synchronous resource loading initially
+		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
-	/**
-	 * Gets the current state of the game
-	 *
-	 * @return {@link #GAME_STATE}
-	 * @since 0.1.0
-	 */
-	public static @NotNull GameState getGameState() {
-		return GAME_STATE;
-	}
-	
-	/**
-	 * Gets the next state of the game. Not specified for every state.
-	 *
-	 * @return {@link #NEXT_STATE}
-	 * @since 0.1.0
-	 */
-	public static @Nullable GameState getNextState() {
-		return NEXT_STATE;
-	}
-	
-	/**
-	 * Sets the state of the game.
-	 *
-	 * @param newGameState The new state
-	 * @param newNextState The new next state
-	 * @since 0.1.0
-	 */
-	public static synchronized void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
-		synchronized(GameEngine.ENGINE_WAIT_LOCK) {
-			synchronized(GraphicsManager.GRAPHICS_LOCK) {
-				GameState previous = GAME_STATE;
-				GameState previousNext = NEXT_STATE;
-				//
-				GAME_STATE = newGameState;
-				NEXT_STATE = newNextState;
-				//
-				if(previous != null) {
-					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
-				}
-				//
-				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
-				//
-				EXECUTORS.execute(() -> {
-					ResourceManager.onStateChange(newGameState, newNextState);
-					if(newGameState.isLoadingState()) {
-						setGameState(newNextState, null);
-					}
-				});
-				//
-				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
-			}
-		}
+	public static void panic() {
+		printSystemUsageDebugInfo();
+		printSystemDebugInfo();
+		printThreadDump();
 	}
 	
 	/**
@@ -345,10 +233,122 @@ public class Main {
 		LOGGER.info("\n---END OF THREAD DUMP---");
 	}
 	
-	public static void panic() {
-		printSystemUsageDebugInfo();
-		printSystemDebugInfo();
-		printThreadDump();
+	/**
+	 * Sets the state of the game.
+	 *
+	 * @param newGameState The new state
+	 * @param newNextState The new next state
+	 * @since 0.1.0
+	 */
+	public static synchronized void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
+		synchronized(GameEngine.ENGINE_WAIT_LOCK) {
+			synchronized(GraphicsManager.GRAPHICS_LOCK) {
+				GameState previous = GAME_STATE;
+				GameState previousNext = NEXT_STATE;
+				//
+				GAME_STATE = newGameState;
+				NEXT_STATE = newNextState;
+				//
+				if(previous != null) {
+					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
+				}
+				//
+				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
+				//
+				EXECUTORS.execute(() -> {
+					ResourceManager.onStateChange(newGameState, newNextState);
+					if(newGameState.isLoadingState()) {
+						setGameState(newNextState, null);
+					}
+				});
+				//
+				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
+			}
+		}
+	}
+	
+	/**
+	 * Checks if the application is launched in debug mode
+	 *
+	 * @param args The command line arguments
+	 * @since 0.1.0
+	 */
+	private static void checkDebugMode(@NotNull String[] args) {
+		DEBUG = Arrays.asList(args).contains("--debug");
+		LOGGER.info("Debug mode is turned " + (DEBUG ? "on" : "off"));
+	}
+	
+	/**
+	 * Configures the global logger
+	 *
+	 * @since 0.1.0
+	 */
+	private static void configureLogger() {
+		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+		Configurator.setAllLevels("", isDebug() ? Level.DEBUG : Level.INFO);
+		System.setOut(createLoggingProxy(System.out, Level.DEBUG));
+		System.setErr(createLoggingProxy(System.err, Level.WARN));
+		if(isDebug()) {
+			printSystemDebugInfo();
+		}
+	}
+	
+	/**
+	 * Creates a new {@link PrintStream} from the specified stream that writes to the log output.
+	 *
+	 * @param stream The original stream
+	 * @param level  The level of the logged messages
+	 * @return The new logging stream
+	 * @since 0.1.0
+	 */
+	private static PrintStream createLoggingProxy(final PrintStream stream, final Level level) {
+		return new PrintStream(stream) {
+			public void print(final String string) {
+				LOGGER.log(level, string.strip());
+			}
+		};
+	}
+	
+	/**
+	 * Loads the app's default data.
+	 *
+	 * @since 0.1.0
+	 */
+	private static void loadAppData() {
+		ResourceManager.extractResources();
+		PluginManager.findPlugins();
+		ResourceManager.waitForLoading();
+		PluginManager.loadPlugins();
+		ResourceManager.getOptions();
+		ResourceManager.waitForLoading();
+	}
+	
+	/**
+	 * Parses the command line arguments
+	 *
+	 * @param args The arguments
+	 * @since 0.1.0
+	 */
+	private static void parseArgs(@NotNull String[] args) {
+		for(String arg : args) {
+			switch(arg) {
+				case "--debug" -> {
+				}
+				default -> LOGGER.warn("Unrecognised command line argument \"{}\"", arg);
+			}
+		}
+	}
+	
+	/**
+	 * Starts the game loops and handling threads.
+	 *
+	 * @since 0.1.0
+	 */
+	private static void startGameLoops() {
+		InputManager.initialize();
+		ResourceManager.waitForLoading();
+		GraphicsManager.startGameLoop();
+		GameEngine.start();
 	}
 	
 }

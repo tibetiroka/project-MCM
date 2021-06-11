@@ -36,23 +36,17 @@ public class ResolutionManager {
 	 */
 	protected static final @NotNull Graphics2D BUFFER_GRAPHICS;
 	/**
-	 * The ratio of the current screen compared to the original screen.
+	 * The buffer's output image (this is what's drawn to the frame and what the buffer is eventually drawn to)
 	 *
 	 * @since 0.1.0
 	 */
-	private static final double ratio;
+	private static final @NotNull BufferedImage OUTPUT;
 	/**
-	 * The area representing the current screen on the buffer.
+	 * Graphics for {@link #OUTPUT}
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Rectangle screenRect;
-	/**
-	 * The size of the original screen
-	 *
-	 * @since 0.1.0
-	 */
-	private static final @NotNull Dimension originalScreen;
+	private static final @NotNull Graphics2D OUTPUT_GRAPHICS;
 	/**
 	 * The size of the buffer
 	 *
@@ -66,18 +60,23 @@ public class ResolutionManager {
 	 */
 	private static final @NotNull Point origin;
 	/**
-	 * The buffer's output image (this is what's drawn to the frame and what the buffer is eventually drawn to)
+	 * The size of the original screen
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull BufferedImage OUTPUT;
+	private static final @NotNull Dimension originalScreen;
 	/**
-	 * Graphics for {@link #OUTPUT}
+	 * The ratio of the current screen compared to the original screen.
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Graphics2D OUTPUT_GRAPHICS;
-	
+	private static final double ratio;
+	/**
+	 * The area representing the current screen on the buffer.
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull Rectangle screenRect;
 	/**
 	 * True if visible areas outside of the original screen's area should be filled with black.
 	 *
@@ -147,33 +146,102 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Creates an image to server as {@link #BUFFER}
+	 * Draws an image to the buffer. Doesn't draw images that would be entirely off-screen.
 	 *
-	 * @return The created buffer image
+	 * @param x     The x coordinate of the image
+	 * @param y     The y coordinate of the image
+	 * @param image The image to draw
 	 * @since 0.1.0
 	 */
-	private static @NotNull BufferedImage createBufferImage() {
-		return new BufferedImage(getBufferSize().width, getBufferSize().height, BufferedImage.TYPE_INT_ARGB);
+	public static void drawImageAnywhere(int x, int y, @NotNull Image image) {
+		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
+			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
+		}
 	}
 	
 	/**
-	 * Gets the size of the screen on the machine running the game
+	 * Draws an image to the buffer. Doesn't draw images that would be entirely off-screen.
 	 *
-	 * @return The screen size
+	 * @param x     The x coordinate of the image
+	 * @param y     The y coordinate of the image
+	 * @param image The image to draw
 	 * @since 0.1.0
 	 */
-	public static @NotNull Dimension getLocalScreenSize() {
-		return Toolkit.getDefaultToolkit().getScreenSize();
+	public static void drawImageAnywhere(int x, int y, @Nullable BufferedImage image) {
+		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
+			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
+		}
 	}
 	
 	/**
-	 * Gets the ratio of the current screen compared to the original screen
+	 * Draws an image to the part of the buffer that appears on the screen. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system. Doesn't draw images that would be entirely off-screen.
 	 *
-	 * @return The screen ratio
+	 * @param x     The x coordinate of the image
+	 * @param y     The y coordinate of the image
+	 * @param image The image to draw
 	 * @since 0.1.0
 	 */
-	public static double getScreenRatio() {
-		return ratio;
+	public static void drawImageOnScreen(int x, int y, @NotNull Image image) {
+		if(x <= screenRect.width && y <= screenRect.height) {
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
+		}
+	}
+	
+	/**
+	 * Draws an image to the part of the buffer that appears on the screen. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system. Doesn't draw images that would be entirely off-screen.
+	 *
+	 * @param x     The x coordinate of the image
+	 * @param y     The y coordinate of the image
+	 * @param image The image to draw
+	 * @since 0.1.0
+	 */
+	public static void drawImageOnScreen(int x, int y, @NotNull BufferedImage image) {
+		if(screenRect.intersects(x + screenRect.x, y + screenRect.y, image.getWidth(), image.getHeight())) {
+			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
+		}
+	}
+	
+	/**
+	 * Fills the local screen with black.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void fillLocalScreen() {
+		BUFFER_GRAPHICS.setColor(Color.BLACK);
+		BUFFER_GRAPHICS.fillRect(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+	}
+	
+	/**
+	 * Fills a specified shape on the screen. This method should only be used for debugging due to its excessive resource usage.
+	 *
+	 * @param x     The x offset of the shape
+	 * @param y     The y offset of the shape
+	 * @param shape The shape to fill
+	 * @since 0.1.0
+	 */
+	public static void fillShapeOnScreen(int x, int y, @Nullable Shape shape) {
+		if(shape != null) {
+			AffineTransform transform = AffineTransform.getTranslateInstance(x + origin.x, y + origin.y);
+			BUFFER_GRAPHICS.fill(transform.createTransformedShape(shape));
+		}
+	}
+	
+	/**
+	 * Fills all visible but unpainted areas with black if {@link #isFillVisibleAreas()} is true.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void fillVisibleAreas() {
+		if(!isFillVisibleAreas()) {
+			return;
+		}
+		BUFFER_GRAPHICS.setColor(Color.BLACK);
+		int x = getScreenOffsetX();
+		int y = getScreenOffsetY();
+		fillRectOnScreen(-x, -y, screenRect.width, y);//top
+		fillRectOnScreen(-x, -y, x, screenRect.height);//left
+		fillRectOnScreen(-x, originalScreen.height, originalScreen.width, y);//bottom
+		fillRectOnScreen(originalScreen.width, -y, x, originalScreen.height);//right
 	}
 	
 	/**
@@ -187,23 +255,13 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Gets the offset of the screen on the x axis. The offset is the distance of the {@link #origin} and {@link #screenRect} - origin is {@link #screenRect}'s top-left corner on the original screen, but not on every screen.
+	 * Gets the size of the buffer image
 	 *
-	 * @return The x offset
+	 * @return The buffer's size
 	 * @since 0.1.0
 	 */
-	public static int getScreenOffsetX() {
-		return origin.x - screenRect.x;
-	}
-	
-	/**
-	 * Gets the offset of the screen on the y axis. The offset is the distance of the {@link #origin} and {@link #screenRect} - origin is {@link #screenRect}'s top-left corner on the original screen, but not on every screen.
-	 *
-	 * @return The y offset
-	 * @since 0.1.0
-	 */
-	public static int getScreenOffsetY() {
-		return origin.y - screenRect.y;
+	public static @NotNull Dimension getBufferSize() {
+		return (Dimension) bufferSize.clone();
 	}
 	
 	/**
@@ -227,13 +285,23 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Gets the size of the buffer image
+	 * Returns the area representing the local screen on the buffer. The returned rectangle is a clone of {@link #screenRect}.
 	 *
-	 * @return The buffer's size
+	 * @return The currently visible area of the buffer
 	 * @since 0.1.0
 	 */
-	public static @NotNull Dimension getBufferSize() {
-		return (Dimension) bufferSize.clone();
+	public static @NotNull Rectangle getLocalScreenOnBuffer() {
+		return (Rectangle) screenRect.clone();
+	}
+	
+	/**
+	 * Gets the size of the screen on the machine running the game
+	 *
+	 * @return The screen size
+	 * @since 0.1.0
+	 */
+	public static @NotNull Dimension getLocalScreenSize() {
+		return Toolkit.getDefaultToolkit().getScreenSize();
 	}
 	
 	/**
@@ -247,137 +315,33 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Returns the area representing the local screen on the buffer. The returned rectangle is a clone of {@link #screenRect}.
+	 * Gets the offset of the screen on the x axis. The offset is the distance of the {@link #origin} and {@link #screenRect} - origin is {@link #screenRect}'s top-left corner on the original screen, but not on every screen.
 	 *
-	 * @return The currently visible area of the buffer
+	 * @return The x offset
 	 * @since 0.1.0
 	 */
-	public static @NotNull Rectangle getLocalScreenOnBuffer() {
-		return (Rectangle) screenRect.clone();
+	public static int getScreenOffsetX() {
+		return origin.x - screenRect.x;
 	}
 	
 	/**
-	 * Draws an image to the part of the buffer that appears on the screen. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system. Doesn't draw images that would be entirely off-screen.
+	 * Gets the offset of the screen on the y axis. The offset is the distance of the {@link #origin} and {@link #screenRect} - origin is {@link #screenRect}'s top-left corner on the original screen, but not on every screen.
 	 *
-	 * @param x     The x coordinate of the image
-	 * @param y     The y coordinate of the image
-	 * @param image The image to draw
+	 * @return The y offset
 	 * @since 0.1.0
 	 */
-	public static void drawImageOnScreen(int x, int y, @NotNull Image image) {
-		if(x <= screenRect.width && y <= screenRect.height) {
-			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
-		}
+	public static int getScreenOffsetY() {
+		return origin.y - screenRect.y;
 	}
 	
 	/**
-	 * Draws an image to the buffer. Doesn't draw images that would be entirely off-screen.
+	 * Gets the ratio of the current screen compared to the original screen
 	 *
-	 * @param x     The x coordinate of the image
-	 * @param y     The y coordinate of the image
-	 * @param image The image to draw
+	 * @return The screen ratio
 	 * @since 0.1.0
 	 */
-	public static void drawImageAnywhere(int x, int y, @NotNull Image image) {
-		if(x <= screenRect.x + screenRect.width && y <= screenRect.y + screenRect.height) {
-			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
-		}
-	}
-	
-	/**
-	 * Draws an image to the part of the buffer that appears on the screen. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system. Doesn't draw images that would be entirely off-screen.
-	 *
-	 * @param x     The x coordinate of the image
-	 * @param y     The y coordinate of the image
-	 * @param image The image to draw
-	 * @since 0.1.0
-	 */
-	public static void drawImageOnScreen(int x, int y, @NotNull BufferedImage image) {
-		if(screenRect.intersects(x + screenRect.x, y + screenRect.y, image.getWidth(), image.getHeight())) {
-			BUFFER_GRAPHICS.drawImage(image, x + origin.x, y + origin.y, GraphicsManager.PANEL);
-		}
-	}
-	
-	/**
-	 * Fills a specified shape on the screen. This method should only be used for debugging due to its excessive resource usage.
-	 *
-	 * @param x     The x offset of the shape
-	 * @param y     The y offset of the shape
-	 * @param shape The shape to fill
-	 * @since 0.1.0
-	 */
-	public static void fillShapeOnScreen(int x, int y, @Nullable Shape shape) {
-		if(shape != null) {
-			AffineTransform transform = AffineTransform.getTranslateInstance(x + origin.x, y + origin.y);
-			BUFFER_GRAPHICS.fill(transform.createTransformedShape(shape));
-		}
-	}
-	
-	/**
-	 * Draws an image to the buffer. Doesn't draw images that would be entirely off-screen.
-	 *
-	 * @param x     The x coordinate of the image
-	 * @param y     The y coordinate of the image
-	 * @param image The image to draw
-	 * @since 0.1.0
-	 */
-	public static void drawImageAnywhere(int x, int y, @Nullable BufferedImage image) {
-		if(screenRect.intersects(x, y, image.getWidth(), image.getHeight())) {
-			BUFFER_GRAPHICS.drawImage(image, x, y, GraphicsManager.PANEL);
-		}
-	}
-	
-	/**
-	 * Fills a rectangle on the visible area of the buffer. Doesn't fill parts of the rectangle outside of the visible area. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system.
-	 *
-	 * @param x      The x coordinate of the rectangle
-	 * @param y      The y coordinate of the rectangle
-	 * @param width  The width of the rectangle
-	 * @param height The height of the rectangle
-	 * @since 0.1.0
-	 */
-	protected static void fillRectOnScreen(int x, int y, int width, int height) {
-		x += origin.x;
-		y += origin.y;
-		Rectangle r = screenRect.intersection(new Rectangle(x, y, width, height));
-		if(!r.isEmpty()) {
-			BUFFER_GRAPHICS.fillRect(r.x, r.y, r.width, r.height);
-		}
-	}
-	
-	/**
-	 * Draws a rectangle on the visible area of the buffer. Doesn't fill parts of the rectangle outside of the visible area. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system.
-	 *
-	 * @param x      The x coordinate of the rectangle
-	 * @param y      The y coordinate of the rectangle
-	 * @param width  The width of the rectangle
-	 * @param height The height of the rectangle
-	 * @since 0.1.0
-	 */
-	protected static void drawRectOnScreen(int x, int y, int width, int height) {
-		x += origin.x;
-		y += origin.y;
-		if(screenRect.intersects(x, y, width, height)) {
-			BUFFER_GRAPHICS.drawRect(x, y, width, height);
-		}
-	}
-	
-	/**
-	 * Fills all visible but unpainted areas with black if {@link #isFillVisibleAreas()} is true.
-	 *
-	 * @since 0.1.0
-	 */
-	public static void fillVisibleAreas() {
-		if(!isFillVisibleAreas()) {
-			return;
-		}
-		BUFFER_GRAPHICS.setColor(Color.BLACK);
-		int x = getScreenOffsetX();
-		int y = getScreenOffsetY();
-		fillRectOnScreen(-x, -y, screenRect.width, y);//top
-		fillRectOnScreen(-x, -y, x, screenRect.height);//left
-		fillRectOnScreen(-x, originalScreen.height, originalScreen.width, y);//bottom
-		fillRectOnScreen(originalScreen.width, -y, x, originalScreen.height);//right
+	public static double getScreenRatio() {
+		return ratio;
 	}
 	
 	/**
@@ -401,12 +365,47 @@ public class ResolutionManager {
 	}
 	
 	/**
-	 * Fills the local screen with black.
+	 * Draws a rectangle on the visible area of the buffer. Doesn't fill parts of the rectangle outside of the visible area. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system.
 	 *
+	 * @param x      The x coordinate of the rectangle
+	 * @param y      The y coordinate of the rectangle
+	 * @param width  The width of the rectangle
+	 * @param height The height of the rectangle
 	 * @since 0.1.0
 	 */
-	public static void fillLocalScreen() {
-		BUFFER_GRAPHICS.setColor(Color.BLACK);
-		BUFFER_GRAPHICS.fillRect(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+	protected static void drawRectOnScreen(int x, int y, int width, int height) {
+		x += origin.x;
+		y += origin.y;
+		if(screenRect.intersects(x, y, width, height)) {
+			BUFFER_GRAPHICS.drawRect(x, y, width, height);
+		}
+	}
+	
+	/**
+	 * Fills a rectangle on the visible area of the buffer. Doesn't fill parts of the rectangle outside of the visible area. The coordinates are adjusted by the {@link #origin}'s coordinates to translate them to the buffer's coordinate system.
+	 *
+	 * @param x      The x coordinate of the rectangle
+	 * @param y      The y coordinate of the rectangle
+	 * @param width  The width of the rectangle
+	 * @param height The height of the rectangle
+	 * @since 0.1.0
+	 */
+	protected static void fillRectOnScreen(int x, int y, int width, int height) {
+		x += origin.x;
+		y += origin.y;
+		Rectangle r = screenRect.intersection(new Rectangle(x, y, width, height));
+		if(!r.isEmpty()) {
+			BUFFER_GRAPHICS.fillRect(r.x, r.y, r.width, r.height);
+		}
+	}
+	
+	/**
+	 * Creates an image to server as {@link #BUFFER}
+	 *
+	 * @return The created buffer image
+	 * @since 0.1.0
+	 */
+	private static @NotNull BufferedImage createBufferImage() {
+		return new BufferedImage(getBufferSize().width, getBufferSize().height, BufferedImage.TYPE_INT_ARGB);
 	}
 }

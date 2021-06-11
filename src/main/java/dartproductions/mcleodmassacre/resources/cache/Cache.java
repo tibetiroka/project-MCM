@@ -22,6 +22,79 @@ public interface Cache<T> extends Identified {
 	@NotNull Logger LOGGER = LogManager.getLogger(Cache.class);
 	
 	/**
+	 * Gets the resource with the specified ID. The resource is loaded if it is not loaded in the cache.
+	 *
+	 * @param id The identifier of the resource
+	 * @return The resource or null if it isn't registered or has no loader
+	 * @since 0.1.0
+	 */
+	default @Nullable T get(@NotNull Identifier id) {
+		if(!isLoaded(id)) {
+			load(id);
+		}
+		return getFromCache(id);
+	}
+	
+	/**
+	 * Gets the specified resource from the cache. Returns null if the identifier is not registered of it is not loaded
+	 *
+	 * @param id The identifier of the resource
+	 * @return The cached data
+	 * @since 0.1.0
+	 */
+	@Nullable T getFromCache(@NotNull Identifier id);
+	
+	/**
+	 * Gets the parallelization strategy used for loading resources, or for any other long tasks. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
+	 *
+	 * @return The used parallelization strategy
+	 * @since 0.1.0
+	 */
+	@NotNull ParallelizationStrategy getParallelizationStrategy();
+	
+	/**
+	 * Gets the access strategy used for reading cached values. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
+	 *
+	 * @return The used access strategy
+	 * @since 0.1.0
+	 */
+	@NotNull AccessStrategy getReadAccessStrategy();
+	
+	/**
+	 * Gets a set of identifiers that corresponds to the registered resource. There is no guarantee made that changes made to this set are ignored or reflected on the cache.
+	 *
+	 * @return The registered identifiers
+	 * @since 0.1.0
+	 */
+	@NotNull Set<Identifier> getRegisteredResources();
+	
+	/**
+	 * Gets the access strategy used for writing to the cache. This includes registering new identifiers and loading resources. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
+	 *
+	 * @return The used access strategy
+	 * @since 0.1.0
+	 */
+	@NotNull AccessStrategy getWriteAccessStrategy();
+	
+	/**
+	 * Checks if the specified resource is loaded.
+	 *
+	 * @param id The identifier of the resource
+	 * @return True if loaded
+	 * @since 0.1.0
+	 */
+	boolean isLoaded(@NotNull Identifier id);
+	
+	/**
+	 * Loads the specified resource. Fails silently if the identifier isn't registered (returns false). Returns true if the resource is registered and loaded when calling this method.
+	 *
+	 * @param id The identifier of the resource
+	 * @return True if the id is registered and the resource is loaded
+	 * @since 0.1.0
+	 */
+	boolean load(@NotNull Identifier id);
+	
+	/**
 	 * Loads all registered resources.
 	 *
 	 * @since 0.1.0
@@ -46,13 +119,20 @@ public interface Cache<T> extends Identified {
 	}
 	
 	/**
-	 * Unloads all registered resources.
+	 * Loads any resources that meet the specified predicate. The predicate is given the id and the cached value of the resource. The predicate is only tested on unloaded resources.
 	 *
+	 * @param predicate The predicate to test
 	 * @since 0.1.0
 	 */
-	default void unloadAll() {
+	default void loadIf(@NotNull BiPredicate<Identifier, T> predicate) {
+		ArrayList<Identifier> list = new ArrayList<>();
 		for(Identifier id : getRegisteredResources()) {
-			unload(id);
+			if(!isLoaded(id) && predicate.test(id, getFromCache(id))) {
+				list.add(id);
+			}
+		}
+		for(Identifier identifier : list) {
+			load(identifier);
 		}
 	}
 	
@@ -87,55 +167,6 @@ public interface Cache<T> extends Identified {
 	}
 	
 	/**
-	 * Gets a set of identifiers that corresponds to the registered resource. There is no guarantee made that changes made to this set are ignored or reflected on the cache.
-	 *
-	 * @return The registered identifiers
-	 * @since 0.1.0
-	 */
-	@NotNull Set<Identifier> getRegisteredResources();
-	
-	/**
-	 * Loads the specified resource. Fails silently if the identifier isn't registered (returns false). Returns true if the resource is registered and loaded when calling this method.
-	 *
-	 * @param id The identifier of the resource
-	 * @return True if the id is registered and the resource is loaded
-	 * @since 0.1.0
-	 */
-	boolean load(@NotNull Identifier id);
-	
-	/**
-	 * Gets the resource with the specified ID. The resource is loaded if it is not loaded in the cache.
-	 *
-	 * @param id The identifier of the resource
-	 * @return The resource or null if it isn't registered or has no loader
-	 * @since 0.1.0
-	 */
-	default @Nullable T get(@NotNull Identifier id) {
-		if(!isLoaded(id)) {
-			load(id);
-		}
-		return getFromCache(id);
-	}
-	
-	/**
-	 * Gets the specified resource from the cache. Returns null if the identifier is not registered of it is not loaded
-	 *
-	 * @param id The identifier of the resource
-	 * @return The cached data
-	 * @since 0.1.0
-	 */
-	@Nullable T getFromCache(@NotNull Identifier id);
-	
-	/**
-	 * Checks if the specified resource is loaded.
-	 *
-	 * @param id The identifier of the resource
-	 * @return True if loaded
-	 * @since 0.1.0
-	 */
-	boolean isLoaded(@NotNull Identifier id);
-	
-	/**
 	 * Unloads the specified resource. Fails silently if the identifier is not registered (returns false). Returns true if the resource is already unloaded when calling this method. May return false for existing resources if the cache doesn't support unloading.
 	 *
 	 * @param id The ID of the resource
@@ -143,6 +174,17 @@ public interface Cache<T> extends Identified {
 	 * @since 0.1.0
 	 */
 	boolean unload(@NotNull Identifier id);
+	
+	/**
+	 * Unloads all registered resources.
+	 *
+	 * @since 0.1.0
+	 */
+	default void unloadAll() {
+		for(Identifier id : getRegisteredResources()) {
+			unload(id);
+		}
+	}
 	
 	/**
 	 * Unloads any resources that meet the specified predicate. The predicate is given the id and the cached value of the resource. The predicate is only tested on loaded resources.
@@ -161,48 +203,6 @@ public interface Cache<T> extends Identified {
 			unload(identifier);
 		}
 	}
-	
-	/**
-	 * Loads any resources that meet the specified predicate. The predicate is given the id and the cached value of the resource. The predicate is only tested on unloaded resources.
-	 *
-	 * @param predicate The predicate to test
-	 * @since 0.1.0
-	 */
-	default void loadIf(@NotNull BiPredicate<Identifier, T> predicate) {
-		ArrayList<Identifier> list = new ArrayList<>();
-		for(Identifier id : getRegisteredResources()) {
-			if(!isLoaded(id) && predicate.test(id, getFromCache(id))) {
-				list.add(id);
-			}
-		}
-		for(Identifier identifier : list) {
-			load(identifier);
-		}
-	}
-	
-	/**
-	 * Gets the access strategy used for reading cached values. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
-	 *
-	 * @return The used access strategy
-	 * @since 0.1.0
-	 */
-	@NotNull AccessStrategy getReadAccessStrategy();
-	
-	/**
-	 * Gets the access strategy used for writing to the cache. This includes registering new identifiers and loading resources. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
-	 *
-	 * @return The used access strategy
-	 * @since 0.1.0
-	 */
-	@NotNull AccessStrategy getWriteAccessStrategy();
-	
-	/**
-	 * Gets the parallelization strategy used for loading resources, or for any other long tasks. Although this data is visible to potential callers, implementations are not required to (and generally don't) support changing this strategy. The return value of this method can be used to optimize the calls made to this cache, however, enforcing the specified behaviour is up to the cache.
-	 *
-	 * @return The used parallelization strategy
-	 * @since 0.1.0
-	 */
-	@NotNull ParallelizationStrategy getParallelizationStrategy();
 	
 	/**
 	 * Specifies different specifications for accessing cached resources. Implementations should take these values into account or fall back to {@link #SEQUENTIAL} if they cannot support all values.

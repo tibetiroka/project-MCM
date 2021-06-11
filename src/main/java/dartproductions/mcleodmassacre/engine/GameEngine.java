@@ -31,6 +31,12 @@ import java.util.Iterator;
  */
 public class GameEngine {
 	/**
+	 * Lock object for the engine's scheduled tasks.
+	 *
+	 * @since 0.1.0
+	 */
+	public static final @NotNull Object ENGINE_TASK_LOCK = new Object();
+	/**
 	 * Lock object for suspending the engine. Used in timing frames and pausing.
 	 *
 	 * @since 0.1.0
@@ -42,12 +48,6 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	public static final @NotNull Object ENTITY_LOCK = new Object();
-	/**
-	 * Lock object for the engine's scheduled tasks.
-	 *
-	 * @since 0.1.0
-	 */
-	public static final @NotNull Object ENGINE_TASK_LOCK = new Object();
 	/**
 	 * The delay between two frames (in milliseconds).
 	 *
@@ -61,11 +61,17 @@ public class GameEngine {
 	 */
 	public static final int FRAME_LENGTH_NANO = FRAME_LENGTH * 1000 * 1000;
 	/**
-	 * Logger for the engine
+	 * List of all entities that can collide.
 	 *
 	 * @since 0.1.0
 	 */
-	protected static final Logger LOGGER = LogManager.getLogger(GameEngine.class);
+	protected static final @NotNull ArrayList<Entity> COLLIDABLE_ENTITIES = new ArrayList<>();
+	/**
+	 * List of delayed engine tasks
+	 *
+	 * @since 0.1.0
+	 */
+	protected static final @NotNull ArrayList<ImmutableNullsafePair<Long, Runnable>> DELAYED_TASKS = new ArrayList<>();
 	/**
 	 * List of all existing entities
 	 *
@@ -73,17 +79,11 @@ public class GameEngine {
 	 */
 	protected static final @NotNull ArrayList<Entity> ENTITIES = new ArrayList<>();
 	/**
-	 * List of all entities that can move. Being part of the list does not mean the entity can be moved by collisions, or that it will move at any time.
+	 * List of entities to be added in the next frame
 	 *
 	 * @since 0.1.0
 	 */
-	protected static final @NotNull ArrayList<Entity> MOVABLE_ENTITIES = new ArrayList<>();
-	/**
-	 * List of all entities that can collide.
-	 *
-	 * @since 0.1.0
-	 */
-	protected static final @NotNull ArrayList<Entity> COLLIDABLE_ENTITIES = new ArrayList<>();
+	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_ADD = new ArrayList<>();
 	/**
 	 * List of entities to be removed in the next frame
 	 *
@@ -91,23 +91,23 @@ public class GameEngine {
 	 */
 	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_REMOVE = new ArrayList<>();
 	/**
-	 * List of entities to be added in the next frame
+	 * Logger for the engine
 	 *
 	 * @since 0.1.0
 	 */
-	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_ADD = new ArrayList<>();
+	protected static final Logger LOGGER = LogManager.getLogger(GameEngine.class);
+	/**
+	 * List of all entities that can move. Being part of the list does not mean the entity can be moved by collisions, or that it will move at any time.
+	 *
+	 * @since 0.1.0
+	 */
+	protected static final @NotNull ArrayList<Entity> MOVABLE_ENTITIES = new ArrayList<>();
 	/**
 	 * List of player entities
 	 *
 	 * @since 0.1.0
 	 */
 	protected static final @NotNull ArrayList<PlayerEntity> PLAYERS = new ArrayList<>();
-	/**
-	 * List of delayed engine tasks
-	 *
-	 * @since 0.1.0
-	 */
-	protected static final @NotNull ArrayList<ImmutableNullsafePair<Long, Runnable>> DELAYED_TASKS = new ArrayList<>();
 	/**
 	 * The main engine thread
 	 *
@@ -121,12 +121,6 @@ public class GameEngine {
 	 */
 	private static volatile boolean RUNNING = false;
 	/**
-	 * The time when the previous frame started
-	 *
-	 * @since 0.1.0
-	 */
-	private static volatile long previous = 0;
-	/**
 	 * Time since the previous frame
 	 *
 	 * @since 0.1.0
@@ -138,6 +132,47 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	private static long frame = 0;
+	/**
+	 * The time when the previous frame started
+	 *
+	 * @since 0.1.0
+	 */
+	private static volatile long previous = 0;
+	
+	/**
+	 * Checks if the engine is still running. Might return 'true' if the thread didn't shut down correctly.
+	 *
+	 * @return True if running
+	 * @since 0.1.0
+	 */
+	public static boolean isRunning() {
+		return RUNNING;
+	}
+	
+	/**
+	 * Registers an entity in the engine. The entity does NOT get registered in the rendering engine.
+	 *
+	 * @param e The entity to register
+	 * @since 0.1.0
+	 */
+	public static void registerEntity(@NotNull Entity e) {
+		synchronized(ENTITY_LOCK) {
+			ENTITIES_TO_ADD.add(e);
+		}
+	}
+	
+	/**
+	 * Schedules a task for execution on the main engine thread.
+	 *
+	 * @param delay The amount of frames to wait before execution
+	 * @param task  The task to execute
+	 * @since 0.1.0
+	 */
+	public static void scheduleTask(int delay, @NotNull Runnable task) {
+		synchronized(ENGINE_TASK_LOCK) {
+			DELAYED_TASKS.add(new ImmutableNullsafePair<>(delay + frame, task));
+		}
+	}
 	
 	/**
 	 * Starts the game engine. Fails silently if the engine is already running.
@@ -216,88 +251,65 @@ public class GameEngine {
 		ENGINE_THREAD.start();
 	}
 	
-	/**
-	 * Method for doing all calculations in a frame.
-	 *
-	 * @since 0.1.0
-	 */
-	private static void processFrame() {
-		handleTasks();
-		handleEntities();
-		handleInput();
-		if(Main.getGameState().isPausingState()) {
-			return;
-		}
-		synchronized(ENGINE_WAIT_LOCK) {
-			for(Entity entity : ENTITIES) {//self-processing (movement etc)
-				entity.process();
-			}
-			handleEntities();//allows removing both BEFORE and AFTER processing, without staying in the engine for a frame
-			for(Entity first : COLLIDABLE_ENTITIES) {//collision
-				for(Entity second : COLLIDABLE_ENTITIES) {
-					if(second != first && (second.isCollisionMovable() ^ first.isCollisionMovable()) && areIntersecting(first, second)) {
-						Entity moving, staying;
-						if(first.isCollisionMovable()) {
-							moving = first;
-							staying = second;
-						} else {
-							moving = second;
-							staying = first;
-						}
-						{
-							Dimension vel = moving.getVelocity();
-							moving.move(-vel.width, -vel.height);
-							if(areIntersecting(moving, staying)) {//ignore collisions from previous frames
-								moving.move(vel.width, vel.height);
-								continue;
-							}
-							moving.move(vel.width, vel.height);
-						}
-						if(moving.onCollision(staying) && staying.onCollision(moving)) {
-							Dimension d = moving.getVelocity();
-							double delta = Math.sqrt(d.height * d.height + d.width * d.width);
-							double dx = d.width / delta;
-							double dy = d.height / delta;
-							int x = moving.getLocation().x;
-							int y = moving.getLocation().y;
-							for(int i = 1; areIntersecting(moving, staying); i++) {
-								moving.getLocation().x = x + (int) (dx * i);
-								moving.getLocation().y = y + (int) (dy * i);
-							}
-						}
-					}
-				}
-			}
+	public static void unregisterAllEntities() {
+		synchronized(ENTITY_LOCK) {
+			ENTITIES_TO_REMOVE.addAll(ENTITIES);
 		}
 	}
 	
 	/**
-	 * Runs all tasks scheduled for this frame. Makes sure all tasks have their delays adjusted if necessary.
+	 * Removes an entity from the engine. The entity does NOT get removed from the rendering engine.
 	 *
+	 * @param e The entity to remove
 	 * @since 0.1.0
 	 */
-	private static void handleTasks() {
-		synchronized(ENGINE_TASK_LOCK) {
-			for(Iterator<ImmutableNullsafePair<Long, Runnable>> iterator = DELAYED_TASKS.iterator(); iterator.hasNext(); ) {
-				ImmutableNullsafePair<Long, Runnable> delayedTask = iterator.next();
-				if(delayedTask.first() <= frame) {
-					delayedTask.second().run();
-				}
-				iterator.remove();
-			}
+	public static void unregisterEntity(@NotNull Entity e) {
+		synchronized(ENTITY_LOCK) {
+			ENTITIES_TO_REMOVE.add(e);
 		}
 	}
 	
 	/**
-	 * Schedules a task for execution on the main engine thread.
+	 * Checks if two entities are intersecting with each other.
 	 *
-	 * @param delay The amount of frames to wait before execution
-	 * @param task  The task to execute
+	 * @param first  The first entity
+	 * @param second The second entity
+	 * @return True if they are intersecting
 	 * @since 0.1.0
 	 */
-	public static void scheduleTask(int delay, @NotNull Runnable task) {
-		synchronized(ENGINE_TASK_LOCK) {
-			DELAYED_TASKS.add(new ImmutableNullsafePair<>(delay + frame, task));
+	private static boolean areIntersecting(@NotNull Entity first, @NotNull Entity second) {
+		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
+		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
+		return !a.isEmpty();
+	}
+	
+	/**
+	 * Gets the intersection area of the entities.
+	 *
+	 * @param first  The first entity
+	 * @param second The second entity
+	 * @return Their intersection
+	 * @since 0.1.0
+	 */
+	private static Area getIntersection(@NotNull Entity first, @NotNull Entity second) {
+		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
+		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
+		return a;
+	}
+	
+	/**
+	 * Gets the specified player from the players.
+	 *
+	 * @param id The id of the player
+	 * @return The player or null
+	 * @since 0.1.0
+	 */
+	private static @Nullable PlayerEntity getPlayer(int id) {
+		synchronized(ENTITY_LOCK) {
+			if(id < 0 || PLAYERS.size() <= id) {
+				return null;
+			}
+			return PLAYERS.get(id);
 		}
 	}
 	
@@ -348,22 +360,6 @@ public class GameEngine {
 				}
 			}
 			ENTITIES_TO_ADD.clear();
-		}
-	}
-	
-	/**
-	 * Gets the specified player from the players.
-	 *
-	 * @param id The id of the player
-	 * @return The player or null
-	 * @since 0.1.0
-	 */
-	private static @Nullable PlayerEntity getPlayer(int id) {
-		synchronized(ENTITY_LOCK) {
-			if(id < 0 || PLAYERS.size() <= id) {
-				return null;
-			}
-			return PLAYERS.get(id);
 		}
 	}
 	
@@ -440,70 +436,74 @@ public class GameEngine {
 	}
 	
 	/**
-	 * Checks if the engine is still running. Might return 'true' if the thread didn't shut down correctly.
+	 * Runs all tasks scheduled for this frame. Makes sure all tasks have their delays adjusted if necessary.
 	 *
-	 * @return True if running
 	 * @since 0.1.0
 	 */
-	public static boolean isRunning() {
-		return RUNNING;
-	}
-	
-	/**
-	 * Removes an entity from the engine. The entity does NOT get removed from the rendering engine.
-	 *
-	 * @param e The entity to remove
-	 * @since 0.1.0
-	 */
-	public static void unregisterEntity(@NotNull Entity e) {
-		synchronized(ENTITY_LOCK) {
-			ENTITIES_TO_REMOVE.add(e);
+	private static void handleTasks() {
+		synchronized(ENGINE_TASK_LOCK) {
+			for(Iterator<ImmutableNullsafePair<Long, Runnable>> iterator = DELAYED_TASKS.iterator(); iterator.hasNext(); ) {
+				ImmutableNullsafePair<Long, Runnable> delayedTask = iterator.next();
+				if(delayedTask.first() <= frame) {
+					delayedTask.second().run();
+				}
+				iterator.remove();
+			}
 		}
 	}
 	
 	/**
-	 * Registers an entity in the engine. The entity does NOT get registered in the rendering engine.
+	 * Method for doing all calculations in a frame.
 	 *
-	 * @param e The entity to register
 	 * @since 0.1.0
 	 */
-	public static void registerEntity(@NotNull Entity e) {
-		synchronized(ENTITY_LOCK) {
-			ENTITIES_TO_ADD.add(e);
+	private static void processFrame() {
+		handleTasks();
+		handleEntities();
+		handleInput();
+		if(Main.getGameState().isPausingState()) {
+			return;
 		}
-	}
-	
-	/**
-	 * Checks if two entities are intersecting with each other.
-	 *
-	 * @param first  The first entity
-	 * @param second The second entity
-	 * @return True if they are intersecting
-	 * @since 0.1.0
-	 */
-	private static boolean areIntersecting(@NotNull Entity first, @NotNull Entity second) {
-		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
-		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
-		return !a.isEmpty();
-	}
-	
-	/**
-	 * Gets the intersection area of the entities.
-	 *
-	 * @param first  The first entity
-	 * @param second The second entity
-	 * @return Their intersection
-	 * @since 0.1.0
-	 */
-	private static Area getIntersection(@NotNull Entity first, @NotNull Entity second) {
-		Area a = second.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(first.getLocation().x + first.getCurrentAnimation().getOffset().width, first.getLocation().y + first.getCurrentAnimation().getOffset().height));
-		a.intersect((first.getCurrentAnimation().getCurrentHitbox().createTransformedArea(AffineTransform.getTranslateInstance(second.getLocation().x + second.getCurrentAnimation().getOffset().width, second.getLocation().y + second.getCurrentAnimation().getOffset().height))));
-		return a;
-	}
-	
-	public static void unregisterAllEntities() {
-		synchronized(ENTITY_LOCK) {
-			ENTITIES_TO_REMOVE.addAll(ENTITIES);
+		synchronized(ENGINE_WAIT_LOCK) {
+			for(Entity entity : ENTITIES) {//self-processing (movement etc)
+				entity.process();
+			}
+			handleEntities();//allows removing both BEFORE and AFTER processing, without staying in the engine for a frame
+			for(Entity first : COLLIDABLE_ENTITIES) {//collision
+				for(Entity second : COLLIDABLE_ENTITIES) {
+					if(second != first && (second.isCollisionMovable() ^ first.isCollisionMovable()) && areIntersecting(first, second)) {
+						Entity moving, staying;
+						if(first.isCollisionMovable()) {
+							moving = first;
+							staying = second;
+						} else {
+							moving = second;
+							staying = first;
+						}
+						{
+							Dimension vel = moving.getVelocity();
+							moving.move(-vel.width, -vel.height);
+							if(areIntersecting(moving, staying)) {//ignore collisions from previous frames
+								moving.move(vel.width, vel.height);
+								continue;
+							}
+							moving.move(vel.width, vel.height);
+						}
+						if(moving.onCollision(staying) && staying.onCollision(moving)) {
+							Dimension d = moving.getVelocity();
+							double delta = Math.sqrt(d.height * d.height + d.width * d.width);
+							double dx = d.width / delta;
+							double dy = d.height / delta;
+							int x = moving.getLocation().x;
+							int y = moving.getLocation().y;
+							for(int i = 1; areIntersecting(moving, staying); i++) {
+								moving.getLocation().x = x + (int) (dx * i);
+								moving.getLocation().y = y + (int) (dy * i);
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }

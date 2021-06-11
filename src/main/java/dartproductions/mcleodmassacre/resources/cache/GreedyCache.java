@@ -41,6 +41,41 @@ public class GreedyCache<T> implements Cache<T> {
 	}
 	
 	@Override
+	public @Nullable T getFromCache(@NotNull Identifier id) {
+		return cache.get(id);
+	}
+	
+	@Override
+	public @NotNull ParallelizationStrategy getParallelizationStrategy() {
+		return ParallelizationStrategy.BALANCED_THREADING;
+	}
+	
+	@Override
+	public @NotNull AccessStrategy getReadAccessStrategy() {
+		return AccessStrategy.PARALLEL;
+	}
+	
+	@Override
+	public @NotNull Set<Identifier> getRegisteredResources() {
+		return cache.keySet();
+	}
+	
+	@Override
+	public @NotNull AccessStrategy getWriteAccessStrategy() {
+		return AccessStrategy.SEQUENTIAL;
+	}
+	
+	@Override
+	public boolean isLoaded(@NotNull Identifier id) {
+		return cache.get(id) != null;
+	}
+	
+	@Override
+	public boolean load(@NotNull Identifier id) {
+		return isLoaded(id);
+	}
+	
+	@Override
 	public void register(@NotNull Identifier id, @Nullable Callable<T> loader) {
 		try {
 			if(!isLoaded(id) || loader != null) {
@@ -52,43 +87,8 @@ public class GreedyCache<T> implements Cache<T> {
 	}
 	
 	@Override
-	public @NotNull Set<Identifier> getRegisteredResources() {
-		return cache.keySet();
-	}
-	
-	@Override
-	public boolean load(@NotNull Identifier id) {
-		return isLoaded(id);
-	}
-	
-	@Override
-	public @Nullable T getFromCache(@NotNull Identifier id) {
-		return cache.get(id);
-	}
-	
-	@Override
-	public boolean isLoaded(@NotNull Identifier id) {
-		return cache.get(id) != null;
-	}
-	
-	@Override
 	public boolean unload(@NotNull Identifier id) {
 		return false;
-	}
-	
-	@Override
-	public @NotNull AccessStrategy getReadAccessStrategy() {
-		return AccessStrategy.PARALLEL;
-	}
-	
-	@Override
-	public @NotNull AccessStrategy getWriteAccessStrategy() {
-		return AccessStrategy.SEQUENTIAL;
-	}
-	
-	@Override
-	public @NotNull ParallelizationStrategy getParallelizationStrategy() {
-		return ParallelizationStrategy.BALANCED_THREADING;
 	}
 	
 	@Override

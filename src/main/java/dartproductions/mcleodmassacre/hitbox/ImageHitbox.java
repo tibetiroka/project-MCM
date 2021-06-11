@@ -40,16 +40,6 @@ public class ImageHitbox implements Shape {
 	}
 	
 	/**
-	 * Gets the hitbox area of this hitbox.
-	 *
-	 * @return The hitbox area
-	 * @since 0.1.0
-	 */
-	public @NotNull Area getArea() {
-		return hitbox;
-	}
-	
-	/**
 	 * Creates an {@link Area} from the image based on the locations that match and doesn't match the specified color.
 	 *
 	 * @param target The target color
@@ -84,6 +74,16 @@ public class ImageHitbox implements Shape {
 		gp.closePath();
 		
 		return new Area(gp);
+	}
+	
+	/**
+	 * Gets the hitbox area of this hitbox.
+	 *
+	 * @return The hitbox area
+	 * @since 0.1.0
+	 */
+	public @NotNull Area getArea() {
+		return hitbox;
 	}
 	
 	@Override

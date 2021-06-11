@@ -21,17 +21,17 @@ public class StandardCache<T> implements Cache<T> {
 	 */
 	protected final @NotNull HashMap<Identifier, T> cache = new HashMap<>();
 	/**
-	 * The resource loaders
-	 *
-	 * @since 0.1.0
-	 */
-	protected final @NotNull HashMap<Identifier, Callable<T>> loaders = new HashMap<>();
-	/**
 	 * The identifier of the cache
 	 *
 	 * @since 0.1.0
 	 */
 	protected final @NotNull Identifier id;
+	/**
+	 * The resource loaders
+	 *
+	 * @since 0.1.0
+	 */
+	protected final @NotNull HashMap<Identifier, Callable<T>> loaders = new HashMap<>();
 	
 	/**
 	 * Creates a new standard cache.
@@ -44,20 +44,33 @@ public class StandardCache<T> implements Cache<T> {
 	}
 	
 	@Override
-	public @NotNull Identifier getId() {
-		return id;
+	public @Nullable T getFromCache(@NotNull Identifier id) {
+		return cache.get(id);
 	}
 	
 	@Override
-	public void register(@NotNull Identifier id, @Nullable Callable<T> loader) {
-		if(loader != null || !loaders.containsKey(id)) {
-			loaders.put(id, loader);
-		}
+	public @NotNull ParallelizationStrategy getParallelizationStrategy() {
+		return ParallelizationStrategy.BALANCED_THREADING;
+	}
+	
+	@Override
+	public @NotNull AccessStrategy getReadAccessStrategy() {
+		return AccessStrategy.PARALLEL;
 	}
 	
 	@Override
 	public @NotNull Set<Identifier> getRegisteredResources() {
 		return loaders.keySet();
+	}
+	
+	@Override
+	public @NotNull AccessStrategy getWriteAccessStrategy() {
+		return AccessStrategy.SEQUENTIAL;
+	}
+	
+	@Override
+	public boolean isLoaded(@NotNull Identifier id) {
+		return cache.get(id) != null;
 	}
 	
 	@Override
@@ -80,13 +93,10 @@ public class StandardCache<T> implements Cache<T> {
 	}
 	
 	@Override
-	public @Nullable T getFromCache(@NotNull Identifier id) {
-		return cache.get(id);
-	}
-	
-	@Override
-	public boolean isLoaded(@NotNull Identifier id) {
-		return cache.get(id) != null;
+	public void register(@NotNull Identifier id, @Nullable Callable<T> loader) {
+		if(loader != null || !loaders.containsKey(id)) {
+			loaders.put(id, loader);
+		}
 	}
 	
 	@Override
@@ -101,17 +111,7 @@ public class StandardCache<T> implements Cache<T> {
 	}
 	
 	@Override
-	public @NotNull AccessStrategy getReadAccessStrategy() {
-		return AccessStrategy.PARALLEL;
-	}
-	
-	@Override
-	public @NotNull AccessStrategy getWriteAccessStrategy() {
-		return AccessStrategy.SEQUENTIAL;
-	}
-	
-	@Override
-	public @NotNull ParallelizationStrategy getParallelizationStrategy() {
-		return ParallelizationStrategy.BALANCED_THREADING;
+	public @NotNull Identifier getId() {
+		return id;
 	}
 }

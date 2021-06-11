@@ -23,7 +23,7 @@ public interface Options extends OptionGroup {
 	 * @return The default settings
 	 * @since 0.1.0
 	 */
-	public static @NotNull Options getDefaultOptions() {
+	static @NotNull Options getDefaultOptions() {
 		return new StandardOptions();
 	}
 	
@@ -33,14 +33,14 @@ public interface Options extends OptionGroup {
 	 * @return The option groups
 	 * @since 0.1.0
 	 */
-	public @NotNull List<OptionGroup> getGroups();
+	@NotNull List<OptionGroup> getGroups();
 	
 	/**
 	 * The standard game options
 	 *
 	 * @since 0.1.0
 	 */
-	public static class StandardOptions implements Options {
+	class StandardOptions implements Options {
 		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX";
 		
 		public final @NotNull ArrayList<OptionGroup> groups = new ArrayList<>();

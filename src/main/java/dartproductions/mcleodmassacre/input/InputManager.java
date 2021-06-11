@@ -3,8 +3,12 @@ package dartproductions.mcleodmassacre.input;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.graphics.ResolutionManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType.ControlConfig.ValueControlConfig;
-import net.java.games.input.*;
+import net.java.games.input.Controller;
 import net.java.games.input.Controller.Type;
+import net.java.games.input.ControllerEnvironment;
+import net.java.games.input.ControllerEvent;
+import net.java.games.input.ControllerListener;
+import net.java.games.input.Event;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +27,14 @@ import java.util.List;
  * @since 0.1.0
  */
 public class InputManager {
+	//
+	private static final @NotNull ArrayList<InputAction<Event>> ACTIONS = new ArrayList<>();
+	/**
+	 * Lock object used for synchronizations related to the player devices.
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull Object DEVICE_LOCK = new Object();
 	private static final @NotNull Logger LOGGER = LogManager.getLogger(InputManager.class);
 	/**
 	 * The list of devices used by players. The nth device corresponds to the nth player.
@@ -30,14 +42,54 @@ public class InputManager {
 	 * @since 0.1.0
 	 */
 	private static final @NotNull ArrayList<Controller> PLAYER_DEVICES = new ArrayList<>();
+	
 	/**
-	 * Lock object used for synchronizations related to the player devices.
+	 * Gets the list of actions that have been detected since this method was last called.
 	 *
+	 * @return The new actions
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Object DEVICE_LOCK = new Object();
-	//
-	private static final @NotNull ArrayList<InputAction<Event>> ACTIONS = new ArrayList<>();
+	public static @NotNull ArrayList<InputAction<Event>> getActions() {
+		synchronized(DEVICE_LOCK) {
+			var a = new ArrayList<>(ACTIONS);
+			ACTIONS.clear();
+			return a;
+		}
+	}
+	
+	/**
+	 * Gets the cursor location as it would appear on the (nonexistent) development machine. Useful if you don't want to fuck around with conversions all day.
+	 *
+	 * @return The cursor location in the original coordinate system
+	 * @since 0.1.0
+	 */
+	public static @NotNull Point getCursorLocation() {
+		Point screenLoc = MouseInfo.getPointerInfo().getLocation();
+		screenLoc.setLocation(screenLoc.getX() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetX(), screenLoc.getY() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetY());
+		return screenLoc;
+	}
+	
+	/**
+	 * Gets the location of the cursor on the graphics buffer.
+	 *
+	 * @return The cursor's location on the buffer
+	 * @since 0.1.0
+	 */
+	public static @NotNull Point getCursorLocationBuffer() {
+		Point loc = getCursorLocationLocal();
+		loc.translate(ResolutionManager.getOriginOnBuffer().x, ResolutionManager.getOriginOnBuffer().y);
+		return loc;
+	}
+	
+	/**
+	 * Gets the cursor location on the local machine.
+	 *
+	 * @return The cursor's location
+	 * @since 0.1.0
+	 */
+	public static @NotNull Point getCursorLocationLocal() {
+		return MouseInfo.getPointerInfo().getLocation();
+	}
 	
 	/**
 	 * Initializes the input manager
@@ -76,20 +128,6 @@ public class InputManager {
 	}
 	
 	/**
-	 * Gets the list of actions that have been detected since this method was last called.
-	 *
-	 * @return The new actions
-	 * @since 0.1.0
-	 */
-	public static @NotNull ArrayList<InputAction<Event>> getActions() {
-		synchronized(DEVICE_LOCK) {
-			var a = new ArrayList<>(ACTIONS);
-			ACTIONS.clear();
-			return a;
-		}
-	}
-	
-	/**
 	 * Gathers information from the input devices and parses valid {@link InputAction input actions} from them. Runs asynchronously on {@link Main#getExecutors()}.
 	 *
 	 * @since 0.1.0
@@ -122,47 +160,12 @@ public class InputManager {
 		}
 	}
 	
-	
-	/**
-	 * Gets the cursor location on the local machine.
-	 *
-	 * @return The cursor's location
-	 * @since 0.1.0
-	 */
-	public static @NotNull Point getCursorLocationLocal() {
-		return MouseInfo.getPointerInfo().getLocation();
-	}
-	
-	/**
-	 * Gets the location of the cursor on the graphics buffer.
-	 *
-	 * @return The cursor's location on the buffer
-	 * @since 0.1.0
-	 */
-	public static @NotNull Point getCursorLocationBuffer() {
-		Point loc = getCursorLocationLocal();
-		loc.translate(ResolutionManager.getOriginOnBuffer().x, ResolutionManager.getOriginOnBuffer().y);
-		return loc;
-	}
-	
-	/**
-	 * Gets the cursor location as it would appear on the (nonexistent) development machine. Useful if you don't want to fuck around with conversions all day.
-	 *
-	 * @return The cursor location in the original coordinate system
-	 * @since 0.1.0
-	 */
-	public static @NotNull Point getCursorLocation() {
-		Point screenLoc = MouseInfo.getPointerInfo().getLocation();
-		screenLoc.setLocation(screenLoc.getX() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetX(), screenLoc.getY() / ResolutionManager.getScreenRatio() - ResolutionManager.getScreenOffsetY());
-		return screenLoc;
-	}
-	
 	/**
 	 * Enum describing all user actions.
 	 *
 	 * @since 0.1.0
 	 */
-	public static enum ActionType {
+	public enum ActionType {
 		/**
 		 * Moves the focus upwards in a menu.
 		 *
@@ -298,17 +301,17 @@ public class InputManager {
 		 */
 		public static final @NotNull ActionType[] values = values();
 		/**
-		 * The user-friendly name of the action
-		 *
-		 * @since 0.1.0
-		 */
-		public final @NotNull String name;
-		/**
 		 * The controls for this action
 		 *
 		 * @since 0.1.0
 		 */
 		public final @NotNull ControlConfig[] controls;
+		/**
+		 * The user-friendly name of the action
+		 *
+		 * @since 0.1.0
+		 */
+		public final @NotNull String name;
 		
 		/**
 		 * Creates a new action type
@@ -317,7 +320,7 @@ public class InputManager {
 		 * @param controls The controls to activate the action
 		 * @since 0.1.0
 		 */
-		private ActionType(@NotNull String name, @NotNull ControlConfig... controls) {
+		ActionType(@NotNull String name, @NotNull ControlConfig... controls) {
 			this.name = name;
 			this.controls = controls;
 		}
@@ -361,7 +364,7 @@ public class InputManager {
 		 *
 		 * @since 0.1.0
 		 */
-		public static interface ControlConfig {
+		public interface ControlConfig {
 			/**
 			 * Checks if this config matches with the specified event
 			 *
@@ -370,20 +373,20 @@ public class InputManager {
 			 * @return True if matches
 			 * @since 0.1.0
 			 */
-			public boolean isValid(@NotNull Controller controller, @NotNull Event event);
+			boolean isValid(@NotNull Controller controller, @NotNull Event event);
 			
 			/**
 			 * {@link ControlConfig} implementation where a certain value is expected from a component.
 			 *
 			 * @since 0.1.0
 			 */
-			public static class ValueControlConfig implements ControlConfig {
+			class ValueControlConfig implements ControlConfig {
 				/**
-				 * The minimum accepted value
+				 * The name of the input component
 				 *
 				 * @since 0.1.0
 				 */
-				protected float min;
+				protected @NotNull String component;
 				/**
 				 * The maximum acepted value
 				 *
@@ -391,11 +394,11 @@ public class InputManager {
 				 */
 				protected float max;
 				/**
-				 * The name of the input component
+				 * The minimum accepted value
 				 *
 				 * @since 0.1.0
 				 */
-				protected @NotNull String component;
+				protected float min;
 				/**
 				 * The accepted controller types
 				 *
@@ -431,16 +434,12 @@ public class InputManager {
 					this(value, value, component, types);
 				}
 				
-				@Override
-				public boolean isValid(@NotNull Controller controller, @NotNull Event event) {
-					boolean contains = types.contains(controller.getType());
-					if(Math.abs(event.getValue()) - event.getComponent().getDeadZone() < 0) {
-						return false;
-					}
-					if(contains) {
-						return (event.getValue() >= min && event.getValue() <= max) && (component == null || component.equalsIgnoreCase(event.getComponent().getName()));
-					}
-					return false;
+				public @NotNull String getComponent() {
+					return component;
+				}
+				
+				public void setComponent(@NotNull String component) {
+					this.component = component;
 				}
 				
 				public float getMax() {
@@ -449,14 +448,6 @@ public class InputManager {
 				
 				public void setMax(float max) {
 					this.max = max;
-				}
-				
-				public @NotNull String getComponent() {
-					return component;
-				}
-				
-				public void setComponent(@NotNull String component) {
-					this.component = component;
 				}
 				
 				public float getMin() {
@@ -469,6 +460,18 @@ public class InputManager {
 				
 				public @NotNull List<Type> getTypes() {
 					return types;
+				}
+				
+				@Override
+				public boolean isValid(@NotNull Controller controller, @NotNull Event event) {
+					boolean contains = types.contains(controller.getType());
+					if(Math.abs(event.getValue()) - event.getComponent().getDeadZone() < 0) {
+						return false;
+					}
+					if(contains) {
+						return (event.getValue() >= min && event.getValue() <= max) && (component == null || component.equalsIgnoreCase(event.getComponent().getName()));
+					}
+					return false;
 				}
 			}
 		}
@@ -488,11 +491,11 @@ public class InputManager {
 		 */
 		protected final @NotNull ActionType action;
 		/**
-		 * The time the action occurred
+		 * The event data
 		 *
 		 * @since 0.1.0
 		 */
-		protected final @NotNull Instant time;
+		protected final T event;
 		/**
 		 * The cursor location at the time of the event
 		 *
@@ -500,23 +503,23 @@ public class InputManager {
 		 */
 		protected final @NotNull Point location;
 		/**
-		 * The event's input value
-		 *
-		 * @since 0.1.0
-		 */
-		protected final float value;
-		/**
 		 * The player's id associated with the input device
 		 *
 		 * @since 0.1.0
 		 */
 		protected final int playerId;
 		/**
-		 * The event data
+		 * The time the action occurred
 		 *
 		 * @since 0.1.0
 		 */
-		protected final T event;
+		protected final @NotNull Instant time;
+		/**
+		 * The event's input value
+		 *
+		 * @since 0.1.0
+		 */
+		protected final float value;
 		
 		/**
 		 * Creates a new input action. Uses the current time for the event's 'occurred at' time, {@link #getCursorLocation()} for the cursor location and 0 for the event's value.
@@ -628,13 +631,13 @@ public class InputManager {
 		}
 		
 		/**
-		 * Gets the value of the event (semi-magic number in e.g. {@link Event#getValue()})
+		 * Gets the event data
 		 *
-		 * @return The event's value
+		 * @return The data
 		 * @since 0.1.0
 		 */
-		public double getValue() {
-			return value;
+		public @NotNull T getData() {
+			return event;
 		}
 		
 		/**
@@ -668,13 +671,13 @@ public class InputManager {
 		}
 		
 		/**
-		 * Gets the event data
+		 * Gets the value of the event (semi-magic number in e.g. {@link Event#getValue()})
 		 *
-		 * @return The data
+		 * @return The event's value
 		 * @since 0.1.0
 		 */
-		public @NotNull T getData() {
-			return event;
+		public double getValue() {
+			return value;
 		}
 		
 		@Override

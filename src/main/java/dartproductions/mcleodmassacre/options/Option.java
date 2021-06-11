@@ -17,7 +17,7 @@ public interface Option<T> {
 	 * @return The current setting
 	 * @since 0.1.0
 	 */
-	public @Nullable T getValue();
+	@Nullable T getValue();
 	
 	/**
 	 * Sets the value of this setting.
@@ -25,7 +25,7 @@ public interface Option<T> {
 	 * @param t The new value
 	 * @since 0.1.0
 	 */
-	public void setValue(@Nullable T t);
+	void setValue(@Nullable T t);
 	
 	/**
 	 * Gets the visible name of this setting. This name can be displayed to users.
@@ -33,7 +33,7 @@ public interface Option<T> {
 	 * @return The name of this setting
 	 * @since 0.1.0
 	 */
-	public @Nullable String getVisibleName();
+	@Nullable String getVisibleName();
 	
 	/**
 	 * Sets the visible name of this setting. This name can be displayed to users.
@@ -41,250 +41,26 @@ public interface Option<T> {
 	 * @param name The new name of this setting
 	 * @since 0.1.0
 	 */
-	public void setVisibleName(@Nullable String name);
-	
-	/**
-	 * {@link Option} implementation for integer values
-	 *
-	 * @since 0.1.0
-	 */
-	public static class IntOption implements Option<Integer> {
-		/**
-		 * The value of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected int value;
-		/**
-		 * The name of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String name;
-		
-		/**
-		 * Creates a new option with no name and 0 as value.
-		 *
-		 * @since 0.1.0
-		 */
-		public IntOption() {
-			this(null, 0);
-		}
-		
-		/**
-		 * Creates a new option with no name and the specified value.
-		 *
-		 * @param value The option's value
-		 * @since 0.1.0
-		 */
-		public IntOption(int value) {
-			this(null, value);
-		}
-		
-		/**
-		 * Creates a new option with the specified name and 0 as value.
-		 *
-		 * @param name The option's name
-		 * @since 0.1.0
-		 */
-		public IntOption(@Nullable String name) {
-			this(name, 0);
-		}
-		
-		/**
-		 * Creates a new option with the specified name and value.
-		 *
-		 * @param name  The name of the option
-		 * @param value The value of the option
-		 * @since 0.1.0
-		 */
-		public IntOption(@Nullable String name, int value) {
-			this.name = name;
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable Integer getValue() {
-			return value;
-		}
-		
-		@Override
-		public void setValue(@Nullable Integer value) {
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable String getVisibleName() {
-			return name;
-		}
-		
-		@Override
-		public void setVisibleName(@Nullable String name) {
-			this.name = name;
-		}
-	}
-	
-	/**
-	 * {@link Option} implementation for double values
-	 *
-	 * @since 0.1.0
-	 */
-	public static class DoubleOption implements Option<Double> {
-		/**
-		 * The value of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected double value;
-		/**
-		 * The name of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String name;
-		
-		/**
-		 * Creates a new option with no name and 0 as value.
-		 *
-		 * @since 0.1.0
-		 */
-		public DoubleOption() {
-			this(null, 0.);
-		}
-		
-		/**
-		 * Creates a new option with no name and the specified value.
-		 *
-		 * @param value The option's value
-		 * @since 0.1.0
-		 */
-		public DoubleOption(@Nullable Double value) {
-			this(null, value);
-		}
-		
-		/**
-		 * Creates a new option with the specified name and 0 as value.
-		 *
-		 * @param name The option's name
-		 * @since 0.1.0
-		 */
-		public DoubleOption(@Nullable String name) {
-			this(name, 0.);
-		}
-		
-		/**
-		 * Creates a new option with the specified name and value.
-		 *
-		 * @param name  The name of the option
-		 * @param value The value of the option
-		 * @since 0.1.0
-		 */
-		public DoubleOption(@Nullable String name, @Nullable Double value) {
-			this.name = name;
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable Double getValue() {
-			return value;
-		}
-		
-		@Override
-		public void setValue(@Nullable Double value) {
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable String getVisibleName() {
-			return name;
-		}
-		
-		@Override
-		public void setVisibleName(@Nullable String name) {
-			this.name = name;
-		}
-	}
-	
-	/**
-	 * {@link Option} implementation for string values
-	 *
-	 * @since 0.1.0
-	 */
-	
-	public static class StringOption implements Option<String> {
-		/**
-		 * The value of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String value;
-		/**
-		 * The name of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String name;
-		
-		/**
-		 * Creates a new option with no name and null as value.
-		 *
-		 * @since 0.1.0
-		 */
-		public StringOption() {
-			this(null, null);
-		}
-		
-		/**
-		 * Creates a new option with the specified name and value.
-		 *
-		 * @param name  The name of the option
-		 * @param value The value of the option
-		 * @since 0.1.0
-		 */
-		public StringOption(@Nullable String name, @Nullable String value) {
-			this.name = name;
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable String getValue() {
-			return value;
-		}
-		
-		@Override
-		public void setValue(@Nullable String value) {
-			this.value = value;
-		}
-		
-		@Override
-		public @Nullable String getVisibleName() {
-			return name;
-		}
-		
-		@Override
-		public void setVisibleName(@Nullable String name) {
-			this.name = name;
-		}
-	}
+	void setVisibleName(@Nullable String name);
 	
 	/**
 	 * {@link Option} implementation for boolean values
 	 *
 	 * @since 0.1.0
 	 */
-	public static class BooleanOption implements Option<Boolean> {
-		/**
-		 * The value of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected boolean value;
+	class BooleanOption implements Option<Boolean> {
 		/**
 		 * The name of the option
 		 *
 		 * @since 0.1.0
 		 */
 		protected @Nullable String name;
+		/**
+		 * The value of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected boolean value;
 		
 		/**
 		 * Creates a new option with no name and false as value.
@@ -349,23 +125,104 @@ public interface Option<T> {
 	}
 	
 	/**
-	 * {@link Option} implementation for enum values
+	 * {@link Option} implementation for double values
 	 *
 	 * @since 0.1.0
 	 */
-	public static class EnumOption<T extends Enum<T>> implements Option<T> {
-		/**
-		 * The value of the option
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable T value;
+	class DoubleOption implements Option<Double> {
 		/**
 		 * The name of the option
 		 *
 		 * @since 0.1.0
 		 */
 		protected @Nullable String name;
+		/**
+		 * The value of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected double value;
+		
+		/**
+		 * Creates a new option with no name and 0 as value.
+		 *
+		 * @since 0.1.0
+		 */
+		public DoubleOption() {
+			this(null, 0.);
+		}
+		
+		/**
+		 * Creates a new option with no name and the specified value.
+		 *
+		 * @param value The option's value
+		 * @since 0.1.0
+		 */
+		public DoubleOption(@Nullable Double value) {
+			this(null, value);
+		}
+		
+		/**
+		 * Creates a new option with the specified name and 0 as value.
+		 *
+		 * @param name The option's name
+		 * @since 0.1.0
+		 */
+		public DoubleOption(@Nullable String name) {
+			this(name, 0.);
+		}
+		
+		/**
+		 * Creates a new option with the specified name and value.
+		 *
+		 * @param name  The name of the option
+		 * @param value The value of the option
+		 * @since 0.1.0
+		 */
+		public DoubleOption(@Nullable String name, @Nullable Double value) {
+			this.name = name;
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable Double getValue() {
+			return value;
+		}
+		
+		@Override
+		public void setValue(@Nullable Double value) {
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable String getVisibleName() {
+			return name;
+		}
+		
+		@Override
+		public void setVisibleName(@Nullable String name) {
+			this.name = name;
+		}
+	}
+	
+	/**
+	 * {@link Option} implementation for enum values
+	 *
+	 * @since 0.1.0
+	 */
+	class EnumOption<T extends Enum<T>> implements Option<T> {
+		/**
+		 * The name of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String name;
+		/**
+		 * The value of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable T value;
 		
 		/**
 		 * Creates a new option with no name and null as value.
@@ -415,6 +272,149 @@ public interface Option<T> {
 		
 		@Override
 		public void setValue(@Nullable T value) {
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable String getVisibleName() {
+			return name;
+		}
+		
+		@Override
+		public void setVisibleName(@Nullable String name) {
+			this.name = name;
+		}
+	}
+	
+	/**
+	 * {@link Option} implementation for integer values
+	 *
+	 * @since 0.1.0
+	 */
+	class IntOption implements Option<Integer> {
+		/**
+		 * The name of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String name;
+		/**
+		 * The value of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected int value;
+		
+		/**
+		 * Creates a new option with no name and 0 as value.
+		 *
+		 * @since 0.1.0
+		 */
+		public IntOption() {
+			this(null, 0);
+		}
+		
+		/**
+		 * Creates a new option with no name and the specified value.
+		 *
+		 * @param value The option's value
+		 * @since 0.1.0
+		 */
+		public IntOption(int value) {
+			this(null, value);
+		}
+		
+		/**
+		 * Creates a new option with the specified name and 0 as value.
+		 *
+		 * @param name The option's name
+		 * @since 0.1.0
+		 */
+		public IntOption(@Nullable String name) {
+			this(name, 0);
+		}
+		
+		/**
+		 * Creates a new option with the specified name and value.
+		 *
+		 * @param name  The name of the option
+		 * @param value The value of the option
+		 * @since 0.1.0
+		 */
+		public IntOption(@Nullable String name, int value) {
+			this.name = name;
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable Integer getValue() {
+			return value;
+		}
+		
+		@Override
+		public void setValue(@Nullable Integer value) {
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable String getVisibleName() {
+			return name;
+		}
+		
+		@Override
+		public void setVisibleName(@Nullable String name) {
+			this.name = name;
+		}
+	}
+	
+	/**
+	 * {@link Option} implementation for string values
+	 *
+	 * @since 0.1.0
+	 */
+	
+	class StringOption implements Option<String> {
+		/**
+		 * The name of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String name;
+		/**
+		 * The value of the option
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String value;
+		
+		/**
+		 * Creates a new option with no name and null as value.
+		 *
+		 * @since 0.1.0
+		 */
+		public StringOption() {
+			this(null, null);
+		}
+		
+		/**
+		 * Creates a new option with the specified name and value.
+		 *
+		 * @param name  The name of the option
+		 * @param value The value of the option
+		 * @since 0.1.0
+		 */
+		public StringOption(@Nullable String name, @Nullable String value) {
+			this.name = name;
+			this.value = value;
+		}
+		
+		@Override
+		public @Nullable String getValue() {
+			return value;
+		}
+		
+		@Override
+		public void setValue(@Nullable String value) {
 			this.value = value;
 		}
 		

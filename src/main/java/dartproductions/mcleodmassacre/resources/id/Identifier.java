@@ -31,28 +31,6 @@ public interface Identifier {
 	String DEFAULT_PLUGIN_GROUP = "plugin";
 	
 	/**
-	 * Checks if the given string is valid as a group name for an identifier.
-	 *
-	 * @param group The group name
-	 * @return True if valid
-	 * @since 0.1.0
-	 */
-	static boolean isValidGroup(@Nullable String group) {
-		return group != null && group.length() > 0 && !Pattern.matches(".*\\s+.*", group) && !group.contains(":");
-	}
-	
-	/**
-	 * Checks if the given string is valid as an element name for an identifier.
-	 *
-	 * @param name The name
-	 * @return True if valid
-	 * @since 0.1.0
-	 */
-	static boolean isValidName(@Nullable String name) {
-		return name != null && name.length() > 0 && !Pattern.matches(".*\\s+.*", name) && !name.contains(":");
-	}
-	
-	/**
 	 * Creates a new {@link Identifier} from the specified string.
 	 *
 	 * @param string The group and the name separated with a color
@@ -95,6 +73,28 @@ public interface Identifier {
 	}
 	
 	/**
+	 * Checks if the given string is valid as a group name for an identifier.
+	 *
+	 * @param group The group name
+	 * @return True if valid
+	 * @since 0.1.0
+	 */
+	static boolean isValidGroup(@Nullable String group) {
+		return group != null && group.length() > 0 && !Pattern.matches(".*\\s+.*", group) && !group.contains(":");
+	}
+	
+	/**
+	 * Checks if the given string is valid as an element name for an identifier.
+	 *
+	 * @param name The name
+	 * @return True if valid
+	 * @since 0.1.0
+	 */
+	static boolean isValidName(@Nullable String name) {
+		return name != null && name.length() > 0 && !Pattern.matches(".*\\s+.*", name) && !name.contains(":");
+	}
+	
+	/**
 	 * Gets the identifier's group.
 	 *
 	 * @return The group
@@ -102,15 +102,6 @@ public interface Identifier {
 	 * @since 0.1.0
 	 */
 	@NotNull String getGroup();
-	
-	/**
-	 * Gets the name of the identifier.
-	 *
-	 * @return The name
-	 * @see Identifier
-	 * @since 0.1.0
-	 */
-	@NotNull String getName();
 	
 	/**
 	 * Gets the {@link String} representation of this identifier. This consists of the group and the name separated by a colon.
@@ -122,4 +113,13 @@ public interface Identifier {
 	default @NotNull String getId() {
 		return getGroup() + ":" + getName();
 	}
+	
+	/**
+	 * Gets the name of the identifier.
+	 *
+	 * @return The name
+	 * @see Identifier
+	 * @since 0.1.0
+	 */
+	@NotNull String getName();
 }

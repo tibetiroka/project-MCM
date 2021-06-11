@@ -29,6 +29,16 @@ import java.util.function.IntFunction;
  */
 public interface Animation extends Cloneable {
 	
+	@Nullable Animation clone();
+	
+	/**
+	 * Gets the name of this animation. The returned value doesn't have to match the base name for the images or hitboxes used.
+	 *
+	 * @return The name of this animation
+	 * @since 0.1.0
+	 */
+	@NotNull String getAnimationName();
+	
 	/**
 	 * Gets the image that this animation is currently showing.
 	 *
@@ -44,38 +54,6 @@ public interface Animation extends Cloneable {
 	 * @since 0.1.0
 	 */
 	@Nullable Area getCurrentHitbox();
-	
-	/**
-	 * Gets the name of this animation. The returned value doesn't have to match the base name for the images or hitboxes used.
-	 *
-	 * @return The name of this animation
-	 * @since 0.1.0
-	 */
-	@NotNull String getAnimationName();
-	
-	/**
-	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes}.
-	 *
-	 * @return True if over
-	 * @since 0.1.0
-	 */
-	boolean isOver();
-	
-	/**
-	 * Resets this animation. The animation must return to its first frame.
-	 *
-	 * @since 0.1.0
-	 */
-	void reset();
-	
-	/**
-	 * Changes the animation to show its next frame and the corresponding hitboxes.
-	 *
-	 * @since 0.1.0
-	 */
-	void next();
-	
-	@Nullable Animation clone();
 	
 	/**
 	 * Gets the unique id of this animation.
@@ -102,205 +80,26 @@ public interface Animation extends Cloneable {
 	@NotNull Dimension getOffset();
 	
 	/**
-	 * Animation implementation for simple animations. The images and hitboxes are automatically queried based on the animation's name.
+	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes}.
 	 *
+	 * @return True if over
 	 * @since 0.1.0
 	 */
-	class StandardAnimation implements Animation {
-		/**
-		 * The name of the animation
-		 *
-		 * @see #getAnimationName()
-		 * @since 0.1.0
-		 */
-		protected final @NotNull String name;
-		/**
-		 * The images to show
-		 *
-		 * @see #getCurrentFrame()
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Image[] frames;
-		/**
-		 * The hitboxes as areas
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Area[] hitboxes;
-		/**
-		 * The id of the animation
-		 *
-		 * @see #getId()
-		 * @since 0.1.0
-		 */
-		protected final @NotNull UUID id = UUID.randomUUID();
-		/**
-		 * The offset of the animation
-		 *
-		 * @see #getOffset()
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Dimension offset;
-		/**
-		 * The index of the current frame
-		 *
-		 * @see #getLength()
-		 * @see #getCurrentFrame()
-		 * @see #reset()
-		 * @since 0.1.0
-		 */
-		protected int frame = 0;
-		
-		
-		/**
-		 * Creates a new animation with the given name and no offset.
-		 *
-		 * @param name The name of the animation, used for finding images and hitboxes
-		 * @since 0.1.0
-		 */
-		public StandardAnimation(@NotNull String name) {
-			this(name, new Dimension(0, 0));
-		}
-		
-		/**
-		 * Creates a new animation with the given name and offset.
-		 *
-		 * @param name   The name of the animation, used for finding images and hitboxes
-		 * @param offset The offset of the animation
-		 * @since 0.1.0
-		 */
-		public StandardAnimation(@NotNull String name, @NotNull Dimension offset) {
-			this.name = name;
-			this.offset = offset;
-			int frameCount = countFrames();
-			frames = new Image[frameCount];
-			hitboxes = new Area[frameCount];
-			fetchFrames();
-		}
-		
-		/**
-		 * Counts the amount of images that can be found with the animation's name.
-		 *
-		 * @return The amount of frames
-		 * @since 0.1.0
-		 */
-		protected int countFrames() {
-			int current = 0;
-			while(ResourceManager.getImage(Identifier.fromString(name + "#" + current)) != null) {
-				current++;
-			}
-			return current == 0 ? 1 : current;
-		}
-		
-		/**
-		 * Sets the values in the {@link #frames} and {@link #hitboxes} arrays.
-		 *
-		 * @since 0.1.0
-		 */
-		protected void fetchFrames() {
-			if(frames.length == 1) {
-				frames[0] = ResourceManager.getImage(Identifier.fromString(name));
-				hitboxes[0] = ResourceManager.getHitbox(Identifier.fromString(name + "/hitbox")).getArea();
-			} else {
-				for(int i = 0; i < frames.length; i++) {
-					frames[i] = ResourceManager.getImage(Identifier.fromString(name + "#" + i));
-					hitboxes[i] = ResourceManager.getHitbox(Identifier.fromString(name + "#" + i + "/hitbox")).getArea();
-				}
-			}
-		}
-		
-		@Override
-		public @NotNull Image getCurrentFrame() {
-			return frames[frame];
-		}
-		
-		@Override
-		public @Nullable Area getCurrentHitbox() {
-			return hitboxes[frame];
-		}
-		
-		@Override
-		public @NotNull String getAnimationName() {
-			return name;
-		}
-		
-		@Override
-		public boolean isOver() {
-			return frame >= frames.length;
-		}
-		
-		@Override
-		public void reset() {
-			frame = 0;
-		}
-		
-		@Override
-		public void next() {
-			frame++;
-		}
-		
-		@Override
-		public @Nullable Animation clone() {
-			try {
-				return (Animation) super.clone();
-			} catch(Exception e) {
-				return null;
-			}
-		}
-		
-		@Override
-		public int getLength() {
-			return frames.length;
-		}
-		
-		@Override
-		public @NotNull UUID getId() {
-			return id;
-		}
-		
-		@Override
-		public @NotNull Dimension getOffset() {
-			return offset;
-		}
-		
-		
-	}
+	boolean isOver();
 	
 	/**
-	 * An animation that resets every time it is over, creating a loop.
+	 * Changes the animation to show its next frame and the corresponding hitboxes.
 	 *
 	 * @since 0.1.0
 	 */
-	class LoopingAnimation extends StandardAnimation {
-		/**
-		 * Creates a new animation with the given name and no offset.
-		 *
-		 * @param name The name of the animation, used for finding images and hitboxes
-		 * @since 0.1.0
-		 */
-		public LoopingAnimation(@NotNull String name) {
-			this(name, new Dimension(0, 0));
-		}
-		
-		/**
-		 * Creates a new animation with the given name and offset.
-		 *
-		 * @param name   The name of the animation, used for finding images and hitboxes
-		 * @param offset The offset of the animation
-		 * @since 0.1.0
-		 */
-		public LoopingAnimation(@NotNull String name, @NotNull Dimension offset) {
-			super(name, offset);
-		}
-		
-		@Override
-		public void next() {
-			super.next();
-			if(isOver()) {
-				frame = 0;
-			}
-		}
-	}
+	void next();
+	
+	/**
+	 * Resets this animation. The animation must return to its first frame.
+	 *
+	 * @since 0.1.0
+	 */
+	void reset();
 	
 	/**
 	 * An animation that can render text over its images. The text doesn't change the hitbox.
@@ -309,11 +108,11 @@ public interface Animation extends Cloneable {
 	 */
 	class AnimationWithText extends LoopingAnimation {
 		/**
-		 * The text to show
+		 * The color of the text
 		 *
 		 * @since 0.1.0
 		 */
-		protected final @NotNull String text;
+		protected final @NotNull Color color;
 		/**
 		 * The font of the text
 		 *
@@ -321,11 +120,11 @@ public interface Animation extends Cloneable {
 		 */
 		protected final @NotNull Font font;
 		/**
-		 * The color of the text
+		 * The text to show
 		 *
 		 * @since 0.1.0
 		 */
-		protected final @NotNull Color color;
+		protected final @NotNull String text;
 		/**
 		 * The offset of the text along the x axis
 		 */
@@ -389,164 +188,6 @@ public interface Animation extends Cloneable {
 	}
 	
 	/**
-	 * An animation that can be mirrored along the Y axis.
-	 *
-	 * @since 0.1.0
-	 */
-	class MirrorableAnimation implements Animation {
-		/**
-		 * The underlying animation instance
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Animation animation;
-		/**
-		 * The mirrored images of the animation
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull BufferedImage[] mirroredFrames;
-		/**
-		 * The mirrored hitbox areas
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull Area[] mirroredHitboxes;
-		/**
-		 * True if the animation is mirrored
-		 *
-		 * @since 0.1.0
-		 */
-		protected boolean mirrored;
-		/**
-		 * The current frame
-		 *
-		 * @since 0.1.0
-		 */
-		protected int currentFrame = 0;
-		
-		/**
-		 * Creates a new mirrored animation.
-		 *
-		 * @param animation The animation to use
-		 * @since 0.1.0
-		 */
-		public MirrorableAnimation(@NotNull Animation animation) {
-			this(animation, true);
-		}
-		
-		/**
-		 * Creates a new mirrorable animation
-		 *
-		 * @param animation The animation to use
-		 * @param mirrored  True if the animation should be mirrored
-		 * @since 0.1.0
-		 */
-		public MirrorableAnimation(@NotNull Animation animation, boolean mirrored) {
-			this.animation = animation;
-			this.mirrored = mirrored;
-			mirroredFrames = new BufferedImage[animation.getLength()];
-			mirroredHitboxes = new Area[animation.getLength()];
-			
-			animation.reset();
-			for(int i = 0; i < animation.getLength(); i++) {
-				BufferedImage image = (BufferedImage) animation.getCurrentFrame();
-				AffineTransform tx = AffineTransform.getScaleInstance(-1, 1);
-				tx.translate(-image.getWidth(), 0);
-				AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-				
-				BufferedImage dest = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-				{
-					Graphics2D g2d = dest.createGraphics();
-					g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR));
-					g2d.fillRect(0, 0, 256, 256);
-					g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
-					g2d.dispose();
-				}
-				mirroredFrames[i] = op.filter(image, dest);
-				mirroredHitboxes[i] = new Area(tx.createTransformedShape(animation.getCurrentHitbox()));
-			}
-		}
-		
-		/**
-		 * Checks if this animation is mirrored.
-		 *
-		 * @return True if mirrored
-		 * @since 0.1.0
-		 */
-		public boolean isMirrored() {
-			return mirrored;
-		}
-		
-		/**
-		 * Sets whether this animation is mirrored or not.
-		 *
-		 * @param mirrored True if mirrored
-		 * @since 0.1.0
-		 */
-		public void setMirrored(boolean mirrored) {
-			this.mirrored = mirrored;
-		}
-		
-		@Override
-		public @NotNull Image getCurrentFrame() {
-			return isMirrored() ? mirroredFrames[currentFrame] : animation.getCurrentFrame();
-		}
-		
-		@Override
-		public @Nullable Area getCurrentHitbox() {
-			return isMirrored() ? mirroredHitboxes[currentFrame] : animation.getCurrentHitbox();
-		}
-		
-		@Override
-		public @NotNull String getAnimationName() {
-			return animation.getAnimationName();
-		}
-		
-		@Override
-		public boolean isOver() {
-			return animation.isOver();
-		}
-		
-		@Override
-		public void reset() {
-			currentFrame = 0;
-			animation.reset();
-		}
-		
-		@Override
-		public void next() {
-			currentFrame++;
-			animation.next();
-		}
-		
-		@Override
-		public @Nullable Animation clone() {
-			try {
-				return (Animation) super.clone();
-			} catch(CloneNotSupportedException e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-		
-		@Override
-		public @NotNull UUID getId() {
-			return animation.getId();
-		}
-		
-		@Override
-		public int getLength() {
-			return animation.getLength();
-		}
-		
-		@Override
-		public @NotNull Dimension getOffset() {
-			return animation.getOffset();
-		}
-	}
-	
-	/**
 	 * Animation for displaying formatted text. The text may change at every frame. This animation has no hitbox and loops continuously.
 	 *
 	 * @since 0.1.0
@@ -558,12 +199,6 @@ public interface Animation extends Cloneable {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Area EMPTY = new Area();
-		/**
-		 * The name of the animation
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull String name;
 		/**
 		 * The unique ID of this animation
 		 *
@@ -577,17 +212,23 @@ public interface Animation extends Cloneable {
 		 */
 		protected final @NotNull BufferedImage[] images;
 		/**
-		 * Generator function for the text offset in each frame
-		 *
-		 * @since 0.1.0
-		 */
-		protected final @NotNull IntFunction<Dimension> offsetGenerator;
-		/**
 		 * True if the animation should loop
 		 *
 		 * @since 0.1.0
 		 */
 		protected final boolean loop;
+		/**
+		 * The name of the animation
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull String name;
+		/**
+		 * Generator function for the text offset in each frame
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull IntFunction<Dimension> offsetGenerator;
 		/**
 		 * The current frame
 		 *
@@ -613,6 +254,63 @@ public interface Animation extends Cloneable {
 			this.loop = loop;
 			images = new BufferedImage[length];
 			createImages(defaultFont, textGenerator, colorGenerator);
+		}
+		
+		@Override
+		public @Nullable FormattedTextAnimation clone() {
+			try {
+				return (FormattedTextAnimation) super.clone();
+			} catch(CloneNotSupportedException e) {
+				return null;
+			}
+		}
+		
+		@Override
+		public @NotNull String getAnimationName() {
+			return name;
+		}
+		
+		@Override
+		public @NotNull Image getCurrentFrame() {
+			return images[frame];
+		}
+		
+		@Override
+		public @Nullable Area getCurrentHitbox() {
+			return EMPTY;
+		}
+		
+		@Override
+		public @NotNull UUID getId() {
+			return id;
+		}
+		
+		@Override
+		public int getLength() {
+			return images.length;
+		}
+		
+		@Override
+		public @NotNull Dimension getOffset() {
+			return offsetGenerator.apply(frame);
+		}
+		
+		@Override
+		public boolean isOver() {
+			return frame >= images.length;
+		}
+		
+		@Override
+		public void next() {
+			frame++;
+			if(loop && frame >= images.length) {
+				frame = 0;
+			}
+		}
+		
+		@Override
+		public void reset() {
+			frame = 0;
 		}
 		
 		/**
@@ -678,15 +376,286 @@ public interface Animation extends Cloneable {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * An animation that resets every time it is over, creating a loop.
+	 *
+	 * @since 0.1.0
+	 */
+	class LoopingAnimation extends StandardAnimation {
+		/**
+		 * Creates a new animation with the given name and no offset.
+		 *
+		 * @param name The name of the animation, used for finding images and hitboxes
+		 * @since 0.1.0
+		 */
+		public LoopingAnimation(@NotNull String name) {
+			this(name, new Dimension(0, 0));
+		}
+		
+		/**
+		 * Creates a new animation with the given name and offset.
+		 *
+		 * @param name   The name of the animation, used for finding images and hitboxes
+		 * @param offset The offset of the animation
+		 * @since 0.1.0
+		 */
+		public LoopingAnimation(@NotNull String name, @NotNull Dimension offset) {
+			super(name, offset);
+		}
+		
+		@Override
+		public void next() {
+			super.next();
+			if(isOver()) {
+				frame = 0;
+			}
+		}
+	}
+	
+	/**
+	 * An animation that can be mirrored along the Y axis.
+	 *
+	 * @since 0.1.0
+	 */
+	class MirrorableAnimation implements Animation {
+		/**
+		 * The underlying animation instance
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull Animation animation;
+		/**
+		 * The mirrored images of the animation
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull BufferedImage[] mirroredFrames;
+		/**
+		 * The mirrored hitbox areas
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull Area[] mirroredHitboxes;
+		/**
+		 * The current frame
+		 *
+		 * @since 0.1.0
+		 */
+		protected int currentFrame = 0;
+		/**
+		 * True if the animation is mirrored
+		 *
+		 * @since 0.1.0
+		 */
+		protected boolean mirrored;
+		
+		/**
+		 * Creates a new mirrored animation.
+		 *
+		 * @param animation The animation to use
+		 * @since 0.1.0
+		 */
+		public MirrorableAnimation(@NotNull Animation animation) {
+			this(animation, true);
+		}
+		
+		/**
+		 * Creates a new mirrorable animation
+		 *
+		 * @param animation The animation to use
+		 * @param mirrored  True if the animation should be mirrored
+		 * @since 0.1.0
+		 */
+		public MirrorableAnimation(@NotNull Animation animation, boolean mirrored) {
+			this.animation = animation;
+			this.mirrored = mirrored;
+			mirroredFrames = new BufferedImage[animation.getLength()];
+			mirroredHitboxes = new Area[animation.getLength()];
+			
+			animation.reset();
+			for(int i = 0; i < animation.getLength(); i++) {
+				BufferedImage image = (BufferedImage) animation.getCurrentFrame();
+				AffineTransform tx = AffineTransform.getScaleInstance(-1, 1);
+				tx.translate(-image.getWidth(), 0);
+				AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+				
+				BufferedImage dest = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+				{
+					Graphics2D g2d = dest.createGraphics();
+					g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR));
+					g2d.fillRect(0, 0, 256, 256);
+					g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+					g2d.dispose();
+				}
+				mirroredFrames[i] = op.filter(image, dest);
+				mirroredHitboxes[i] = new Area(tx.createTransformedShape(animation.getCurrentHitbox()));
+			}
+		}
+		
+		@Override
+		public @Nullable Animation clone() {
+			try {
+				return (Animation) super.clone();
+			} catch(CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		@Override
+		public @NotNull String getAnimationName() {
+			return animation.getAnimationName();
+		}
 		
 		@Override
 		public @NotNull Image getCurrentFrame() {
-			return images[frame];
+			return isMirrored() ? mirroredFrames[currentFrame] : animation.getCurrentFrame();
 		}
 		
 		@Override
 		public @Nullable Area getCurrentHitbox() {
-			return EMPTY;
+			return isMirrored() ? mirroredHitboxes[currentFrame] : animation.getCurrentHitbox();
+		}
+		
+		@Override
+		public @NotNull UUID getId() {
+			return animation.getId();
+		}
+		
+		@Override
+		public int getLength() {
+			return animation.getLength();
+		}
+		
+		@Override
+		public @NotNull Dimension getOffset() {
+			return animation.getOffset();
+		}
+		
+		@Override
+		public boolean isOver() {
+			return animation.isOver();
+		}
+		
+		@Override
+		public void next() {
+			currentFrame++;
+			animation.next();
+		}
+		
+		@Override
+		public void reset() {
+			currentFrame = 0;
+			animation.reset();
+		}
+		
+		/**
+		 * Checks if this animation is mirrored.
+		 *
+		 * @return True if mirrored
+		 * @since 0.1.0
+		 */
+		public boolean isMirrored() {
+			return mirrored;
+		}
+		
+		/**
+		 * Sets whether this animation is mirrored or not.
+		 *
+		 * @param mirrored True if mirrored
+		 * @since 0.1.0
+		 */
+		public void setMirrored(boolean mirrored) {
+			this.mirrored = mirrored;
+		}
+	}
+	
+	/**
+	 * Animation implementation for simple animations. The images and hitboxes are automatically queried based on the animation's name.
+	 *
+	 * @since 0.1.0
+	 */
+	class StandardAnimation implements Animation {
+		/**
+		 * The images to show
+		 *
+		 * @see #getCurrentFrame()
+		 * @since 0.1.0
+		 */
+		protected final @NotNull Image[] frames;
+		/**
+		 * The hitboxes as areas
+		 *
+		 * @since 0.1.0
+		 */
+		protected final @NotNull Area[] hitboxes;
+		/**
+		 * The id of the animation
+		 *
+		 * @see #getId()
+		 * @since 0.1.0
+		 */
+		protected final @NotNull UUID id = UUID.randomUUID();
+		/**
+		 * The name of the animation
+		 *
+		 * @see #getAnimationName()
+		 * @since 0.1.0
+		 */
+		protected final @NotNull String name;
+		/**
+		 * The offset of the animation
+		 *
+		 * @see #getOffset()
+		 * @since 0.1.0
+		 */
+		protected final @NotNull Dimension offset;
+		/**
+		 * The index of the current frame
+		 *
+		 * @see #getLength()
+		 * @see #getCurrentFrame()
+		 * @see #reset()
+		 * @since 0.1.0
+		 */
+		protected int frame = 0;
+		
+		
+		/**
+		 * Creates a new animation with the given name and no offset.
+		 *
+		 * @param name The name of the animation, used for finding images and hitboxes
+		 * @since 0.1.0
+		 */
+		public StandardAnimation(@NotNull String name) {
+			this(name, new Dimension(0, 0));
+		}
+		
+		/**
+		 * Creates a new animation with the given name and offset.
+		 *
+		 * @param name   The name of the animation, used for finding images and hitboxes
+		 * @param offset The offset of the animation
+		 * @since 0.1.0
+		 */
+		public StandardAnimation(@NotNull String name, @NotNull Dimension offset) {
+			this.name = name;
+			this.offset = offset;
+			int frameCount = countFrames();
+			frames = new Image[frameCount];
+			hitboxes = new Area[frameCount];
+			fetchFrames();
+		}
+		
+		@Override
+		public @Nullable Animation clone() {
+			try {
+				return (Animation) super.clone();
+			} catch(Exception e) {
+				return null;
+			}
 		}
 		
 		@Override
@@ -695,30 +664,13 @@ public interface Animation extends Cloneable {
 		}
 		
 		@Override
-		public boolean isOver() {
-			return frame >= images.length;
+		public @NotNull Image getCurrentFrame() {
+			return frames[frame];
 		}
 		
 		@Override
-		public void reset() {
-			frame = 0;
-		}
-		
-		@Override
-		public void next() {
-			frame++;
-			if(loop && frame >= images.length) {
-				frame = 0;
-			}
-		}
-		
-		@Override
-		public @Nullable FormattedTextAnimation clone() {
-			try {
-				return (FormattedTextAnimation) super.clone();
-			} catch(CloneNotSupportedException e) {
-				return null;
-			}
+		public @Nullable Area getCurrentHitbox() {
+			return hitboxes[frame];
 		}
 		
 		@Override
@@ -728,12 +680,60 @@ public interface Animation extends Cloneable {
 		
 		@Override
 		public int getLength() {
-			return images.length;
+			return frames.length;
 		}
 		
 		@Override
 		public @NotNull Dimension getOffset() {
-			return offsetGenerator.apply(frame);
+			return offset;
 		}
+		
+		@Override
+		public boolean isOver() {
+			return frame >= frames.length;
+		}
+		
+		@Override
+		public void next() {
+			frame++;
+		}
+		
+		@Override
+		public void reset() {
+			frame = 0;
+		}
+		
+		/**
+		 * Counts the amount of images that can be found with the animation's name.
+		 *
+		 * @return The amount of frames
+		 * @since 0.1.0
+		 */
+		protected int countFrames() {
+			int current = 0;
+			while(ResourceManager.getImage(Identifier.fromString(name + "#" + current)) != null) {
+				current++;
+			}
+			return current == 0 ? 1 : current;
+		}
+		
+		/**
+		 * Sets the values in the {@link #frames} and {@link #hitboxes} arrays.
+		 *
+		 * @since 0.1.0
+		 */
+		protected void fetchFrames() {
+			if(frames.length == 1) {
+				frames[0] = ResourceManager.getImage(Identifier.fromString(name));
+				hitboxes[0] = ResourceManager.getHitbox(Identifier.fromString(name + "/hitbox")).getArea();
+			} else {
+				for(int i = 0; i < frames.length; i++) {
+					frames[i] = ResourceManager.getImage(Identifier.fromString(name + "#" + i));
+					hitboxes[i] = ResourceManager.getHitbox(Identifier.fromString(name + "#" + i + "/hitbox")).getArea();
+				}
+			}
+		}
+		
+		
 	}
 }

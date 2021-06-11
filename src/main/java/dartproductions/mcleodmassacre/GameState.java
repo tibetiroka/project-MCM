@@ -36,25 +36,12 @@ import static dartproductions.mcleodmassacre.util.MathUtils.*;
  */
 public interface GameState {
 	
-	@NotNull Logger LOGGER = LogManager.getLogger(GameState.class);
 	/**
 	 * This state is used when the game is paused while on a map, fighting with other characters.
 	 *
 	 * @since 0.1.0
 	 */
 	@NotNull GameState IN_GAME_PAUSED = new Pause() {
-	};
-	/**
-	 * Loading state between two 'normal' states. The next game state should be specified when changing state to loading.
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState LOADING = new Loading() {
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Loading.super.onStateActivation(previousState, previousNextState, nextState);
-			setToCenter(new Background(new LoopingAnimation("loading"))).register();
-		}
 	};
 	/**
 	 * Indicates that the player is playing on a map against other characters.
@@ -89,84 +76,18 @@ public interface GameState {
 		}
 	};
 	/**
-	 * The sound settings menu
+	 * Loading state between two 'normal' states. The next game state should be specified when changing state to loading.
 	 *
 	 * @since 0.1.0
 	 */
-	@NotNull GameState SOUND_SETTINGS = new Menu() {
-		
+	@NotNull GameState LOADING = new Loading() {
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			Menu.addBackButton(SETTINGS_MENU);
-			//todo
+			Loading.super.onStateActivation(previousState, previousNextState, nextState);
+			setToCenter(new Background(new LoopingAnimation("loading"))).register();
 		}
 	};
-	/**
-	 * The control settings menu
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState CONTROL_SETTINGS = new Menu() {
-		
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			Menu.addBackButton(SETTINGS_MENU);
-			//todo
-		}
-	};
-	/**
-	 * The quality settings menu
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState QUALITY_SETTINGS = new Menu() {
-		
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			Menu.addBackButton(SETTINGS_MENU);
-			//todo
-		}
-	};
-	/**
-	 * State for the main menu. This is the first screen the player sees after the initial loading.
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState MAIN_MENU = new Menu() {
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			//
-			new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.ROSTER, null)).register();
-			new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.GALLERY, null)).register();
-			new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.SETTINGS_MENU, null)).register();
-			new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.DATA_MENU, null)).register();
-			new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.VERSUS_MENU, null)).register();
-			//
-			new Foreground(new LoopingAnimation("mm_data")).register();
-			new Foreground(new LoopingAnimation("mm_gallery")).register();
-			new Foreground(new LoopingAnimation("mm_options")).register();
-			new Foreground(new LoopingAnimation("mm_solo_placeholder")).register();
-			new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
-		}
-	};
-	/**
-	 * The general settings menu
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState SETTINGS_MENU = new Menu() {
-		
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			Menu.addBackButton(MAIN_MENU);
-			//todo
-		}
-	};
+	@NotNull Logger LOGGER = LogManager.getLogger(GameState.class);
 	/**
 	 * The roster screen
 	 *
@@ -218,6 +139,99 @@ public interface GameState {
 		}
 	};
 	/**
+	 * The general settings menu
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState SETTINGS_MENU = new Menu() {
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			Menu.addBackButton(MAIN_MENU);
+			//todo
+		}
+	};
+	/**
+	 * The control settings menu
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState CONTROL_SETTINGS = new Menu() {
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			Menu.addBackButton(SETTINGS_MENU);
+			//todo
+		}
+	};
+	/**
+	 * The quality settings menu
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState QUALITY_SETTINGS = new Menu() {
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			Menu.addBackButton(SETTINGS_MENU);
+			//todo
+		}
+	};
+	/**
+	 * The sound settings menu
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState SOUND_SETTINGS = new Menu() {
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			Menu.addBackButton(SETTINGS_MENU);
+			//todo
+		}
+	};
+	/**
+	 * The menu for playing against other players
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState VERSUS_MENU = new Menu() {
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			Menu.addBackButton(MAIN_MENU);
+			//todo
+		}
+	};
+	/**
+	 * State for the main menu. This is the first screen the player sees after the initial loading.
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState MAIN_MENU = new Menu() {
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			Menu.super.onStateActivation(previousState, previousNextState, nextState);
+			//
+			new Button(new LoopingAnimation("mm_singleplayer_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.ROSTER, null)).register();
+			new Button(new LoopingAnimation("mm_gallery_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.GALLERY, null)).register();
+			new Button(new LoopingAnimation("mm_options_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.SETTINGS_MENU, null)).register();
+			new Button(new LoopingAnimation("mm_data_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.DATA_MENU, null)).register();
+			new Button(new LoopingAnimation("mm_versus_button"), null, null, null, new Point(0, 0), () -> Main.setGameState(GameState.VERSUS_MENU, null)).register();
+			//
+			new Foreground(new LoopingAnimation("mm_data")).register();
+			new Foreground(new LoopingAnimation("mm_gallery")).register();
+			new Foreground(new LoopingAnimation("mm_options")).register();
+			new Foreground(new LoopingAnimation("mm_solo_placeholder")).register();
+			new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
+		}
+	};
+	/**
 	 * The data menu
 	 *
 	 * @since 0.1.0
@@ -236,20 +250,6 @@ public interface GameState {
 			} catch(IOException e) {
 				LOGGER.error("Could not read credits file", e);
 			}
-		}
-	};
-	/**
-	 * The menu for playing against other players
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState VERSUS_MENU = new Menu() {
-		
-		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			Menu.super.onStateActivation(previousState, previousNextState, nextState);
-			Menu.addBackButton(MAIN_MENU);
-			//todo
 		}
 	};
 	
@@ -272,6 +272,15 @@ public interface GameState {
 		return false;
 	}
 	
+	/**
+	 * Checks if this state is a 'pause' state. If the active state is a pausing state, the game engine might produce different behaviour.
+	 *
+	 * @return True if pause
+	 * @since 0.1.0
+	 */
+	default boolean isPausingState() {
+		return false;
+	}
 	
 	/**
 	 * Runs whenever {@link Main#setGameState(GameState, GameState)} is called with this state as the first parameter. This method is supposed to handle any updates made to entities registered in the game engine or in the rendering engine, together with any action that has to be executed when this state is activated.
@@ -301,32 +310,22 @@ public interface GameState {
 	}
 	
 	/**
-	 * Checks if this state is a 'pause' state. If the active state is a pausing state, the game engine might produce different behaviour.
-	 *
-	 * @return True if pause
-	 * @since 0.1.0
-	 */
-	default boolean isPausingState() {
-		return false;
-	}
-	
-	/**
 	 * A game state interface for loading screens. Implements {@link #isLoadingState()} to return true, and {@link #getBackgroundMusicTag(GameState)} to return the tag of the next state.
 	 *
 	 * @since 0.1.0
 	 */
 	interface Loading extends GameState {
 		@Override
-		default boolean isLoadingState() {
-			return true;
-		}
-		
-		@Override
 		default @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
 			if(nextState == null) {
 				return null;
 			}
 			return nextState.getBackgroundMusicTag(null);
+		}
+		
+		@Override
+		default boolean isLoadingState() {
+			return true;
 		}
 	}
 	
@@ -371,13 +370,13 @@ public interface GameState {
 		}
 		
 		@Override
-		default void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			GameState.super.onStateActivation(previousState, previousNextState, nextState);
+		default boolean isPausingState() {
+			return true;
 		}
 		
 		@Override
-		default boolean isPausingState() {
-			return true;
+		default void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			GameState.super.onStateActivation(previousState, previousNextState, nextState);
 		}
 		
 		@Override

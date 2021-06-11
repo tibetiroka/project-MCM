@@ -26,26 +26,6 @@ public class RenderingLayer {
 	}
 	
 	/**
-	 * Paints the entities of this layer to the buffer.
-	 *
-	 * @since 0.1.0
-	 */
-	public void paint() {
-		entities.forEach(e -> ResolutionManager.drawImageOnScreen(e.getLocation().x + e.getCurrentAnimation().getOffset().width, e.getLocation().y + e.getCurrentAnimation().getOffset().height, e.getCurrentAnimation().getCurrentFrame()));
-		entities.forEach(e -> e.getCurrentAnimation().next());
-	}
-	
-	/**
-	 * Removes an entity from this layer.
-	 *
-	 * @param entity The entity to remove
-	 * @since 0.1.0
-	 */
-	public void remove(@Nullable Entity entity) {
-		entities.remove(entity);
-	}
-	
-	/**
 	 * Adds an entity to this layer
 	 *
 	 * @param entity The entity to add
@@ -76,5 +56,25 @@ public class RenderingLayer {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Paints the entities of this layer to the buffer.
+	 *
+	 * @since 0.1.0
+	 */
+	public void paint() {
+		entities.forEach(e -> ResolutionManager.drawImageOnScreen(e.getLocation().x + e.getCurrentAnimation().getOffset().width, e.getLocation().y + e.getCurrentAnimation().getOffset().height, e.getCurrentAnimation().getCurrentFrame()));
+		entities.forEach(e -> e.getCurrentAnimation().next());
+	}
+	
+	/**
+	 * Removes an entity from this layer.
+	 *
+	 * @param entity The entity to remove
+	 * @since 0.1.0
+	 */
+	public void remove(@Nullable Entity entity) {
+		entities.remove(entity);
 	}
 }

@@ -15,6 +15,12 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface Tag extends Identified {
 	/**
+	 * Tag that indicates an audio resource. Doesn't change the loading/unloading methods specified by other tags. This tag is used for identifying audio resources during automatic registration.
+	 *
+	 * @since 0.0.1
+	 */
+	@NotNull Tag AUDIO = new IgnorantTag(Identifier.fromString("tags/audio"));
+	/**
 	 * Tag that indicates a 'default resource'. These resources are loaded on startup and are never unloaded.
 	 *
 	 * @since 0.1.0
@@ -26,13 +32,6 @@ public interface Tag extends Identified {
 	 * @since 0.0.1
 	 */
 	@NotNull Tag GRAPHICS = new IgnorantTag(Identifier.fromString("tags/graphics"));
-	/**
-	 * Tag that indicates an audio resource. Doesn't change the loading/unloading methods specified by other tags. This tag is used for identifying audio resources during automatic registration.
-	 *
-	 * @since 0.0.1
-	 */
-	@NotNull Tag AUDIO = new IgnorantTag(Identifier.fromString("tags/audio"));
-	
 	/**
 	 * Tag that indicates graphics resources that are used for hitbox creation. Doesn't change the loading/unloading methods specified by other tags.
 	 *

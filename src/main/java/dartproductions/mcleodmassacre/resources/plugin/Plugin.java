@@ -20,23 +20,23 @@ import java.util.HashSet;
  */
 public class Plugin implements Identified {
 	/**
-	 * The base directory of the plugin
-	 *
-	 * @since 0.1.0
-	 */
-	protected final @NotNull File directory;
-	/**
 	 * The plugin configuration loaded from the config file.ű
 	 *
 	 * @since 0.1.0
 	 */
 	protected final @NotNull PluginConfiguration config;
 	/**
-	 * The plugins to load before this plugin
+	 * The base directory of the plugin
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull HashSet<Identifier> loadbefore;
+	protected final @NotNull File directory;
+	/**
+	 * The identifier of the plugin; the group name is always {@link Identifier#DEFAULT_PLUGIN_GROUP}
+	 *
+	 * @since 0.1.0
+	 */
+	protected final @NotNull Identifier id;
 	/**
 	 * The plugins to load after this plugin
 	 *
@@ -44,11 +44,11 @@ public class Plugin implements Identified {
 	 */
 	protected final @NotNull HashSet<Identifier> loadafter;
 	/**
-	 * The identifier of the plugin; the group name is always {@link Identifier#DEFAULT_PLUGIN_GROUP}
+	 * The plugins to load before this plugin
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull Identifier id;
+	protected final @NotNull HashSet<Identifier> loadbefore;
 	
 	/**
 	 * Creates a new plugin.
@@ -89,13 +89,18 @@ public class Plugin implements Identified {
 	}
 	
 	/**
-	 * Gets the id of the plugins that must be loaded before this plugin.
+	 * Gets the configuration of this plugin.
 	 *
-	 * @return The plugins to load before
+	 * @return The config
 	 * @since 0.1.0
 	 */
-	public @NotNull HashSet<Identifier> getLoadBefore() {
-		return loadbefore;
+	public @NotNull PluginConfiguration getConfiguration() {
+		return config;
+	}
+	
+	@Override
+	public @NotNull Identifier getId() {
+		return id;
 	}
 	
 	/**
@@ -109,13 +114,13 @@ public class Plugin implements Identified {
 	}
 	
 	/**
-	 * Gets the configuration of this plugin.
+	 * Gets the id of the plugins that must be loaded before this plugin.
 	 *
-	 * @return The config
+	 * @return The plugins to load before
 	 * @since 0.1.0
 	 */
-	public @NotNull PluginConfiguration getConfiguration() {
-		return config;
+	public @NotNull HashSet<Identifier> getLoadBefore() {
+		return loadbefore;
 	}
 	
 	/**
@@ -142,11 +147,6 @@ public class Plugin implements Identified {
 		return config.name + ":" + config.version;
 	}
 	
-	@Override
-	public @NotNull Identifier getId() {
-		return id;
-	}
-	
 	/**
 	 * JSON-parsable configuration for plugins
 	 *
@@ -154,17 +154,29 @@ public class Plugin implements Identified {
 	 */
 	public static final class PluginConfiguration {
 		/**
-		 * The id of the plugins to load before this one
+		 * The jar files to load inside the plugin. These are relative paths from the base directory.
 		 *
 		 * @since 0.1.0
 		 */
-		protected @Nullable String[] loadbefore;
+		protected @Nullable String[] jar;
 		/**
 		 * The id of the plugins to load after this one
 		 *
 		 * @since 0.1.0
 		 */
 		protected @Nullable String[] loadafter;
+		/**
+		 * The id of the plugins to load before this one
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String[] loadbefore;
+		/**
+		 * The entry to the plugin's mod class. This must be a fully qualified class name of a class present in the loaded jars.
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable String modEntry;
 		/**
 		 * The name of this plugin
 		 *
@@ -177,20 +189,6 @@ public class Plugin implements Identified {
 		 * @since 0.1.0
 		 */
 		protected @Nullable String version;
-		
-		/**
-		 * The jar files to load inside the plugin. These are relative paths from the base directory.
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String[] jar;
-		
-		/**
-		 * The entry to the plugin's mod class. This must be a fully qualified class name of a class present in the loaded jars.
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable String modEntry;
 		
 		/**
 		 * Verifies that this configuration is ready for use.

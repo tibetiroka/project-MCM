@@ -18,18 +18,15 @@ public interface OptionGroup {
 	 * @return The options
 	 * @since 0.1.0
 	 */
-	public @NotNull HashMap<String, Option<?>> getAllSettings();
+	@NotNull HashMap<String, Option<?>> getAllSettings();
 	
 	/**
-	 * Gets the specified setting from {@link #getAllSettings()}
+	 * Gets the name of the option group.
 	 *
-	 * @param name The name of the option
-	 * @return The option or null if not found
+	 * @return The name
 	 * @since 0.1.0
 	 */
-	public default @Nullable Option<?> getSetting(String name) {
-		return getAllSettings().get(name);
-	}
+	@NotNull String getGroupName();
 	
 	/**
 	 * Gets the specified setting from {@link #getAllSettings()}. The setting is cast to the specified type.
@@ -40,17 +37,20 @@ public interface OptionGroup {
 	 * @return The option or null if not found
 	 * @since 0.1.0
 	 */
-	public default @Nullable <T> Option<T> getSetting(String name, Class<T> type) {
+	default @Nullable <T> Option<T> getSetting(String name, Class<T> type) {
 		return (Option<T>) getSetting(name);
 	}
 	
 	/**
-	 * Gets the name of the option group.
+	 * Gets the specified setting from {@link #getAllSettings()}
 	 *
-	 * @return The name
+	 * @param name The name of the option
+	 * @return The option or null if not found
 	 * @since 0.1.0
 	 */
-	public @NotNull String getGroupName();
+	default @Nullable Option<?> getSetting(String name) {
+		return getAllSettings().get(name);
+	}
 	
 	/**
 	 * Gets the value of an option.
@@ -62,11 +62,11 @@ public interface OptionGroup {
 	 * @throws NullPointerException If the option is not found
 	 * @since 0.1.0
 	 */
-	public default @Nullable <T> T getSettingValue(@NotNull String name, @NotNull Class<T> type) throws NullPointerException {
+	default @Nullable <T> T getSettingValue(@NotNull String name, @NotNull Class<T> type) throws NullPointerException {
 		return getSetting(name, type).getValue();
 	}
 	
-	public static class StandardOptionGroup implements OptionGroup {
+	class StandardOptionGroup implements OptionGroup {
 		public final @NotNull HashMap<String, Option<?>> options = new HashMap<>();
 		public @NotNull String name;
 		

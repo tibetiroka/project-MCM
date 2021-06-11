@@ -19,6 +19,14 @@ public interface Pair<First, Second> {
 	 * @return The first value
 	 * @since 0.1.0
 	 */
+	@Nullable First first();
+	
+	/**
+	 * Gets the first value of the pair
+	 *
+	 * @return The first value
+	 * @since 0.1.0
+	 */
 	default @Nullable First getFirst() {
 		return first();
 	}
@@ -34,20 +42,103 @@ public interface Pair<First, Second> {
 	}
 	
 	/**
-	 * Gets the first value of the pair
-	 *
-	 * @return The first value
-	 * @since 0.1.0
-	 */
-	@Nullable First first();
-	
-	/**
 	 * Gets the second value of the pair
 	 *
 	 * @return The first value
 	 * @since 0.1.0
 	 */
 	@Nullable Second second();
+	
+	/**
+	 * Immutable pair implementation
+	 *
+	 * @since 0.1.0
+	 */
+	class ImmutablePair<First, Second> implements Pair<First, Second> {
+		/**
+		 * The first value
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable First first;
+		/**
+		 * The second value
+		 *
+		 * @since 0.1.0
+		 */
+		protected @Nullable Second second;
+		
+		/**
+		 * Creates a new pair.
+		 *
+		 * @param first  The first value
+		 * @param second The second value
+		 * @since 0.1.0
+		 */
+		public ImmutablePair(@Nullable First first, @Nullable Second second) {
+			this.first = first;
+			this.second = second;
+		}
+		
+		/**
+		 * Creates a new pair with null values.
+		 *
+		 * @since 0.1.0
+		 */
+		public ImmutablePair() {
+		}
+		
+		@Override
+		public @Nullable First first() {
+			return first;
+		}
+		
+		@Override
+		public @Nullable Second second() {
+			return second;
+		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(getFirst(), getSecond());
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(this == o) return true;
+			if(o == null || getClass() != o.getClass()) return false;
+			ImmutablePair<?, ?> that = (ImmutablePair<?, ?>) o;
+			return Objects.equals(getFirst(), that.getFirst()) && Objects.equals(getSecond(), that.getSecond());
+		}
+		
+		/**
+		 * Null-safe immutable pair implementation
+		 *
+		 * @since 0.1.0
+		 */
+		public static class ImmutableNullsafePair<First, Second> extends ImmutablePair<First, Second> {
+			/**
+			 * Creates a new pair.
+			 *
+			 * @param first  The first value
+			 * @param second The second value
+			 * @since 0.1.0
+			 */
+			public ImmutableNullsafePair(@NotNull First first, @NotNull Second second) {
+				super(Objects.requireNonNull(first), Objects.requireNonNull(second));
+			}
+			
+			@Override
+			public @NotNull First first() {
+				return Objects.requireNonNull(first);
+			}
+			
+			@Override
+			public @NotNull Second second() {
+				return Objects.requireNonNull(second);
+			}
+		}
+	}
 	
 	/**
 	 * Mutable pair implementation
@@ -173,97 +264,6 @@ public interface Pair<First, Second> {
 			public @NotNull Second setSecond(@Nullable Second second) {
 				Objects.requireNonNull(second);
 				return Objects.requireNonNull(super.setSecond(second));
-			}
-		}
-	}
-	
-	/**
-	 * Immutable pair implementation
-	 *
-	 * @since 0.1.0
-	 */
-	class ImmutablePair<First, Second> implements Pair<First, Second> {
-		/**
-		 * The first value
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable First first;
-		/**
-		 * The second value
-		 *
-		 * @since 0.1.0
-		 */
-		protected @Nullable Second second;
-		
-		/**
-		 * Creates a new pair.
-		 *
-		 * @param first  The first value
-		 * @param second The second value
-		 * @since 0.1.0
-		 */
-		public ImmutablePair(@Nullable First first, @Nullable Second second) {
-			this.first = first;
-			this.second = second;
-		}
-		
-		/**
-		 * Creates a new pair with null values.
-		 *
-		 * @since 0.1.0
-		 */
-		public ImmutablePair() {
-		}
-		
-		@Override
-		public @Nullable First first() {
-			return first;
-		}
-		
-		@Override
-		public @Nullable Second second() {
-			return second;
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if(this == o) return true;
-			if(o == null || getClass() != o.getClass()) return false;
-			ImmutablePair<?, ?> that = (ImmutablePair<?, ?>) o;
-			return Objects.equals(getFirst(), that.getFirst()) && Objects.equals(getSecond(), that.getSecond());
-		}
-		
-		@Override
-		public int hashCode() {
-			return Objects.hash(getFirst(), getSecond());
-		}
-		
-		/**
-		 * Null-safe immutable pair implementation
-		 *
-		 * @since 0.1.0
-		 */
-		public static class ImmutableNullsafePair<First, Second> extends ImmutablePair<First, Second> {
-			/**
-			 * Creates a new pair.
-			 *
-			 * @param first  The first value
-			 * @param second The second value
-			 * @since 0.1.0
-			 */
-			public ImmutableNullsafePair(@NotNull First first, @NotNull Second second) {
-				super(Objects.requireNonNull(first), Objects.requireNonNull(second));
-			}
-			
-			@Override
-			public @NotNull First first() {
-				return Objects.requireNonNull(first);
-			}
-			
-			@Override
-			public @NotNull Second second() {
-				return Objects.requireNonNull(second);
 			}
 		}
 	}

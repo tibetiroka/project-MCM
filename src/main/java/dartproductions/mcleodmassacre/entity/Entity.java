@@ -17,12 +17,44 @@ import java.awt.Point;
  */
 public interface Entity {
 	/**
+	 * Increases this entity's velocity.
+	 *
+	 * @param accX The change along the x axis
+	 * @param accY The change along the y axis
+	 * @since 0.1.0
+	 */
+	default void accelerate(int accX, int accY) {
+		getVelocity().width += accX;
+		getVelocity().height += accY;
+	}
+	
+	/**
 	 * Gets the currently shown animation of the entity.
 	 *
 	 * @return The animation
 	 * @since 0.1.0
 	 */
 	@NotNull Animation getCurrentAnimation();
+	
+	/**
+	 * Gets the entity's deceleration on the X axis. This value is subtracted from the speed every frame.
+	 *
+	 * @return The horizontal deceleration
+	 * @since 0.1.0
+	 */
+	default int getDecelerationX() {
+		return 0;
+	}
+	
+	/**
+	 * Gets the entity's deceleration on the Y axis. This value is subtracted from the speed every frame.
+	 *
+	 * @return The vertical deceleration
+	 * @since 0.1.0
+	 */
+	default int getDecelerationY() {
+		return 0;
+	}
 	
 	/**
 	 * Gets the layer where this entity is rendered by default.
@@ -33,43 +65,61 @@ public interface Entity {
 	@NotNull RenderingLayer getDefaultLayer();
 	
 	/**
-	 * Runs whenever this entity is hovered. Doesn't run if the entity was hovered in the previous frame.
+	 * Gets the entity's gravity. This value is used to increase vertical speed at every frame.
 	 *
+	 * @return The entity's gravity
 	 * @since 0.1.0
 	 */
-	default void onHover() {
+	default int getGravity() {
+		return 0;
 	}
 	
 	/**
-	 * Runs whenever this entity is no longer hovered.
+	 * Gets the location of this entity.
 	 *
+	 * @return The location
 	 * @since 0.1.0
 	 */
-	default void onHoverStop() {
+	@NotNull Point getLocation();
+	
+	/**
+	 * Gets the square of the maximum horizontal speed of this entity. If the value is negative, the limit is ignored.
+	 *
+	 * @return The maximum horizontal speed
+	 * @since 0.1.0
+	 */
+	default int getMaxSpeedX() {
+		return isMovable() ? -1 : 0;
 	}
 	
 	/**
-	 * Checks if this entity is hovered by the mouse.
+	 * Gets the square of the maximum vertical speed of this entity. If the value is negative, the limit is ignored.
 	 *
-	 * @return True if hovered
+	 * @return The maximum vertical speed
 	 * @since 0.1.0
 	 */
-	boolean isHovered();
-	
-	/**
-	 * Runs whenever the mouse has pressed this entity.
-	 *
-	 * @since 0.1.0
-	 */
-	default void onMousePress() {
+	default int getMaxSpeedY() {
+		return isMovable() ? -1 : 0;
 	}
 	
 	/**
-	 * Runs when the mouse is no longer pressing this entity.
+	 * Gets the velocity of this entity.
 	 *
+	 * @return The velocity
 	 * @since 0.1.0
 	 */
-	default void onMouseRelease() {
+	default @NotNull Dimension getVelocity() {
+		return new Dimension(0, 0);
+	}
+	
+	/**
+	 * Checks if this entity can collide with other entities.
+	 *
+	 * @return True if can collide
+	 * @since 0.1.0
+	 */
+	default boolean hasCollision() {
+		return false;
 	}
 	
 	/**
@@ -83,36 +133,22 @@ public interface Entity {
 	}
 	
 	/**
-	 * Gets the location of this entity.
+	 * Checks if this entity can be moved by collisions with other entities.
 	 *
-	 * @return The location
+	 * @return True if can be moved
 	 * @since 0.1.0
 	 */
-	@NotNull Point getLocation();
-	
-	/**
-	 * Gets the velocity of this entity.
-	 *
-	 * @return The velocity
-	 * @since 0.1.0
-	 */
-	default @NotNull Dimension getVelocity() {
-		return new Dimension(0, 0);
+	default boolean isCollisionMovable() {
+		return hasCollision();
 	}
 	
 	/**
-	 * Handles the entity's own actions in every frame.
+	 * Checks if this entity is hovered by the mouse.
 	 *
+	 * @return True if hovered
 	 * @since 0.1.0
 	 */
-	default void process() {
-		if(isMovable()) {
-			move();
-		}
-		if(getCurrentAnimation().isOver()) {
-			unregister();
-		}
-	}
+	boolean isHovered();
 	
 	/**
 	 * Checks if this entity can move.
@@ -125,6 +161,24 @@ public interface Entity {
 	}
 	
 	/**
+	 * Checks if this entity can be selected.
+	 *
+	 * @return True if can be selected
+	 * @since 0.1.0
+	 */
+	default boolean isSelectable() {
+		return false;
+	}
+	
+	/**
+	 * Checks if this entity is selected.
+	 *
+	 * @return True if selected
+	 * @since 0.1.0
+	 */
+	boolean isSelected();
+	
+	/**
 	 * Moves this entity by the specified distance.
 	 *
 	 * @param moveByX The distance on the x axis
@@ -133,18 +187,6 @@ public interface Entity {
 	 */
 	default void move(int moveByX, int moveByY) {
 		getLocation().translate(moveByX, moveByY);
-	}
-	
-	/**
-	 * Increases this entity's velocity.
-	 *
-	 * @param accX The change along the x axis
-	 * @param accY The change along the y axis
-	 * @since 0.1.0
-	 */
-	default void accelerate(int accX, int accY) {
-		getVelocity().width += accX;
-		getVelocity().height += accY;
 	}
 	
 	/**
@@ -199,53 +241,46 @@ public interface Entity {
 	}
 	
 	/**
-	 * Gets the entity's deceleration on the X axis. This value is subtracted from the speed every frame.
+	 * Handles the entity's custom collision behaviour. It is called right before the game engine handles the collision, and can be used to tell the engine not to process the collision.
 	 *
-	 * @return The horizontal deceleration
+	 * @param e The entity this entity is colliding with
+	 * @return True if the engine should process this collision, false otherwise
 	 * @since 0.1.0
 	 */
-	default int getDecelerationX() {
-		return 0;
+	default boolean onCollision(@NotNull Entity e) {
+		return true;
 	}
 	
 	/**
-	 * Gets the entity's deceleration on the Y axis. This value is subtracted from the speed every frame.
+	 * Runs whenever this entity is hovered. Doesn't run if the entity was hovered in the previous frame.
 	 *
-	 * @return The vertical deceleration
 	 * @since 0.1.0
 	 */
-	default int getDecelerationY() {
-		return 0;
+	default void onHover() {
 	}
 	
 	/**
-	 * Gets the square of the maximum horizontal speed of this entity. If the value is negative, the limit is ignored.
+	 * Runs whenever this entity is no longer hovered.
 	 *
-	 * @return The maximum horizontal speed
 	 * @since 0.1.0
 	 */
-	default int getMaxSpeedX() {
-		return isMovable() ? -1 : 0;
+	default void onHoverStop() {
 	}
 	
 	/**
-	 * Gets the square of the maximum vertical speed of this entity. If the value is negative, the limit is ignored.
+	 * Runs whenever the mouse has pressed this entity.
 	 *
-	 * @return The maximum vertical speed
 	 * @since 0.1.0
 	 */
-	default int getMaxSpeedY() {
-		return isMovable() ? -1 : 0;
+	default void onMousePress() {
 	}
 	
 	/**
-	 * Gets the entity's gravity. This value is used to increase vertical speed at every frame.
+	 * Runs when the mouse is no longer pressing this entity.
 	 *
-	 * @return The entity's gravity
 	 * @since 0.1.0
 	 */
-	default int getGravity() {
-		return 0;
+	default void onMouseRelease() {
 	}
 	
 	/**
@@ -265,52 +300,17 @@ public interface Entity {
 	}
 	
 	/**
-	 * Checks if this entity can be selected.
+	 * Handles the entity's own actions in every frame.
 	 *
-	 * @return True if can be selected
 	 * @since 0.1.0
 	 */
-	default boolean isSelectable() {
-		return false;
-	}
-	
-	/**
-	 * Checks if this entity is selected.
-	 *
-	 * @return True if selected
-	 * @since 0.1.0
-	 */
-	boolean isSelected();
-	
-	/**
-	 * Checks if this entity can collide with other entities.
-	 *
-	 * @return True if can collide
-	 * @since 0.1.0
-	 */
-	default boolean hasCollision() {
-		return false;
-	}
-	
-	/**
-	 * Checks if this entity can be moved by collisions with other entities.
-	 *
-	 * @return True if can be moved
-	 * @since 0.1.0
-	 */
-	default boolean isCollisionMovable() {
-		return hasCollision();
-	}
-	
-	/**
-	 * Handles the entity's custom collision behaviour. It is called right before the game engine handles the collision, and can be used to tell the engine not to process the collision.
-	 *
-	 * @param e The entity this entity is colliding with
-	 * @return True if the engine should process this collision, false otherwise
-	 * @since 0.1.0
-	 */
-	default boolean onCollision(@NotNull Entity e) {
-		return true;
+	default void process() {
+		if(isMovable()) {
+			move();
+		}
+		if(getCurrentAnimation().isOver()) {
+			unregister();
+		}
 	}
 	
 	/**
