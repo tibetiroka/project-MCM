@@ -1,10 +1,11 @@
 package dartproductions.mcleodmassacre.sound;
 
+import dartproductions.mcleodmassacre.GameState;
 import dartproductions.mcleodmassacre.Main;
-import dartproductions.mcleodmassacre.Main.GameState;
-import dartproductions.mcleodmassacre.ResourceManager;
 import dartproductions.mcleodmassacre.entity.Entity;
 import dartproductions.mcleodmassacre.graphics.ResolutionManager;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
+import dartproductions.mcleodmassacre.resources.id.Identifier;
 import dartproductions.mcleodmassacre.util.Pair;
 import dartproductions.mcleodmassacre.util.Pair.ImmutablePair;
 import dartproductions.mcleodmassacre.util.Pair.ImmutablePair.ImmutableNullsafePair;
@@ -13,8 +14,18 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.sound.sampled.*;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.Control;
 import javax.sound.sampled.Control.Type;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.Line;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,18 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SoundManager {
 	/**
-	 * Sound category for menu background music
-	 *
-	 * @since 0.1.0
-	 */
-	public static final String CATEGORY_MENU = "MENU";
-	/**
-	 * Sound category for unknown game states.
-	 *
-	 * @since 0.1.0
-	 */
-	public static final String CATEGORY_UNKNOWN = "UNKNOWN";
-	/**
 	 * Lock object for the audio thread
 	 *
 	 * @since 0.1.0
@@ -49,13 +48,13 @@ public class SoundManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull ConcurrentHashMap<String, ArrayList<ResumableClip>> INACTIVE_SFX = new ConcurrentHashMap<>();
+	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<ResumableClip>> INACTIVE_SFX = new ConcurrentHashMap<>();
 	/**
 	 * The active audio clips. These clips are playing audio.
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull ConcurrentHashMap<String, ArrayList<Pair<Entity, ResumableClip>>> ACTIVE_SFX = new ConcurrentHashMap<>();
+	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<Pair<Entity, ResumableClip>>> ACTIVE_SFX = new ConcurrentHashMap<>();
 	private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
 	/**
 	 * The volume of sound effects on a linear scale between 0 and 1.
@@ -80,11 +79,9 @@ public class SoundManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static volatile @Nullable String BACKGROUND_MUSIC_NAME;
+	private static volatile @Nullable Identifier BACKGROUND_MUSIC_NAME;
 	
-	//TODO: add sound categories, play sounds automatically based on game state, separate volume for music and sfx, panning via FloatContol, etc.
-	
-	static {
+	static {//starting sound engine
 		Thread thread = new Thread(() -> {
 			final float centerX = ResolutionManager.getOriginOnBuffer().x + ResolutionManager.getDefaultScreenSize().width / 2.0f;
 			final float width = (float) ResolutionManager.getDefaultScreenSize().getWidth();
@@ -96,7 +93,7 @@ public class SoundManager {
 						LOGGER.warn("Interrupted wait in audio thread", e);
 					}
 				}
-				synchronized(ACTIVE_SFX) {
+				synchronized(ACTIVE_SFX) {//automatic panning
 					ACTIVE_SFX.values().forEach(list -> list.forEach(pair -> {
 						if(pair.first() != null) {
 							float entityX = (float) pair.first().getCurrentAnimation().getCurrentHitbox().getBounds().getCenterX();
@@ -110,48 +107,51 @@ public class SoundManager {
 			}
 		}, "Audio thread");
 		thread.setDaemon(true);
-		thread.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Uncaught exception in audio thread", e));
+		thread.setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in audio thread", e);
+			Main.panic();
+		});
 	}
 	
 	/**
-	 * Plays a sound effect.
+	 * Plays a sound effect. Doesn't block the executing thread. Uses the inactive clips from the buffer if possible.
 	 *
-	 * @param name   The name of the effect to play
-	 * @param entity The entity to use for audio panning, or null for balanced panning
+	 * @param id     The identifier of the effect to play
+	 * @param entity The entity to use for audio panning, or null for balanced panning (equal volume on left and right audio channels)
 	 * @since 0.1.0
 	 */
-	public static void playEffect(final @NotNull String name, final @Nullable Entity entity) {
+	public static void playEffect(final @NotNull Identifier id, final @Nullable Entity entity) {
 		Main.getExecutors().execute(() -> {
 			try {
 				ResumableClip clip = null;
 				synchronized(INACTIVE_SFX) {
-					ArrayList<ResumableClip> clips = INACTIVE_SFX.get(name);
-					if(clips != null && clips.size() > 0) {
+					ArrayList<ResumableClip> clips = INACTIVE_SFX.get(id);//get clip from buffer
+					if(clips != null && !clips.isEmpty()) {
 						clip = clips.remove(clips.size() - 1);
 						clip.setFramePosition(0);
 						clip.loop(0);
 						clip.start();
 					}
 				}
-				if(clip == null) {
+				if(clip == null) {//not found in buffer -> create new clip
 					clip = ResumableClip.createFromClip(AudioSystem.getClip(null));
-					clip.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(ResourceManager.getSound(name))));
+					clip.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(ResourceManager.getAudio(id))));
 					clip.start();
 					final ResumableClip clip_ = clip;
-					clip.addLineListener(event -> {//deactivating clip
+					clip.addLineListener(event -> {//deactivating clip when done
 						if(event.getType() == LineEvent.Type.CLOSE || event.getFramePosition() >= clip_.getFrameLength()) {
 							synchronized(ACTIVE_SFX) {
-								ACTIVE_SFX.get(name).removeIf(p -> p.second() == clip_);
+								ACTIVE_SFX.get(id).removeIf(p -> p.second() == clip_);
 							}
 							synchronized(INACTIVE_SFX) {
-								var a = INACTIVE_SFX.getOrDefault(name, new ArrayList<>());
+								var a = INACTIVE_SFX.getOrDefault(id, new ArrayList<>());
 								a.add(clip_);
-								INACTIVE_SFX.put(name, a);
+								INACTIVE_SFX.put(id, a);
 							}
 						}
 					});
 				}
-				{
+				{//setting volume of the clip
 					setVolume(clip, true);
 					FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.PAN);
 					if(entity == null) {
@@ -165,12 +165,12 @@ public class SoundManager {
 						control.setValue(distance < -1 ? -1 : (distance > 1 ? 1 : distance));
 					}
 				}
-				synchronized(ACTIVE_SFX) {
-					ArrayList<Pair<Entity, ResumableClip>> clips = ACTIVE_SFX.getOrDefault(name, new ArrayList<>());
+				synchronized(ACTIVE_SFX) {//registering clip
+					ArrayList<Pair<Entity, ResumableClip>> clips = ACTIVE_SFX.getOrDefault(id, new ArrayList<>());
 					clips.add(new ImmutablePair<>(entity, clip));
-					ACTIVE_SFX.put(name, clips);
+					ACTIVE_SFX.put(id, clips);
 				}
-			} catch(UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+			} catch(UnsupportedAudioFileException | IOException | LineUnavailableException | NullPointerException e) {
 				LOGGER.warn("Could not play sound effect", e);
 			}
 		});
@@ -219,7 +219,7 @@ public class SoundManager {
 	}
 	
 	/**
-	 * Changes the volume of all sound effects.
+	 * Changes the volume of all sound effects. The new value will also become the default volume for sound effects played in the future.
 	 *
 	 * @param volume The new volume between 0 and 1
 	 * @since 0.1.0
@@ -236,7 +236,7 @@ public class SoundManager {
 	}
 	
 	/**
-	 * Changes the volume of all background music.
+	 * Changes the volume of all background music. The new value will also become the default volume for background music played in the future.
 	 *
 	 * @param volume The new volume between 0 and 1
 	 * @since 0.1.0
@@ -248,17 +248,34 @@ public class SoundManager {
 		}
 	}
 	
+	/**
+	 * Stops all audio output.
+	 *
+	 * @see #stopAllMusic()
+	 * @see #stopAllSfx()
+	 * @since 0.1.0
+	 */
 	public static void stopAll() {
 		stopAllSfx();
 		stopAllMusic();
 	}
 	
+	/**
+	 * Stops all active sound effects.
+	 *
+	 * @since 0.1.0
+	 */
 	public static void stopAllSfx() {
 		synchronized(ACTIVE_SFX) {
 			ACTIVE_SFX.values().forEach(list -> list.forEach(p -> p.second().stop()));
 		}
 	}
 	
+	/**
+	 * Stops the background music.
+	 *
+	 * @since 0.1.0
+	 */
 	public static void stopAllMusic() {
 		if(BACKGROUND_MUSIC != null) {
 			BACKGROUND_MUSIC.stop();
@@ -267,10 +284,16 @@ public class SoundManager {
 		}
 	}
 	
-	public static void playMusic(@NotNull String category) {
+	/**
+	 * Plays a random audio resource that has the specified tag as background music.
+	 *
+	 * @param category The identifier of the tag
+	 * @since 0.1.0
+	 */
+	public static void playMusic(@Nullable Identifier category) {
 		try {
 			stopAllMusic();
-			ImmutableNullsafePair<String, byte[]> pair = ResourceManager.getRandomSound(category);
+			ImmutableNullsafePair<Identifier, byte[]> pair = ResourceManager.getRandomAudio(category);
 			if(pair == null) {
 				return;
 			}
@@ -278,12 +301,23 @@ public class SoundManager {
 			BACKGROUND_MUSIC.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(pair.second())));
 			setVolume(BACKGROUND_MUSIC, false);
 			BACKGROUND_MUSIC.start();
+			BACKGROUND_MUSIC.addLineListener(event -> {
+				if(event.getType() == LineEvent.Type.STOP) {
+					Main.getExecutors().execute(SoundManager::updateBackgroundMusic);
+					BACKGROUND_MUSIC.close();
+				}
+			});
 			BACKGROUND_MUSIC_NAME = pair.first();
 		} catch(LineUnavailableException | UnsupportedAudioFileException | IOException e) {
 			LOGGER.warn("Could not play background music", e);
 		}
 	}
 	
+	/**
+	 * Releases all audio resources cached in this class. This includes both the curently active and inactive clips. All audio output is stopped.
+	 *
+	 * @since 0.1.0.
+	 */
 	public static void clear() {
 		synchronized(INACTIVE_SFX) {
 			INACTIVE_SFX.clear();
@@ -292,40 +326,21 @@ public class SoundManager {
 			stopAllSfx();
 			ACTIVE_SFX.clear();
 		}
+		stopAllMusic();
 		BACKGROUND_MUSIC = null;
 	}
 	
 	/**
-	 * Handles any changes when the application's state changes.
+	 * Updates the background music. If the audio is playing and it is valid for the current game state, no changes are made. Otherwise a new background music is chosen and played.
 	 *
-	 * @param newGameState The new state of the application
-	 * @param newNextState The expected state after the new state
 	 * @since 0.1.0
 	 */
-	public static synchronized void onStateChange(@NotNull Main.GameState newGameState, @Nullable Main.GameState newNextState) {
-		stopAllSfx();
-		if(newGameState != GameState.IN_GAME_PAUSED) {
-			if(!(ResourceManager.isValidSoundForCategory(BACKGROUND_MUSIC_NAME, getSoundCategory(newGameState)) || (newGameState == GameState.LOADING && ResourceManager.isValidSoundForCategory(BACKGROUND_MUSIC_NAME, getSoundCategory(newNextState))))) {
-				//if the sound is not valid for this state, or the state is LOADING and the sound is not valid for the next one
-				if(newGameState != GameState.LOADING) {
-					playMusic(getSoundCategory(newGameState));
-				}
+	public static void updateBackgroundMusic() {
+		if(Main.getGameState() != GameState.IN_GAME_PAUSED) {
+			if(BACKGROUND_MUSIC == null || !BACKGROUND_MUSIC.isOpen() || !ResourceManager.hasTag(BACKGROUND_MUSIC_NAME, Main.getGameState().getBackgroundMusicTag(Main.getNextState()))) {
+				playMusic(Main.getGameState().getBackgroundMusicTag(Main.getNextState()));
 			}
 		}
-	}
-	
-	/**
-	 * Gets the sound category for the specified game state.
-	 *
-	 * @param state The game state
-	 * @return The sound category
-	 * @since 0.1.0
-	 */
-	private static @NotNull String getSoundCategory(@NotNull GameState state) {
-		return switch(state) {
-			case MAIN_MENU, DATA_MENU, CONTROL_SETTINGS, GALLERY, SOUND_SETTINGS, SETTINGS_MENU, QUALITY_SETTINGS, ROSTER, VERSUS_MENU -> CATEGORY_MENU;
-			default -> CATEGORY_UNKNOWN;
-		};
 	}
 	
 	/**
