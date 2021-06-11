@@ -62,7 +62,7 @@ public class Plugin implements Identified {
 		this.directory = directory;
 		config = new Gson().fromJson(Files.readString(new File(directory, "PLUGIN").toPath()), PluginConfiguration.class);
 		config.verify();
-		id = Identifier.fromString(Identifier.DEFAULT_PLUGIN_GROUP, config.name);
+		id = Identifier.fromString(Identifier.DEFAULT_PLUGIN_GROUP, config.name.replace(" ", "_"));
 		loadbefore = new HashSet<>();
 		loadafter = new HashSet<>();
 		//
