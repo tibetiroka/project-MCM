@@ -1,3 +1,10 @@
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Copyright (c) 2021 Dart Productions
+ Released under the GNU General Public License version 3
+ 
+ This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation.
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 package dartproductions.mcleodmassacre.graphics;
 
 import dartproductions.mcleodmassacre.entity.Entity;
@@ -20,7 +27,8 @@ public class RenderingLayer {
 	 *
 	 * @since 0.1.0
 	 */
-	protected @NotNull List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
+	protected @NotNull
+	final List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
 	
 	protected RenderingLayer() {
 	}

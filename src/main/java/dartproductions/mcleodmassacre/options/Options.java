@@ -1,3 +1,10 @@
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Copyright (c) 2021 Dart Productions
+ Released under the GNU General Public License version 3
+ 
+ This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation.
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 package dartproductions.mcleodmassacre.options;
 
 import dartproductions.mcleodmassacre.options.Option.BooleanOption;
@@ -44,7 +51,8 @@ public interface Options extends OptionGroup {
 		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX";
 		
 		public final @NotNull ArrayList<OptionGroup> groups = new ArrayList<>();
-		public @NotNull String name = "Settings";
+		public @NotNull
+		final String name = "Settings";
 		
 		public StandardOptions() {
 			{
