@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,7 +48,7 @@ public class PluginManager {
 							Plugin plugin = new Plugin(folder);
 							ResourceManager.registerPlugin(plugin);
 							LOGGER.info("Registered plugin " + plugin);
-						} catch(IOException e) {
+						} catch(Exception e) {
 							LOGGER.warn("Could not load plugin in folder " + folder.getPath(), e);
 						}
 					}
@@ -84,7 +83,15 @@ public class PluginManager {
 		while(!loadbefores.isEmpty()) {
 			loadbefores.forEach((id, value) -> {//loading plugins without loadbefores
 				if(value.isEmpty()) {
-					loadPlugin(ResourceManager.getPlugin(id));
+					Plugin plugin = ResourceManager.getPlugin(id);
+					if(plugin != null) {
+						LOGGER.info("Loading plugin " + plugin.getName() + ":" + plugin.getVersion());
+						ResourceManager.registerAssets(plugin);
+						loadPlugin(ResourceManager.getPlugin(id));
+						LOGGER.info("Loaded plugin " + plugin.getName() + ":" + plugin.getVersion());
+					} else {
+						LOGGER.error("Couldn't load plugin " + id + " (plugin doesn't exist)");
+					}
 				}
 			});
 			boolean changed = loadbefores.entrySet().removeIf(e -> e.getValue().isEmpty());//remove newly loaded plugins

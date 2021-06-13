@@ -426,9 +426,9 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void registerAssets(@NotNull final Plugin plugin) {
-		new LoadingOperation(() -> {
-			try {
-				getPaths(plugin.getBaseDirectory().getPath(), false).filter(path -> "tags".equalsIgnoreCase(getFileExtension(path.toFile()))).forEach(path -> {
+		try {
+			getPaths(plugin.getBaseDirectory().getPath(), false).filter(path -> "tags".equalsIgnoreCase(getFileExtension(path.toFile()))).forEach(path -> {
+				new LoadingOperation(() -> {
 					Identifier resourceId = Identifier.fromString(plugin.getId().getName(), getFileName(path.toFile()));
 					HashSet<Identifier> tags = new HashSet<>();
 					File resourceFile = getResourceFileFromTags(path);
@@ -460,10 +460,11 @@ public class ResourceManager {
 						LOGGER.warn("Could not register resource " + resourceId, e);
 					}
 				});
-			} catch(IOException | URISyntaxException | NullPointerException e) {
-				LOGGER.warn("Could not register assets for plugin " + plugin, e);
-			}
-		});
+			});
+		} catch(IOException | URISyntaxException | NullPointerException e) {
+			LOGGER.warn("Could not register assets for plugin " + plugin, e);
+		}
+		waitForLoading();
 	}
 	
 	/**
@@ -474,7 +475,6 @@ public class ResourceManager {
 	 */
 	public static void registerPlugin(@NotNull Plugin plugin) {
 		PLUGINS.register(plugin.getId(), () -> plugin);
-		registerAssets(plugin);
 	}
 	
 	/**
