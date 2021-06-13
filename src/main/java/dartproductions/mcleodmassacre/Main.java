@@ -108,6 +108,10 @@ public class Main {
 	
 	/**
 	 * Gets the next state of the game. Not specified for every state.
+	 * <p>
+	 * This state represents the recommended/expected state that follows the current state - however, there is no guarantee that this will be the next state, and it is erroneous to assume so.
+	 * <p>
+	 * The main point of this variable is the reusability of {@link GameState#isLoadingState() loading game states}. With the use of this parameter, the same game state can be used for any loading state, while it provides information about the following state.
 	 *
 	 * @return {@link #NEXT_STATE}
 	 * @since 0.1.0
@@ -248,7 +252,7 @@ public class Main {
 	 * Sets the state of the game.
 	 *
 	 * @param newGameState The new state
-	 * @param newNextState The new next state
+	 * @param newNextState The new next state, as specified by {@link #getNextState()}
 	 * @since 0.1.0
 	 */
 	public static synchronized void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
