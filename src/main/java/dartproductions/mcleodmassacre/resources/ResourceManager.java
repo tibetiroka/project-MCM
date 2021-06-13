@@ -403,13 +403,7 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void onStateChange(@NotNull GameState newState, @Nullable GameState newNextState) {
-		final double memoryUsage;
-		{
-			Runtime runtime = Runtime.getRuntime();
-			long max = runtime.totalMemory();
-			long free = runtime.freeMemory();
-			memoryUsage = ((double) (max - free)) / (double) max;
-		}
+		double memoryUsage = getMemoryUsage();
 		AVAILABLE_UNLOADS.clear();
 		for(Identifier resourceId : RESOURCE_TAGS.getRegisteredResources()) {
 			HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
@@ -429,15 +423,19 @@ public class ResourceManager {
 	}
 	
 	/**
-	 * Unloads all resources that can be unloaded, but are still loaded in the cache.
+	 * Unloads all resources that can be unloaded, but are still loaded in the cache, if the memory usage is above the specified threshold.
 	 *
+	 * @param threshold The ratio of used memory required to start unloading
 	 * @since 0.1.0
 	 */
-	public static void unloadAll() {
-		for(Identifier resource : AVAILABLE_UNLOADS) {
-			getCacheOfResource(resource).unload(resource);
+	public static void unloadAll(double threshold) {
+		if(getMemoryUsage() > threshold) {
+			LOGGER.info("Manual resource unloading was triggered (threshold: " + threshold + ")");
+			for(Identifier resource : AVAILABLE_UNLOADS) {
+				getCacheOfResource(resource).unload(resource);
+			}
+			AVAILABLE_UNLOADS.clear();
 		}
-		AVAILABLE_UNLOADS.clear();
 	}
 	
 	/**
@@ -535,6 +533,19 @@ public class ResourceManager {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Gets the current memory usage of the application. The returned value represents the ratio of the used and available memory.
+	 *
+	 * @return The memory usage between 0 and 1
+	 * @since 0.1.0
+	 */
+	private static double getMemoryUsage() {
+		Runtime runtime = Runtime.getRuntime();
+		long max = runtime.totalMemory();
+		long free = runtime.freeMemory();
+		return ((double) (max - free)) / (double) max;
 	}
 	
 	/**

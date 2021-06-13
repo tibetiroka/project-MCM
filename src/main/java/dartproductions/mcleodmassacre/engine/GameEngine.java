@@ -18,6 +18,7 @@ import dartproductions.mcleodmassacre.graphics.RenderingLayer;
 import dartproductions.mcleodmassacre.input.InputManager;
 import dartproductions.mcleodmassacre.input.InputManager.ActionType;
 import dartproductions.mcleodmassacre.input.InputManager.InputAction;
+import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.sound.SoundManager;
 import dartproductions.mcleodmassacre.util.Pair.ImmutablePair.ImmutableNullsafePair;
 import net.java.games.input.Event;
@@ -208,6 +209,9 @@ public class GameEngine {
 					delta -= FRAME_LENGTH_NANO;
 					frame++;
 					processFrame();
+					if(frame % 100 == 0) {
+						ResourceManager.unloadAll(0.9);
+					}
 				}
 				synchronized(GraphicsManager.GRAPHICS_LOCK) {
 					GraphicsManager.GRAPHICS_LOCK.notifyAll();
@@ -219,6 +223,7 @@ public class GameEngine {
 					Thread.onSpinWait();
 					if(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
 						SoundManager.pause();
+						ResourceManager.unloadAll(0);
 						while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
 							try {
 								Thread.sleep(100);
