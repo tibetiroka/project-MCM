@@ -19,6 +19,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -294,8 +295,8 @@ public class Main {
 	private static void configureLogger() {
 		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
 		Configurator.setAllLevels("", isDebug() ? Level.DEBUG : Level.INFO);
-		System.setOut(createLoggingProxy(System.out, Level.DEBUG));
-		System.setErr(createLoggingProxy(System.err, Level.WARN));
+		System.setOut(createLoggingProxy(Level.DEBUG));
+		System.setErr(createLoggingProxy(Level.WARN));
 		if(isDebug()) {
 			printSystemDebugInfo();
 		}
@@ -304,17 +305,33 @@ public class Main {
 	/**
 	 * Creates a new {@link PrintStream} from the specified stream that writes to the log output.
 	 *
-	 * @param stream The original stream
-	 * @param level  The level of the logged messages
+	 * @param level The level of the logged messages
 	 * @return The new logging stream
 	 * @since 0.1.0
 	 */
-	private static PrintStream createLoggingProxy(final PrintStream stream, final Level level) {
-		return new PrintStream(stream) {
-			public void print(final String string) {
-				LOGGER.log(level, string.strip());
+	private static PrintStream createLoggingProxy(final Level level) {
+		final OutputStream stream = new OutputStream() {
+			protected final StringBuffer buffer = new StringBuffer();
+			protected final int separator;
+			
+			{
+				String s = System.lineSeparator();
+				char[] chars = s.toCharArray();
+				separator = chars[chars.length - 1];
+			}
+			
+			@Override
+			public void write(int b) {
+				if(b == separator) {
+					LOGGER.log(level, buffer.toString().stripTrailing());
+					buffer.setLength(0);
+				} else {
+					buffer.append((char) b);
+				}
+				
 			}
 		};
+		return new PrintStream(stream, true);
 	}
 	
 	/**
