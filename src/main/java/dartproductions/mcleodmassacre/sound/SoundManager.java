@@ -477,6 +477,21 @@ public class SoundManager {
 			clip.setMicrosecondPosition(microseconds);
 		}
 		
+		@Override
+		public float getLevel() {
+			return clip.getLevel();
+		}
+		
+		@Override
+		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
+			clip.open(stream);
+		}
+		
+		@Override
+		public int getFrameLength() {
+			return clip.getFrameLength();
+		}
+		
 		/**
 		 * Checks if the clip is paused.
 		 *
@@ -493,8 +508,18 @@ public class SoundManager {
 		}
 		
 		@Override
-		public float getLevel() {
-			return clip.getLevel();
+		public long getMicrosecondLength() {
+			return clip.getMicrosecondPosition();
+		}
+		
+		@Override
+		public void setLoopPoints(int start, int end) {
+			clip.setLoopPoints(start, end);
+		}
+		
+		@Override
+		public void loop(int count) {
+			clip.loop(count);
 		}
 		
 		@Override
@@ -540,31 +565,6 @@ public class SoundManager {
 		@Override
 		public void removeLineListener(LineListener listener) {
 			clip.removeLineListener(listener);
-		}
-		
-		@Override
-		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
-			clip.open(stream);
-		}
-		
-		@Override
-		public int getFrameLength() {
-			return clip.getFrameLength();
-		}
-		
-		@Override
-		public long getMicrosecondLength() {
-			return clip.getMicrosecondPosition();
-		}
-		
-		@Override
-		public void setLoopPoints(int start, int end) {
-			clip.setLoopPoints(start, end);
-		}
-		
-		@Override
-		public void loop(int count) {
-			clip.loop(count);
 		}
 		
 		/**

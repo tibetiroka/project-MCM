@@ -15,6 +15,7 @@ import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
 /**
@@ -36,16 +37,40 @@ public class CustomTag implements Tag {
 	protected final @NotNull BiPredicate<GameState, GameState> predicate;
 	
 	/**
-	 * Creates a new tag
+	 * The function that determines the unloading threshold for resources
+	 *
+	 * @see #getUnloadingThreshold(GameState, GameState)
+	 * @since 0.1.0
+	 */
+	protected final @NotNull BiFunction<GameState, GameState, Double> unloading;
+	
+	/**
+	 * Creates a new tag with the default threshold of 0.8
 	 *
 	 * @param id        The identifier of the tag
 	 * @param predicate The predicate that determines whether the resource is required
 	 * @see GameStateTag
+	 * @see #getUnloadingThreshold(GameState, GameState)
 	 * @since 0.1.0
 	 */
 	public CustomTag(@NotNull Identifier id, @NotNull BiPredicate<GameState, GameState> predicate) {
+		this(id, predicate, (state, newState) -> 0.8);
+	}
+	
+	/**
+	 * Creates a new tag
+	 *
+	 * @param id        The identifier of the tag
+	 * @param predicate The predicate that determines whether the resource is required
+	 * @param unloading The function that determines the unloading threshold
+	 * @see GameStateTag
+	 * @see #getUnloadingThreshold(GameState, GameState)
+	 * @since 0.1.0
+	 */
+	public CustomTag(@NotNull Identifier id, @NotNull BiPredicate<GameState, GameState> predicate, BiFunction<GameState, GameState, Double> unloading) {
 		this.id = id;
 		this.predicate = predicate;
+		this.unloading = unloading;
 		ResourceManager.registerTag(this);
 	}
 	
@@ -57,5 +82,10 @@ public class CustomTag implements Tag {
 	@Override
 	public boolean isRequired(@NotNull GameState state, @Nullable GameState nextState) {
 		return predicate.test(state, nextState);
+	}
+	
+	@Override
+	public double getUnloadingThreshold(@NotNull GameState state, @Nullable GameState nextState) {
+		return unloading.apply(state, nextState);
 	}
 }

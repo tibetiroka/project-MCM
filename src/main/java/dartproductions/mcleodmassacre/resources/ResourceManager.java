@@ -70,6 +70,12 @@ public class ResourceManager {
 	 */
 	private static final @NotNull Cache<byte[]> AUDIO = new StandardCache<>(Identifier.fromString("resources/sfx"));
 	/**
+	 * List of resources that are available for unloading, but at the time of checking their unloading threshold was not reached.
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull ArrayList<Identifier> AVAILABLE_UNLOADS = new ArrayList<>();
+	/**
 	 * The list of created caches. Caches are not required to be registered here, but it is recommended.
 	 *
 	 * @since 0.1.0
@@ -120,7 +126,8 @@ public class ResourceManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static @NotNull Options OPTIONS;
+	private static @NotNull
+	volatile Options OPTIONS;
 	
 	static {
 		CACHES.register(AUDIO);
@@ -396,6 +403,14 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void onStateChange(@NotNull GameState newState, @Nullable GameState newNextState) {
+		final double memoryUsage;
+		{
+			Runtime runtime = Runtime.getRuntime();
+			long max = runtime.totalMemory();
+			long free = runtime.freeMemory();
+			memoryUsage = ((double) (max - free)) / (double) max;
+		}
+		AVAILABLE_UNLOADS.clear();
 		for(Identifier resourceId : RESOURCE_TAGS.getRegisteredResources()) {
 			HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
 			Cache<?> cache = getCacheOfResource(resourceId);
@@ -403,10 +418,26 @@ public class ResourceManager {
 				if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
 					cache.load(resourceId);
 				} else {
-					cache.unload(resourceId);
+					if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.getUnloadingThreshold(newState, newNextState) < memoryUsage)) {
+						cache.unload(resourceId);
+					} else {
+						AVAILABLE_UNLOADS.add(resourceId);
+					}
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Unloads all resources that can be unloaded, but are still loaded in the cache.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void unloadAll() {
+		for(Identifier resource : AVAILABLE_UNLOADS) {
+			getCacheOfResource(resource).unload(resource);
+		}
+		AVAILABLE_UNLOADS.clear();
 	}
 	
 	/**

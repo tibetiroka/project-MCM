@@ -49,4 +49,9 @@ public class GreedyTag implements Tag {
 	public boolean isRequired(@NotNull GameState state, @Nullable GameState nextState) {
 		return true;
 	}
+	
+	@Override
+	public double getUnloadingThreshold(@NotNull GameState state, @Nullable GameState nextState) {
+		return 1;
+	}
 }
