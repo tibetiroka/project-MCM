@@ -8,6 +8,7 @@
 package dartproductions.mcleodmassacre.resources.plugin;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import dartproductions.mcleodmassacre.resources.id.Identified;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -167,36 +168,42 @@ public class Plugin implements Identified {
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "jar", alternate = {"jars", "jarfiles", "classpath", "jar files", "libraries", "resource jars"})
 		protected @Nullable String[] jar;
 		/**
 		 * The id of the plugins to load after this one
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "loadafter", alternate = {"delay", "after", "later", "after this"})
 		protected @Nullable String[] loadafter;
 		/**
 		 * The id of the plugins to load before this one
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "loadbefore", alternate = {"before", "await", "wait for", "before this"})
 		protected @Nullable String[] loadbefore;
 		/**
 		 * The entry to the plugin's mod class. This must be a fully qualified class name of a class present in the loaded jars.
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "modEntry", alternate = {"mod entry", "entry", "mod", "main", "hook"})
 		protected @Nullable String modEntry;
 		/**
 		 * The name of this plugin
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "name", alternate = {"displayname", "display name", "plugin name"})
 		protected @Nullable String name;
 		/**
 		 * The version of this plugin
 		 *
 		 * @since 0.1.0
 		 */
+		@SerializedName(value = "version", alternate = {"v", "plugin version"})
 		protected @Nullable String version;
 		
 		/**
