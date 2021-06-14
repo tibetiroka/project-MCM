@@ -156,8 +156,8 @@ public interface GameState {
 			new Foreground(new LoopingAnimation("css_top")).register();
 			//
 			{
-				final String[] characters = {"blade", "blue", "azrael", "spikeman", "ronin", "korah", "TODO", "ryder", "cleodbot", "LS", "terro", "sab", "eton", "mitsu", "daichi", "glitch", "pat", "damaus", "meikiru", "dracobot", "internet", "sakuro", "hackensaw", "yjf", "ycoldsteel", "redwolf", "random", "boner", "kfm"};
-				final int rowSize = 8;
+				final String[] characters = {"blade", "blue", "azrael", "spikeman", "ronin", "korah", "karatestick", "ryder", "cleodbot", "LS", "terro", "sab", "eton", "mitsu", "daichi", "glitch", "pat", "damaus", "meikiru", "dracobot", "internet", "sakuro", "hackensaw", "yjf", "ycoldsteel", "redwolf", "virus", "boner", "kfm"};
+				final int rowSize = 9;//amount of characters in a row
 				final int imageWidth = ResourceManager.getBufferedImage(Identifier.fromString("roster_character_background")).getWidth();
 				final int imageHeight = ResourceManager.getBufferedImage(Identifier.fromString("roster_character_background")).getHeight();
 				final int topOffset = (int) (imageHeight * 1.5);
@@ -391,7 +391,7 @@ public interface GameState {
 	 * @since 0.1.0
 	 */
 	default void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-		SoundManager.updateBackgroundMusic();
+		Main.getExecutors().execute(SoundManager::updateBackgroundMusic);
 	}
 	
 	/**
