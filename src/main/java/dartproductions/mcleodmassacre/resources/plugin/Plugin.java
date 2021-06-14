@@ -87,7 +87,6 @@ public class Plugin implements Identified {
 				loadbefore.add(Identifier.fromString(Identifier.DEFAULT_PLUGIN_GROUP, s));
 			}
 		}
-		PluginManager.LOGGER.info("Read config for plugin " + this);
 	}
 	
 	/**
