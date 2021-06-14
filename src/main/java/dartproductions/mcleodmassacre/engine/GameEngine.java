@@ -202,8 +202,6 @@ public class GameEngine {
 			while(isRunning() && Main.isRunning()) {
 				if(delta > FRAME_LENGTH_NANO * 30) {
 					LOGGER.warn("Massive lag spike: " + delta + " ns (" + Math.round(delta / (double) FRAME_LENGTH_NANO * 100) / 100.0 + " frames)");
-				} else if(delta > FRAME_LENGTH_NANO * 3) {
-					LOGGER.debug("Minor lag spike: " + Math.round(delta / (double) FRAME_LENGTH_NANO * 100) / 100.0 + " frames");
 				}
 				while(delta >= FRAME_LENGTH_NANO) {
 					delta -= FRAME_LENGTH_NANO;
@@ -259,8 +257,6 @@ public class GameEngine {
 		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in the main engine thread (" + t.getName() + ")", e);
 			Main.panic();
-			Main.setRunning(false);
-			System.exit(-10001);
 		});
 		ENGINE_THREAD.start();
 	}
