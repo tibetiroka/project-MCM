@@ -13,9 +13,9 @@ import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A cache that support loading and unloading resources. Resources are not loaded by default.
@@ -28,7 +28,7 @@ public class StandardCache<T> implements Cache<T> {
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull ConcurrentHashMap<Identifier, T> cache = new ConcurrentHashMap<>();
+	protected final @NotNull HashMap<Identifier, T> cache = new HashMap<>();
 	/**
 	 * The identifier of the cache
 	 *
@@ -40,7 +40,7 @@ public class StandardCache<T> implements Cache<T> {
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull ConcurrentHashMap<Identifier, Callable<T>> loaders = new ConcurrentHashMap<>();
+	protected final @NotNull HashMap<Identifier, Callable<T>> loaders = new HashMap<>();
 	
 	/**
 	 * Creates a new standard cache.
