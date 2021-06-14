@@ -31,7 +31,6 @@ import javax.sound.sampled.Control;
 import javax.sound.sampled.Control.Type;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.Line;
-import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -209,7 +208,7 @@ public class SoundManager {
 					clip.start();
 					final ResumableClip clip_ = clip;
 					clip.addLineListener(event -> {//deactivating clip when done
-						if(event.getType() == LineEvent.Type.CLOSE || event.getFramePosition() >= clip_.getFrameLength()) {
+						if(event.getFramePosition() >= clip_.getFrameLength()) {
 							synchronized(ACTIVE_SFX) {
 								ACTIVE_SFX.get(id).removeIf(p -> p.second() == clip_);
 							}
@@ -264,7 +263,7 @@ public class SoundManager {
 			setVolume(BACKGROUND_MUSIC, false);
 			BACKGROUND_MUSIC.start();
 			BACKGROUND_MUSIC.addLineListener(event -> {
-				if(event.getType() == LineEvent.Type.STOP) {
+				if(event.getFramePosition() >= BACKGROUND_MUSIC.getFrameLength()) {
 					Main.getExecutors().execute(SoundManager::updateBackgroundMusic);
 					BACKGROUND_MUSIC.close();
 				}
@@ -330,7 +329,7 @@ public class SoundManager {
 	 *
 	 * @since 0.1.0
 	 */
-	public static void updateBackgroundMusic() {
+	public static synchronized void updateBackgroundMusic() {
 		if(Main.getGameState() != GameState.IN_GAME_PAUSED) {
 			if(BACKGROUND_MUSIC == null || !BACKGROUND_MUSIC.isOpen() || !ResourceManager.hasTag(BACKGROUND_MUSIC_NAME, Main.getGameState().getBackgroundMusicTag(Main.getNextState()))) {
 				playMusic(Main.getGameState().getBackgroundMusicTag(Main.getNextState()));
@@ -534,6 +533,7 @@ public class SoundManager {
 		
 		@Override
 		public void close() {
+			clip.setFramePosition(clip.getFrameLength());
 			clip.close();
 		}
 		
