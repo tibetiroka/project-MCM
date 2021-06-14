@@ -21,6 +21,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.JOptionPane;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
@@ -42,25 +43,6 @@ public class Main {
 	 * @since 0.1.0
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(Main.class);
-	/**
-	 * Globally shared executor service for async tasks
-	 *
-	 * @since 0.1.0
-	 */
-	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(4, new ThreadFactory() {
-		protected int count = 0;
-		
-		@Override
-		public Thread newThread(@NotNull Runnable r) {
-			Thread t = new Thread(r, "Executor " + (count++));
-			t.setUncaughtExceptionHandler((t1, e) -> {
-				LOGGER.error("Uncaught exception in " + t1.getName(), e);
-				Main.panic();
-				System.exit(0);
-			});
-			return t;
-		}
-	});
 	/**
 	 * True if additional debug information should be logged. Defaults to false.
 	 *
@@ -85,6 +67,24 @@ public class Main {
 	 * @since 0.1.0
 	 */
 	private static volatile boolean RUNNING = true;
+	/**
+	 * Globally shared executor service for async tasks
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(4, new ThreadFactory() {
+		protected int count = 0;
+		
+		@Override
+		public Thread newThread(@NotNull Runnable r) {
+			Thread t = new Thread(r, "Executor " + (count++));
+			t.setUncaughtExceptionHandler((t1, e) -> {
+				LOGGER.error("Uncaught exception in " + t1.getName(), e);
+				Main.panic();
+			});
+			return t;
+		}
+	});
 	
 	/**
 	 * Gets the global executor service, used for various async tasks.
@@ -159,7 +159,6 @@ public class Main {
 		Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in main thread (" + t.getName() + ")", e);
 			panic();
-			System.exit(-2);
 		});
 		checkDebugMode(args);
 		configureLogger();
@@ -170,10 +169,15 @@ public class Main {
 		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
-	public static void panic() {
+	public static synchronized void panic() {
+		LOGGER.error("An error forced the application to exit.");
+		LOGGER.error("The following debug messages will help us examine the problem.");
 		printSystemUsageDebugInfo();
 		printSystemDebugInfo();
 		printThreadDump();
+		setRunning(false);
+		JOptionPane.showMessageDialog(null, "Please check the logs for more details.", "Error", JOptionPane.ERROR_MESSAGE);
+		System.exit(0);
 	}
 	
 	/**
@@ -183,7 +187,6 @@ public class Main {
 	 */
 	public static void printSystemDebugInfo() {
 		LOGGER.info("\n=======DEBUG INFO=======\n");
-		LOGGER.info("This data is only queried in debug mode or after a crash, and doesn't contain any personal information. It is used for debugging purposes only.");
 		LOGGER.info("\n---ENVIRONMENT INFO---");
 		String[] properties = new String[]{"file.encoding", "java.class.path", "java.class.version", "java.library.path", "java.runtime.name", "java.runtime.version", "java.specification.name", "java.specification.vendor", "java.specification.version", "java.vendor", "java.vendor.url", "java.version", "java.version.date", "java.vm.compressedOopsMode", "java.vm.info", "java.vm.name", "java.vm.specification.name", "java.vm.specification.vendor", "java.vm.specification.version", "java.vm.vendor", "java.vm.version", "jdk.debug", "os.arch", "os.name", "os.version", "sun.arch.data.model", "sun.cpu.endian", "sun.cpu.isalist", "sun.io.unicode.encoding", "sun.java.command", "sun.java.launcher", "sun.jnu.encoding", "sun.management.compiler", "sun.stderr.encoding", "sun.stdout.encoding"};
 		for(String property : properties) {
@@ -268,16 +271,18 @@ public class Main {
 					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
 				}
 				//
-				//LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
-				//
+				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
 				//
 				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
-				EXECUTORS.execute(() -> {
-					ResourceManager.onStateChange(newGameState, newNextState);
-					if(newGameState.isLoadingState()) {
+				if(newGameState.isLoadingState()) {
+					getExecutors().execute(() -> {
+						ResourceManager.onStateChange(newGameState, newNextState);
 						setGameState(newNextState, null);
-					}
-				});
+					});
+				} else {
+					ResourceManager.onStateChange(newGameState, newNextState);
+				}
+				
 			}
 		}
 	}
