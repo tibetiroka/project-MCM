@@ -74,7 +74,7 @@ public class ResourceManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull ArrayList<Identifier> AVAILABLE_UNLOADS = new ArrayList<>();
+	private static final @NotNull HashSet<Identifier> AVAILABLE_UNLOADS = new HashSet<>();
 	/**
 	 * The list of created caches. Caches are not required to be registered here, but it is recommended.
 	 *
@@ -409,32 +409,40 @@ public class ResourceManager {
 			HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
 			Cache<?> cache = getCacheOfResource(resourceId);
 			if(cache != null) {
+				boolean loaded = cache.isLoaded(resourceId);
 				if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
-					cache.load(resourceId);
-				} else {
+					if(!loaded) {
+						LOGGER.debug("Loaded " + resourceId);
+						cache.load(resourceId);
+					}
+				} else if(loaded) {
 					if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.getUnloadingThreshold(newState, newNextState) < memoryUsage)) {
+						LOGGER.debug("Unloaded " + resourceId);
 						cache.unload(resourceId);
 					} else {
+						LOGGER.debug("Scheduled " + resourceId);
 						AVAILABLE_UNLOADS.add(resourceId);
 					}
 				}
 			}
 		}
+		Main.getExecutors().execute(() -> unloadAll(0));
 	}
 	
 	/**
-	 * Unloads all resources that can be unloaded, but are still loaded in the cache, if the memory usage is above the specified threshold.
+	 * Unloads all resources that can be unloaded but are still loaded in the cache, if the memory usage is above the specified threshold.
 	 *
 	 * @param threshold The ratio of used memory required to start unloading
 	 * @since 0.1.0
 	 */
 	public static void unloadAll(double threshold) {
-		if(getMemoryUsage() > threshold) {
-			LOGGER.info("Manual resource unloading was triggered (threshold: " + threshold + ")");
+		if(!AVAILABLE_UNLOADS.isEmpty() && getMemoryUsage() > threshold) {
+			int count = AVAILABLE_UNLOADS.size();
 			for(Identifier resource : AVAILABLE_UNLOADS) {
 				getCacheOfResource(resource).unload(resource);
 			}
 			AVAILABLE_UNLOADS.clear();
+			LOGGER.debug("Manually unloaded " + count + " resources");
 		}
 	}
 	
