@@ -58,6 +58,12 @@ public class SoundManager {
 	 */
 	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<Pair<Entity, ResumableClip>>> ACTIVE_SFX = new ConcurrentHashMap<>();
 	/**
+	 * Clip used to avoid the 'pop' when playing music/sfx
+	 *
+	 * @since 0.1.0
+	 */
+	private static final Clip FUCK_THIS;
+	/**
 	 * The created but inactive audio clips. These clips are not playing audio.
 	 *
 	 * @since 0.1.0
@@ -88,6 +94,17 @@ public class SoundManager {
 	 * @since 0.1.0
 	 */
 	private static float SFX_VOLUME = 0.8f;
+	
+	static {
+		Clip clip = null;
+		try {
+			clip = AudioSystem.getClip(null);
+		} catch(Exception e) {
+			e.printStackTrace();
+			Main.panic();
+		}
+		FUCK_THIS = clip;
+	}
 	
 	static {//starting sound engine
 		Thread thread = new Thread(() -> {
@@ -332,6 +349,16 @@ public class SoundManager {
 	public static synchronized void updateBackgroundMusic() {
 		if(Main.getGameState() != GameState.IN_GAME_PAUSED) {
 			if(BACKGROUND_MUSIC == null || !BACKGROUND_MUSIC.isOpen() || !ResourceManager.hasTag(BACKGROUND_MUSIC_NAME, Main.getGameState().getBackgroundMusicTag(Main.getNextState()))) {
+				if(!FUCK_THIS.isRunning()) {
+					try {
+						FUCK_THIS.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(ResourceManager.getAudio(Identifier.fromString("silence")))));
+					} catch(Exception e) {
+						e.printStackTrace();
+						Main.panic();
+					}
+					FUCK_THIS.loop(Clip.LOOP_CONTINUOUSLY);
+					FUCK_THIS.start();
+				}
 				playMusic(Main.getGameState().getBackgroundMusicTag(Main.getNextState()));
 			}
 		}
