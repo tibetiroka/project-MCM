@@ -219,10 +219,10 @@ public class GameEngine {
 				}
 				while(Main.isRunning()) {
 					Thread.onSpinWait();
-					if(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
+					if(!shouldRunFrame()) {
 						SoundManager.pause();
 						ResourceManager.unloadAll(0);
-						while(GraphicsManager.WINDOW != null && !GraphicsManager.WINDOW.isActive() && Main.isRunning()) {
+						while(!shouldRunFrame()) {
 							try {
 								Thread.sleep(100);
 							} catch(InterruptedException e) {
@@ -259,6 +259,33 @@ public class GameEngine {
 			Main.panic();
 		});
 		ENGINE_THREAD.start();
+		Thread monitor = new Thread(() -> {
+			long lastFrame = 0;
+			boolean previous = false;
+			while(ENGINE_THREAD.isAlive()) {
+				try {
+					Thread.sleep(1000);
+				} catch(InterruptedException e) {
+					LOGGER.warn("Interrupted wait in engine monitor", e);
+				}
+				if(shouldRunFrame()) {
+					if(GameEngine.frame == lastFrame) {
+						if(previous) {
+							LOGGER.error("Engine thread is supposedly deadlocked");
+							Main.panic("Deadlock in engine thread");
+						} else {
+							LOGGER.warn("Engine thread is frozen");
+							previous = true;
+						}
+					} else {
+						previous = false;
+					}
+				} else {
+					previous = false;
+				}
+			}
+		}, "Engine monitor");
+		monitor.start();
 	}
 	
 	public static void unregisterAllEntities() {
@@ -277,6 +304,11 @@ public class GameEngine {
 		synchronized(ENTITY_LOCK) {
 			ENTITIES_TO_REMOVE.add(e);
 		}
+	}
+	
+	private static boolean shouldRunFrame() {
+		//return (GraphicsManager.WINDOW==null||GraphicsManager.WINDOW.isActive()||!Main.isRunning());
+		return GraphicsManager.WINDOW == null || GraphicsManager.WINDOW.isActive() || !Main.isRunning();
 	}
 	
 	/**
