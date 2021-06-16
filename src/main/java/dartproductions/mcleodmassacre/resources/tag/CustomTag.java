@@ -75,6 +75,11 @@ public class CustomTag implements Tag {
 	}
 	
 	@Override
+	public String toString() {
+		return id.toString();
+	}
+	
+	@Override
 	public @NotNull Identifier getId() {
 		return id;
 	}

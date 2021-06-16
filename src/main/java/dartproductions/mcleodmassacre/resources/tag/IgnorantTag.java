@@ -54,4 +54,9 @@ public class IgnorantTag implements Tag {
 	public double getUnloadingThreshold(@NotNull GameState state, @Nullable GameState nextState) {
 		return 1;
 	}
+	
+	@Override
+	public String toString() {
+		return id.toString();
+	}
 }
