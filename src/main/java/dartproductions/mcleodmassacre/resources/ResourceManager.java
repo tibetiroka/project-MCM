@@ -9,6 +9,11 @@
 
 package dartproductions.mcleodmassacre.resources;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dartproductions.mcleodmassacre.GameState;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.engine.GameEngine;
@@ -19,6 +24,9 @@ import dartproductions.mcleodmassacre.resources.cache.GreedyCache;
 import dartproductions.mcleodmassacre.resources.cache.StandardCache;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import dartproductions.mcleodmassacre.resources.plugin.Plugin;
+import dartproductions.mcleodmassacre.resources.tag.GameStateTag;
+import dartproductions.mcleodmassacre.resources.tag.GreedyTag;
+import dartproductions.mcleodmassacre.resources.tag.IgnorantTag;
 import dartproductions.mcleodmassacre.resources.tag.Tag;
 import dartproductions.mcleodmassacre.util.Pair.ImmutablePair.ImmutableNullsafePair;
 import de.cerus.jgif.GifImage;
@@ -34,6 +42,7 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -524,6 +533,7 @@ public class ResourceManager {
 	 */
 	public static void registerTag(Tag tag) {
 		TAGS.register(tag);
+		LOGGER.debug("Registered tag " + tag);
 	}
 	
 	/**
@@ -790,31 +800,60 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	private static void registerResource(@NotNull final Identifier resource, @NotNull final File location) throws MalformedURLException, FileNotFoundException {
-		if(hasTag(resource, Tag.GRAPHICS.getId())) {//graphics resource
-			final boolean isHitboxImage = hasTag(resource, Tag.HITBOX_SOURCE.getId());
-			//
-			final Image image = loadImage(location);
-			final BufferedImage[] images = getImageFrames(image, location);
-			IMAGES.register(resource, () -> images[0]);//registering basic image
-			IMAGES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw"), () -> loadImage(location));
-			if(isHitboxImage) {
-				if(getImage(resource) instanceof BufferedImage) {
-					HITBOXES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(resource))));
-				}
-			}
-			//
-			for(int i = 0; i < images.length; i++) {//register all frames
-				final int index = i;
-				final Identifier id = Identifier.fromString(resource.getGroup(), resource.getName() + "#" + index);
-				IMAGES.register(id, () -> getImageFrames(getImage(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw")), location)[index]);
+		try {
+			if(hasTag(resource, Tag.GRAPHICS.getId())) {//graphics resource
+				final boolean isHitboxImage = hasTag(resource, Tag.HITBOX_SOURCE.getId());
+				//
+				final Image image = loadImage(location);
+				final BufferedImage[] images = getImageFrames(image, location);
+				IMAGES.register(resource, () -> images[0]);//registering basic image
+				IMAGES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw"), () -> loadImage(location));
 				if(isHitboxImage) {
-					HITBOXES.register(Identifier.fromString(id.getGroup(), id.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(id))));
+					if(getImage(resource) instanceof BufferedImage) {
+						HITBOXES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(resource))));
+					}
+				}
+				//
+				for(int i = 0; i < images.length; i++) {//register all frames
+					final int index = i;
+					final Identifier id = Identifier.fromString(resource.getGroup(), resource.getName() + "#" + index);
+					IMAGES.register(id, () -> getImageFrames(getImage(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw")), location)[index]);
+					if(isHitboxImage) {
+						HITBOXES.register(Identifier.fromString(id.getGroup(), id.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(id))));
+					}
+				}
+				LOGGER.debug("Registered resource " + resource);
+			} else if(hasTag(resource, Tag.AUDIO.getId())) {//audio resource
+				AUDIO.register(resource, () -> Files.readAllBytes(location.toPath()));
+				LOGGER.debug("Registered resource " + resource);
+			} else if(hasTag(resource, Tag.TAG.getId())) {//tag
+				Gson gson = new Gson();
+				JsonObject root = JsonParser.parseReader(gson.newJsonReader(new FileReader(location))).getAsJsonObject();
+				String type = root.get("type").getAsString();
+				switch(type.toLowerCase()) {
+					case "greedy" -> new GreedyTag(resource);
+					case "ingorant" -> new IgnorantTag(resource);
+					case "gamestate" -> {
+						JsonArray classes = root.get("classes").getAsJsonArray();
+						ArrayList<Class<? extends GameState>> classNames = new ArrayList<>();
+						for(JsonElement aClass : classes) {
+							try {
+								classNames.add((Class<? extends GameState>) Class.forName(aClass.getAsString()));
+							} catch(Exception e) {
+								LOGGER.warn("Could not get class for tag element", e);
+							}
+						}
+						if(root.has("threshold")) {
+							new GameStateTag(resource, root.get("threshold").getAsDouble(), classNames.toArray(new Class[0]));
+						} else {
+							new GameStateTag(resource, classNames.toArray(new Class[0]));
+						}
+					}
+					default -> throw new IllegalArgumentException("Illegal tag type in tag resource " + resource + " (" + type + ")");
 				}
 			}
-			LOGGER.debug("Registered resource " + resource);
-		} else if(hasTag(resource, Tag.AUDIO.getId())) {//audio resource
-			AUDIO.register(resource, () -> Files.readAllBytes(location.toPath()));
-			LOGGER.debug("Registered resource " + resource);
+		} catch(Exception e) {
+			LOGGER.warn("Could not register resource " + resource, e);
 		}
 	}
 	
