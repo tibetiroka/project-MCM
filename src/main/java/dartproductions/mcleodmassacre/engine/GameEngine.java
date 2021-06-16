@@ -288,6 +288,11 @@ public class GameEngine {
 		monitor.start();
 	}
 	
+	/**
+	 * Unregisters all registered entities from the engine. Doesn't remove them from the rendering engine.
+	 *
+	 * @since 0.1.0
+	 */
 	public static void unregisterAllEntities() {
 		synchronized(ENTITY_LOCK) {
 			ENTITIES_TO_REMOVE.addAll(ENTITIES);
@@ -306,8 +311,13 @@ public class GameEngine {
 		}
 	}
 	
+	/**
+	 * Checks if the game's state is valid for running the next frame.
+	 *
+	 * @return True if the frame can be processed
+	 * @since 0.1.0
+	 */
 	private static boolean shouldRunFrame() {
-		//return (GraphicsManager.WINDOW==null||GraphicsManager.WINDOW.isActive()||!Main.isRunning());
 		return GraphicsManager.WINDOW == null || GraphicsManager.WINDOW.isActive() || !Main.isRunning();
 	}
 	
