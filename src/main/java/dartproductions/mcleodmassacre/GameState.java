@@ -18,6 +18,7 @@ import dartproductions.mcleodmassacre.graphics.Animation.FormattedTextAnimation;
 import dartproductions.mcleodmassacre.graphics.Animation.LoopingAnimation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
+import dartproductions.mcleodmassacre.resources.id.Identified;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import dartproductions.mcleodmassacre.resources.plugin.Plugin;
 import dartproductions.mcleodmassacre.resources.tag.CustomTag;
@@ -45,7 +46,7 @@ import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
  *
  * @since 0.1.0
  */
-public interface GameState {
+public interface GameState extends Identified {
 	
 	/**
 	 * This state is used when the game is paused while on a map, fighting with other characters.
@@ -59,28 +60,21 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/pause_resource"), (s1, s2) -> s1 == IN_GAME_PAUSED || (s1.isLoadingState() && s2 == IN_GAME_PAUSED));
-	};
-	/**
-	 * Indicates that the player is playing on a map against other characters.
-	 *
-	 * @since 0.1.0
-	 */
-	@NotNull GameState IN_GAME = new GameState() {
 		/**
-		 * Tag for resources used in this state
+		 * The identifier of the game state
 		 *
 		 * @since 0.1.0
 		 */
-		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/ingame_resource"), (s1, s2) -> s1 == IN_GAME || (s1.isLoadingState() && s2 == IN_GAME));
+		private static final Identifier ID = Identifier.fromString("in_game_paused");
 		
 		@Override
-		public @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return null;
+		public @NotNull Identifier getId() {
+			return ID;
 		}
 		
 		@Override
-		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
-			GameState.super.onStateActivation(previousState, previousNextState, nextState);
+		public String toString() {
+			return ID.toString();
 		}
 	};
 	/**
@@ -94,6 +88,61 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/gallery_resource"), (s1, s2) -> s1 == GALLERY || (s1.isLoadingState() && s2 == GALLERY));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("gallery");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
+		
+		@Override
+		public @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
+			return null;
+		}
+		
+		@Override
+		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
+			GameState.super.onStateActivation(previousState, previousNextState, nextState);
+		}
+	};
+	/**
+	 * Indicates that the player is playing on a map against other characters.
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull GameState IN_GAME = new GameState() {
+		/**
+		 * Tag for resources used in this state
+		 *
+		 * @since 0.1.0
+		 */
+		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/ingame_resource"), (s1, s2) -> s1 == IN_GAME || (s1.isLoadingState() && s2 == IN_GAME));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("in_game");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
@@ -117,6 +166,22 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/loading_resource"), (s1, s2) -> s1 == LOADING || (s1.isLoadingState() && s2 == LOADING));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("loading");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -144,6 +209,22 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/roster_resource"), (s1, s2) -> s1 == ROSTER || (s1.isLoadingState() && s2 == ROSTER));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("roster");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -200,6 +281,22 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/settings_resource"), (s1, s2) -> s1 == SETTINGS_MENU || (s1.isLoadingState() && s2 == SETTINGS_MENU));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("settings_menu");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -219,6 +316,22 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/control_settings_resource"), (s1, s2) -> s1 == CONTROL_SETTINGS || (s1.isLoadingState() && s2 == CONTROL_SETTINGS));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("controls_menu");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -238,6 +351,22 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/quality_settings_resource"), (s1, s2) -> s1 == QUALITY_SETTINGS || (s1.isLoadingState() && s2 == QUALITY_SETTINGS));
+		/**
+		 * The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("quality_settings");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -258,6 +387,23 @@ public interface GameState {
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/sound_settings_resource"), (s1, s2) -> s1 == SOUND_SETTINGS || (s1.isLoadingState() && s2 == SOUND_SETTINGS));
 		
+		/** The identifier of the game state
+		 *
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("sound_settings");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
+		
+		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
@@ -272,10 +418,25 @@ public interface GameState {
 	 */
 	@NotNull GameState VERSUS_MENU = new Menu() {
 		/**
+		 * The identifier of the game state
+		 * @since 0.1.0
+		 */
+		public static final Identifier ID = Identifier.fromString("versus_menu");
+		/**
 		 * Tag for resources used in this state
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/versus_menu_resource"), (s1, s2) -> s1 == VERSUS_MENU || (s1.isLoadingState() && s2 == VERSUS_MENU));
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -284,6 +445,7 @@ public interface GameState {
 			//todo
 		}
 	};
+	
 	/**
 	 * State for the main menu. This is the first screen the player sees after the initial loading.
 	 *
@@ -295,6 +457,23 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/main_menu_resource"), (s1, s2) -> s1 == MAIN_MENU || (s1.isLoadingState() && s2 == MAIN_MENU));
+		
+		/**
+		 * The identifier of the game state
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("main_menu");
+		
+		@Override
+		
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -313,6 +492,7 @@ public interface GameState {
 			new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
 		}
 	};
+	
 	/**
 	 * The data menu
 	 *
@@ -324,6 +504,23 @@ public interface GameState {
 		 * @since 0.1.0
 		 */
 		public static final @NotNull Tag RESOURCE_TAG = new CustomTag(Identifier.fromString("tags/data_menu_resource"), (s1, s2) -> s1 == DATA_MENU || (s1.isLoadingState() && s2 == DATA_MENU));
+		
+		/**
+		 * The identifier of the game state
+		 * @since 0.1.0
+		 */
+		private static final Identifier ID = Identifier.fromString("data_menu");
+		
+		@Override
+		public @NotNull Identifier getId() {
+			return ID;
+		}
+		
+		@Override
+		public String toString() {
+			return ID.toString();
+		}
+		
 		
 		@Override
 		public void onStateActivation(@NotNull GameState previousState, @Nullable GameState previousNextState, @Nullable GameState nextState) {
@@ -414,7 +611,7 @@ public interface GameState {
 	 *
 	 * @since 0.1.0
 	 */
-	interface Loading extends GameState {
+	public static interface Loading extends GameState {
 		@Override
 		default @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
 			if(nextState == null) {
@@ -434,7 +631,7 @@ public interface GameState {
 	 *
 	 * @since 0.1.0
 	 */
-	interface Menu extends GameState {
+	public static interface Menu extends GameState {
 		
 		/**
 		 * Adds the 'previous menu' button.
@@ -463,7 +660,7 @@ public interface GameState {
 	/**
 	 * A game state interface for pause screens. Implements {@link #isPausingState()} to return true.
 	 */
-	interface Pause extends GameState {
+	public static interface Pause extends GameState {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
