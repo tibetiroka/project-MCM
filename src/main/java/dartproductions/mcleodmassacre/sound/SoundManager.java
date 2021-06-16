@@ -484,11 +484,6 @@ public class SoundManager {
 		}
 		
 		@Override
-		public void setFramePosition(int frames) {
-			clip.setFramePosition(frames);
-		}
-		
-		@Override
 		public long getLongFramePosition() {
 			return clip.getLongFramePosition();
 		}
@@ -499,23 +494,8 @@ public class SoundManager {
 		}
 		
 		@Override
-		public void setMicrosecondPosition(long microseconds) {
-			clip.setMicrosecondPosition(microseconds);
-		}
-		
-		@Override
 		public float getLevel() {
 			return clip.getLevel();
-		}
-		
-		@Override
-		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
-			clip.open(stream);
-		}
-		
-		@Override
-		public int getFrameLength() {
-			return clip.getFrameLength();
 		}
 		
 		/**
@@ -534,8 +514,28 @@ public class SoundManager {
 		}
 		
 		@Override
+		public void open(AudioInputStream stream) throws LineUnavailableException, IOException {
+			clip.open(stream);
+		}
+		
+		@Override
+		public int getFrameLength() {
+			return clip.getFrameLength();
+		}
+		
+		@Override
 		public long getMicrosecondLength() {
 			return clip.getMicrosecondPosition();
+		}
+		
+		@Override
+		public void setFramePosition(int frames) {
+			clip.setFramePosition(frames);
+		}
+		
+		@Override
+		public void setMicrosecondPosition(long microseconds) {
+			clip.setMicrosecondPosition(microseconds);
 		}
 		
 		@Override
