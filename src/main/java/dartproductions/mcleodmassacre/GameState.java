@@ -611,7 +611,7 @@ public interface GameState extends Identified {
 	 *
 	 * @since 0.1.0
 	 */
-	public static interface Loading extends GameState {
+	interface Loading extends GameState {
 		@Override
 		default @Nullable Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
 			if(nextState == null) {
@@ -631,7 +631,7 @@ public interface GameState extends Identified {
 	 *
 	 * @since 0.1.0
 	 */
-	public static interface Menu extends GameState {
+	interface Menu extends GameState {
 		
 		/**
 		 * Adds the 'previous menu' button.
@@ -660,7 +660,7 @@ public interface GameState extends Identified {
 	/**
 	 * A game state interface for pause screens. Implements {@link #isPausingState()} to return true.
 	 */
-	public static interface Pause extends GameState {
+	interface Pause extends GameState {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
