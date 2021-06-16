@@ -47,13 +47,18 @@ public interface Tag extends Identified {
 	 * @since 0.1.0
 	 */
 	@NotNull Tag HITBOX_SOURCE = new IgnorantTag(Identifier.fromString("tags/hitboxed"));
-	
 	/**
 	 * Tag that indicates a resource usable in menus.
 	 *
 	 * @since 0.1.0
 	 */
 	@NotNull Tag MENU_RESOURCE = new GameStateTag(Identifier.fromString("tags/menu_resource"), GameState.Menu.class);
+	/**
+	 * Tag that indicates a tag resource. Tags are never unloaded.
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull Tag TAG = new GreedyTag(Identifier.fromString("tags/tag"));
 	
 	/**
 	 * Checks if the resource is required for the specified game state. If a resource is not required, it might get unloaded. Any required resource will be loaded.
