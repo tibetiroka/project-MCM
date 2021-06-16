@@ -412,15 +412,15 @@ public class ResourceManager {
 				boolean loaded = cache.isLoaded(resourceId);
 				if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
 					if(!loaded) {
-						LOGGER.debug("Loaded " + resourceId);
+						//LOGGER.debug("Loaded " + resourceId);
 						cache.load(resourceId);
 					}
 				} else if(loaded) {
 					if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.getUnloadingThreshold(newState, newNextState) < memoryUsage)) {
-						LOGGER.debug("Unloaded " + resourceId);
+						//LOGGER.debug("Unloaded " + resourceId);
 						cache.unload(resourceId);
 					} else {
-						LOGGER.debug("Scheduled " + resourceId);
+						//LOGGER.debug("Scheduled " + resourceId);
 						AVAILABLE_UNLOADS.add(resourceId);
 					}
 				}
