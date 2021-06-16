@@ -40,7 +40,7 @@ public interface Identifier {
 	String DEFAULT_PLUGIN_GROUP = "plugin";
 	
 	/**
-	 * Creates a new {@link Identifier} from the specified string.
+	 * Creates a new {@link Identifier} from the specified string. If the string only contains the name of the id, the {@link #DEFAULT_GROUP default group name} is used.
 	 *
 	 * @param string The group and the name separated with a color
 	 * @return The identifier if the input is valid, null otherwise
