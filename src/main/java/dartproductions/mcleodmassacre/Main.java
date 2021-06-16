@@ -80,7 +80,7 @@ public class Main {
 			Thread t = new Thread(r, "Executor " + (count++));
 			t.setUncaughtExceptionHandler((t1, e) -> {
 				LOGGER.error("Uncaught exception in " + t1.getName(), e);
-				Main.panic();
+				Main.panic("Uncaught exception in " + t1.getName());
 			});
 			return t;
 		}
@@ -158,7 +158,7 @@ public class Main {
 	public static void main(String[] args) {
 		Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in main thread (" + t.getName() + ")", e);
-			panic();
+			panic("Uncaught exception in main thread");
 		});
 		checkDebugMode(args);
 		configureLogger();
@@ -169,14 +169,14 @@ public class Main {
 		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
 	
-	public static synchronized void panic() {
+	public static synchronized void panic(String reason) {
 		LOGGER.error("An error forced the application to exit.");
 		LOGGER.error("The following debug messages will help us examine the problem.");
 		printSystemUsageDebugInfo();
 		printSystemDebugInfo();
 		printThreadDump();
 		setRunning(false);
-		JOptionPane.showMessageDialog(null, "Please check the logs for more details.", "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(null, "Error: " + reason + (reason.endsWith(".") ? "" : ".") + "\nPlease check the logs for more details.", "Error", JOptionPane.ERROR_MESSAGE);
 		System.exit(0);
 	}
 	

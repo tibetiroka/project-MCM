@@ -100,8 +100,8 @@ public class SoundManager {
 		try {
 			clip = AudioSystem.getClip(null);
 		} catch(Exception e) {
-			e.printStackTrace();
-			Main.panic();
+			LOGGER.error("Could not create clip for sound engine", e);
+			Main.panic("Could not initialize sound engine");
 		}
 		FUCK_THIS = clip;
 	}
@@ -130,11 +130,11 @@ public class SoundManager {
 					}));
 				}
 			}
-		}, "Audio thread");
+		}, "Sound engine");
 		thread.setDaemon(true);
 		thread.setUncaughtExceptionHandler((t, e) -> {
-			LOGGER.error("Uncaught exception in audio thread", e);
-			Main.panic();
+			LOGGER.error("Uncaught exception in sound engine", e);
+			Main.panic("Uncaught exception in sound engine");
 		});
 	}
 	
@@ -354,7 +354,7 @@ public class SoundManager {
 						FUCK_THIS.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(ResourceManager.getAudio(Identifier.fromString("silence")))));
 					} catch(Exception e) {
 						e.printStackTrace();
-						Main.panic();
+						Main.panic("Could not start sound engine");
 					}
 					FUCK_THIS.loop(Clip.LOOP_CONTINUOUSLY);
 					FUCK_THIS.start();

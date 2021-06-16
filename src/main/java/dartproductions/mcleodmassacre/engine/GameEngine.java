@@ -256,7 +256,7 @@ public class GameEngine {
 		}, "Engine");
 		ENGINE_THREAD.setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in the main engine thread (" + t.getName() + ")", e);
-			Main.panic();
+			Main.panic("Uncaught exception in engine");
 		});
 		ENGINE_THREAD.start();
 		Thread monitor = new Thread(() -> {

@@ -217,7 +217,7 @@ public class GraphicsManager extends JPanel {
 		}, "Graphics");
 		GRAPHICS_THREAD.setUncaughtExceptionHandler((t, e) -> {
 			LOGGER.error("Uncaught exception in the main graphics thread (" + t.getName() + ")", e);
-			Main.panic();
+			Main.panic("Uncaught exception in rendering engine");
 		});
 		GRAPHICS_THREAD.start();
 	}

@@ -509,7 +509,7 @@ public interface Animation extends Cloneable {
 			try {
 				return (Animation) super.clone();
 			} catch(CloneNotSupportedException e) {
-				e.printStackTrace();
+				GraphicsManager.LOGGER.warn("Could not clone animation", e);
 			}
 			return null;
 		}
