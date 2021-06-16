@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Tag implementation which marks the resource as required if the current state extends the {@link #stateParent}, or if the current state is {@link GameState#isLoadingState()} and the next state requires the resource.
+ * Tag implementation which marks the resource as required if the current state extends one of the specified {@link #stateParents}, or if the current state is {@link GameState#isLoadingState()} and the next state requires the resource.
  *
  * @since 0.1.0
  */
@@ -33,7 +33,7 @@ public class GameStateTag implements Tag {
 	 *
 	 * @since 0.1.0
 	 */
-	protected final @NotNull Class<? extends GameState> stateParent;
+	protected final @NotNull Class<? extends GameState>[] stateParents;
 	
 	/**
 	 * The unloading threshold
@@ -46,30 +46,30 @@ public class GameStateTag implements Tag {
 	/**
 	 * Creates a new tag with the default threshold of 0.8.
 	 *
-	 * @param id          The identifier of the tag
-	 * @param stateParent The parent {@link GameState} that requires this tag
+	 * @param id           The identifier of the tag
+	 * @param stateParents The parent {@link GameState game states} that require this tag
 	 * @see GameStateTag
 	 * @see #getUnloadingThreshold(GameState, GameState)
 	 * @since 0.1.0
 	 */
-	public GameStateTag(@NotNull Identifier id, @NotNull Class<? extends GameState> stateParent) {
-		this(id, 0.8, stateParent);
+	public GameStateTag(@NotNull Identifier id, @NotNull Class<? extends GameState>... stateParents) {
+		this(id, 0.8, stateParents);
 	}
 	
 	/**
 	 * Creates a new tag.
 	 *
-	 * @param id          The identifier of the tag
-	 * @param stateParent The parent {@link GameState} that requires this tag
-	 * @param threshold   The unloading threshold
+	 * @param id           The identifier of the tag
+	 * @param stateParents The parent {@link GameState game states} that require this tag
+	 * @param threshold    The unloading threshold
 	 * @see GameStateTag
 	 * @see #getUnloadingThreshold(GameState, GameState)
 	 * @since 0.1.0
 	 */
-	public GameStateTag(@NotNull Identifier id, double threshold, @NotNull Class<? extends GameState> stateParent) {
+	public GameStateTag(@NotNull Identifier id, double threshold, @NotNull Class<? extends GameState>... stateParents) {
 		this.id = id;
 		this.threshold = threshold;
-		this.stateParent = stateParent;
+		this.stateParents = stateParents;
 		ResourceManager.registerTag(this);
 	}
 	
@@ -80,7 +80,12 @@ public class GameStateTag implements Tag {
 	
 	@Override
 	public boolean isRequired(@NotNull GameState state, @Nullable GameState nextState) {
-		return stateParent.isAssignableFrom(state.getClass()) || (state.isLoadingState() && stateParent.isAssignableFrom(nextState.getClass()));
+		for(Class<? extends GameState> stateParent : stateParents) {
+			if(stateParent.isAssignableFrom(state.getClass()) || (state.isLoadingState() && stateParent.isAssignableFrom(nextState.getClass()))) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
