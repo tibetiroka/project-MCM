@@ -72,7 +72,7 @@ public class Main {
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(4, new ThreadFactory() {
+	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(8, new ThreadFactory() {
 		protected int count = 0;
 		
 		@Override
