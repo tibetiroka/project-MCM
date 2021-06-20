@@ -21,6 +21,9 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.function.IntFunction;
 
 /**
  * Math utilities for the game.
@@ -28,6 +31,236 @@ import java.awt.image.BufferedImage;
  * @since 0.1.0
  */
 public class MathUtils {
+	
+	/**
+	 * Checks if any of the specified values are true.
+	 *
+	 * @param values Generator function for getting the values
+	 * @param amount The amount of values
+	 * @param offset The initial values to use in {@link IntFunction#apply(int)}
+	 * @return True if there is a true values; false otherwise (false if the amount is 0).
+	 * @since 0.1.0
+	 */
+	public static boolean or(IntFunction<Boolean> values, int amount, int offset) {
+		for(int i = offset; i < offset + amount; i++) {
+			if(values.apply(i)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Checks if neither of the specified values are true.
+	 *
+	 * @param values Generator function for getting the values
+	 * @param amount The amount of values
+	 * @param offset The initial values to use in {@link IntFunction#apply(int)}
+	 * @return True if there are no true values; true otherwise (true if the amount is 0).
+	 * @since 0.1.0
+	 */
+	public static boolean nor(IntFunction<Boolean> values, int amount, int offset) {
+		for(int i = offset; i < offset + amount; i++) {
+			if(values.apply(i)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Checks if exactly one of the specified values is true.
+	 *
+	 * @param values Generator function for getting the values
+	 * @param amount The amount of values
+	 * @param offset The initial values to use in {@link IntFunction#apply(int)}
+	 * @return True if there is exactly one true value; false otherwise (false if the amount is 0).
+	 * @since 0.1.0
+	 */
+	public static boolean xor(IntFunction<Boolean> values, int amount, int offset) {
+		boolean has = false;
+		for(int i = offset; i < offset + amount; i++) {
+			if(values.apply(i)) {
+				if(has) {
+					return false;
+				}
+				has = true;
+			}
+		}
+		return has;
+	}
+	
+	/**
+	 * Gets the minimum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the minimum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The lowest value or {@link Long#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static long minLong(IntFunction<Long> numbers, int amount, int offset) {
+		long min = Long.MAX_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			long value = numbers.apply(i);
+			if(value < min) {
+				min = value;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * Gets the minimum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the minimum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The lowest value or {@link Integer#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static int minInt(IntFunction<Integer> numbers, int amount, int offset) {
+		int min = Integer.MAX_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			int value = numbers.apply(i);
+			if(value < min) {
+				min = value;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * Gets the maximum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the maximum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The highest value or {@link Long#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static long maxLong(IntFunction<Long> numbers, int amount, int offset) {
+		long max = Long.MIN_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			long value = numbers.apply(i);
+			if(value > max) {
+				max = value;
+			}
+		}
+		return max;
+	}
+	
+	/**
+	 * Gets the maximum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the maximum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The highest value or {@link Integer#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static int maxInt(IntFunction<Integer> numbers, int amount, int offset) {
+		int max = Integer.MIN_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			int value = numbers.apply(i);
+			if(value > max) {
+				max = value;
+			}
+		}
+		return max;
+	}
+	
+	/**
+	 * Gets the minimum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the minimum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The lowest value or {@link Double#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static double minDouble(IntFunction<Double> numbers, int amount, int offset) {
+		double min = Double.MAX_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			double value = numbers.apply(i);
+			if(value < min) {
+				min = value;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * Gets the maximum of the specified values.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the maximum of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The highest value or {@link Double#MAX_VALUE} if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static double maxDouble(IntFunction<Double> numbers, int amount, int offset) {
+		double max = Long.MIN_VALUE;
+		for(int i = offset; i < offset + amount; i++) {
+			double value = numbers.apply(i);
+			if(value > max) {
+				max = value;
+			}
+		}
+		return max;
+	}
+	
+	/**
+	 * Gets the average of the specified values. This method uses {@link BigInteger} for avoiding numeric overflow.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the average of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The average of the values or 0 if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static long avgLong(IntFunction<Long> numbers, int amount, int offset) {
+		BigInteger sum = BigInteger.ZERO;
+		for(int i = amount; i < amount + offset; i++) {
+			sum = sum.add(BigInteger.valueOf(numbers.apply(i)));
+		}
+		return sum.divide(BigInteger.valueOf(amount)).longValue();
+	}
+	
+	/**
+	 * Gets the average of the specified values. This method uses long to avoid numeric overflow.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the average of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The average of the values or 0 if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static int avgInt(IntFunction<Integer> numbers, int amount, int offset) {
+		long sum = 0;
+		for(int i = amount; i < amount + offset; i++) {
+			sum += numbers.apply(i);
+		}
+		return (int) (sum / amount);
+	}
+	
+	/**
+	 * Gets the average of the specified values. This method uses {@link BigDecimal} for avoiding numeric overflow.
+	 *
+	 * @param numbers Generator function for getting the values
+	 * @param amount  The amount of values to get the average of
+	 * @param offset  The initial value to use in {@link IntFunction#apply(int)}
+	 * @return The average of the values or 0 if the amount is 0
+	 * @since 0.1.0
+	 */
+	public static double avgDouble(IntFunction<Double> numbers, int amount, int offset) {
+		BigDecimal sum = BigDecimal.ZERO;
+		for(int i = amount; i < amount + offset; i++) {
+			sum = sum.add(BigDecimal.valueOf(numbers.apply(i)));
+		}
+		return sum.divide(BigDecimal.valueOf(amount)).doubleValue();
+	}
+	
 	/**
 	 * Centers the image for the default screen. The image's center will be within .5 pixels of the screen's center if its top-left corner is at the specified point.
 	 *
