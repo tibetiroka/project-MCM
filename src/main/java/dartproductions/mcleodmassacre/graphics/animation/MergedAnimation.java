@@ -9,6 +9,7 @@
 
 package dartproductions.mcleodmassacre.graphics.animation;
 
+import dartproductions.mcleodmassacre.util.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,42 +74,44 @@ public class MergedAnimation extends ArrayList<Animation> implements Animation {
 	
 	@Override
 	public void paint(@NotNull Graphics2D graphics, @NotNull Point entityLocation) {
-		forEach(animation -> animation.paint(graphics, entityLocation));
+		forEach(animation -> animation.paint(graphics, new Point(entityLocation.x + getOffset().width, entityLocation.y + getOffset().height)));
 	}
 	
 	@Override
 	public @Nullable Area getCurrentHitbox() {
-		return null;
+		Area area = new Area();
+		forEach(a -> area.add(a.getCurrentHitbox()));
+		return area;
 	}
 	
 	@Override
 	public @NotNull UUID getId() {
-		return null;
+		return id;
 	}
 	
 	@Override
 	public int getLength() {
-		return 0;
+		return MathUtils.maxInt(i -> get(i).getLength(), size(), 0);
 	}
 	
 	@Override
 	public @NotNull Dimension getOffset() {
-		return null;
+		return offset;
 	}
 	
 	@Override
 	public boolean isOver() {
-		return false;
+		return MathUtils.or(i -> get(i).isOver(), size(), 0);
 	}
 	
 	@Override
 	public void next() {
-	
+		forEach(Animation::next);
 	}
 	
 	@Override
 	public void reset() {
-	
+		forEach(Animation::reset);
 	}
 	
 	@Override
