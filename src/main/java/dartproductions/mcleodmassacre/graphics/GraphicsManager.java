@@ -88,17 +88,17 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static final int LAYER_TOP = 15;
 	/**
-	 * The rendering layers
-	 *
-	 * @since 0.1.0
-	 */
-	protected static final @NotNull RenderingLayer[] LAYERS = new RenderingLayer[16];
-	/**
 	 * Graphics-related logger
 	 *
 	 * @since 0.1.0
 	 */
 	public static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
+	/**
+	 * The rendering layers
+	 *
+	 * @since 0.1.0
+	 */
+	protected static final @NotNull RenderingLayer[] LAYERS = new RenderingLayer[16];
 	/**
 	 * The main graphics thread
 	 *
