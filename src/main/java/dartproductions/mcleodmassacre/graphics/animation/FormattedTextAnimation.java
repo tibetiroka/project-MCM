@@ -19,6 +19,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -33,11 +34,11 @@ import java.util.function.IntFunction;
  */
 public class FormattedTextAnimation implements Animation {
 	/**
-	 * The empty area used as hitbox.
+	 * The hitboxes of this animation
 	 *
 	 * @since 0.1.0
 	 */
-	public static final @NotNull Area EMPTY = new Area();
+	protected final @NotNull Area[] hitboxes;
 	/**
 	 * The unique ID of this animation
 	 *
@@ -93,6 +94,10 @@ public class FormattedTextAnimation implements Animation {
 		this.loop = loop;
 		images = new BufferedImage[length];
 		createImages(defaultFont, textGenerator, colorGenerator);
+		hitboxes = new Area[images.length];
+		for(int i = 0; i < hitboxes.length; i++) {
+			hitboxes[i] = new Area(new Rectangle(images[i].getWidth(), images[i].getHeight()));
+		}
 	}
 	
 	@Override
@@ -116,7 +121,7 @@ public class FormattedTextAnimation implements Animation {
 	
 	@Override
 	public @Nullable Area getCurrentHitbox() {
-		return EMPTY;
+		return hitboxes[frame];
 	}
 	
 	@Override

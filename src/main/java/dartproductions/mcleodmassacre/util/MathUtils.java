@@ -13,11 +13,13 @@ import dartproductions.mcleodmassacre.entity.Entity;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.ResolutionManager;
 import dartproductions.mcleodmassacre.graphics.animation.Animation;
+import dartproductions.mcleodmassacre.graphics.animation.StandardAnimation;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 /**
@@ -33,7 +35,7 @@ public class MathUtils {
 	 * @return The top-left corner of the centered image
 	 * @since 0.1.0
 	 */
-	public static @NotNull Point center(@NotNull BufferedImage image) {
+	public static @NotNull Point getCenter(@NotNull BufferedImage image) {
 		int x = (ResolutionManager.getDefaultScreenSize().width - image.getWidth()) / 2;
 		int y = (ResolutionManager.getDefaultScreenSize().height - image.getHeight()) / 2;
 		return new Point(x, y);
@@ -46,22 +48,9 @@ public class MathUtils {
 	 * @return The top-left corner of the centered image
 	 * @since 0.1.0
 	 */
-	public static @NotNull Point center(@NotNull Image image) {
+	public static @NotNull Point getCenter(@NotNull Image image) {
 		int x = (ResolutionManager.getDefaultScreenSize().width - image.getWidth(GraphicsManager.WINDOW)) / 2;
 		int y = (ResolutionManager.getDefaultScreenSize().height - image.getHeight(GraphicsManager.WINDOW)) / 2;
-		return new Point(x, y);
-	}
-	
-	/**
-	 * Centers the animation's current frame for the default screen. The image's center will be within .5 pixels of the screen's center if its top-left corner is at the specified point. This method IGNORES the animation's current offset.
-	 *
-	 * @param image The image to center
-	 * @return The top-left corner of the centered image
-	 * @since 0.1.0
-	 */
-	public static @NotNull Point center(@NotNull Animation image) {
-		int x = (ResolutionManager.getDefaultScreenSize().width - image.getCurrentFrame().getWidth(GraphicsManager.WINDOW)) / 2;
-		int y = (ResolutionManager.getDefaultScreenSize().height - image.getCurrentFrame().getHeight(GraphicsManager.WINDOW)) / 2;
 		return new Point(x, y);
 	}
 	
@@ -72,7 +61,7 @@ public class MathUtils {
 	 * @return The top-left corner of the centered object
 	 * @since 0.1.0
 	 */
-	public static @NotNull Point center(@NotNull Dimension size) {
+	public static @NotNull Point getCenter(@NotNull Dimension size) {
 		int x = (ResolutionManager.getDefaultScreenSize().width - size.width) / 2;
 		int y = (ResolutionManager.getDefaultScreenSize().height - size.height) / 2;
 		return new Point(x, y);
@@ -135,23 +124,64 @@ public class MathUtils {
 	 * @since 0.1.0
 	 */
 	public static @NotNull Animation setToCenter(@NotNull Animation animation) {
-		int x = (ResolutionManager.getDefaultScreenSize().width - animation.getCurrentFrame().getWidth(GraphicsManager.WINDOW)) / 2;
-		int y = (ResolutionManager.getDefaultScreenSize().height - animation.getCurrentFrame().getHeight(GraphicsManager.WINDOW)) / 2;
-		animation.getOffset().setSize(x, y);
+		return setToCenterOffset(animation, new Dimension(0, 0));
+	}
+	
+	/**
+	 * Shows the given animation centered around the given point relative to the center of the screen by modifying its offset. The current frame of the animation will be centered on the default screen. The animation's offset is modified directly via {@link Animation#getOffset()}.
+	 *
+	 * @param animation The animation to center
+	 * @param offset    The offset from the center of the screen
+	 * @return The original animation after being moved
+	 * @since 0.1.0
+	 */
+	public static @NotNull Animation setToCenterOffset(@NotNull Animation animation, Dimension offset) {
+		return centerAroundScreenPart(animation, 0.5, 0.5, offset.width, offset.height);
+	}
+	
+	/**
+	 * Moves the specified animation so it is centered around the specified point on the screen. The point is specified as the ratio of the point's coordinates and the screen's size (0;0 is the top-left corner, 1;1 is the bottom-right corner). An additional constant offset can also be specified from this point.
+	 *
+	 * @param animation The animation to move
+	 * @param xRatio    The ratio on the x axis
+	 * @param yRatio    The ratio on the y axis
+	 * @param xOffset   The offset from the screenWidth*xRatio value
+	 * @param yOffset   The offset from the screenHeight*yRatio value
+	 * @return The original animation after being moved
+	 * @since 0.1.0
+	 */
+	public static @NotNull Animation centerAroundScreenPart(@NotNull Animation animation, double xRatio, double yRatio, double xOffset, double yOffset) {
+		if(animation instanceof StandardAnimation a) {
+			double x = (ResolutionManager.getDefaultScreenSize().width - a.getCurrentFrame().getWidth(GraphicsManager.WINDOW)) * xRatio;
+			double y = (ResolutionManager.getDefaultScreenSize().height - a.getCurrentFrame().getHeight(GraphicsManager.WINDOW)) * yRatio;
+			a.getOffset().setSize(x + xOffset, y + yOffset);
+		} else {
+			Rectangle r = animation.getCurrentHitbox().getBounds();
+			double x = (ResolutionManager.getDefaultScreenSize().width - r.width) * xRatio;
+			double y = (ResolutionManager.getDefaultScreenSize().height - r.height) * yRatio;
+			animation.getOffset().setSize(x + xOffset, y + yOffset);
+		}
 		return animation;
 	}
 	
 	/**
-	 * Centers the entity so its animation's current frame is centered on the default screen. The offset of the animation is taken into account in this calculation. The entity's location is modified directly via the return value of {@link Entity#getLocation()}.
+	 * Centers the entity so its animation's current frame is centered on the default screen. The offset of the animation is taken into account in this calculation. The entity's location is modified directly via the return value of {@link Animation#getOffset()}.
 	 *
 	 * @param entity The entity to center
 	 * @return The original entity after being moved
 	 * @since 0.1.0
 	 */
 	public static @NotNull Entity setToCenter(@NotNull Entity entity) {
-		int x = (ResolutionManager.getDefaultScreenSize().width - entity.getCurrentAnimation().getCurrentFrame().getWidth(GraphicsManager.WINDOW)) / 2 - entity.getCurrentAnimation().getOffset().width;
-		int y = (ResolutionManager.getDefaultScreenSize().height - entity.getCurrentAnimation().getCurrentFrame().getHeight(GraphicsManager.WINDOW)) / 2 - entity.getCurrentAnimation().getOffset().height;
-		entity.getLocation().setLocation(x, y);
+		setToCenterOffset(entity.getCurrentAnimation(), new Dimension(-entity.getLocation().x, -entity.getLocation().y));
 		return entity;
+	}
+	
+	public static Dimension getSize(Animation animation) {
+		if(animation instanceof StandardAnimation anim) {
+			return new Dimension(anim.getCurrentFrame().getWidth(GraphicsManager.WINDOW), anim.getCurrentFrame().getHeight(GraphicsManager.WINDOW));
+		} else {
+			Rectangle r = animation.getCurrentHitbox().getBounds();
+			return new Dimension(r.width, r.height);
+		}
 	}
 }

@@ -529,8 +529,10 @@ public interface GameState extends Identified {
 			//
 			try {
 				List<String> credits = ResourceManager.readTextFile("credits.txt");
-				Animation creditsAnim = new FormattedTextAnimation("credits", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> credits, i -> new Dimension(0, 0));
+				final Dimension creditsOffset = new Dimension(0, 0);//extracting this because of MathUtils centering fuckery
+				Animation creditsAnim = new FormattedTextAnimation("credits", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> credits, i -> creditsOffset);
 				MathUtils.setToCenter(new Foreground(creditsAnim)).register();
+				final Dimension pluginsOffset = new Dimension(0, 0);
 				Animation pluginsAnim = new FormattedTextAnimation("plugins", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> {
 					ArrayList<String> list = new ArrayList<>();
 					list.add("» Plugins");
@@ -539,10 +541,9 @@ public interface GameState extends Identified {
 						list.add(plugin.getName() + " " + plugin.getVersion());
 					}
 					return list;
-				}, i -> new Dimension(0, 0));
+				}, i -> pluginsOffset);
 				Foreground plugins = new Foreground(pluginsAnim);
-				MathUtils.setToCenter(plugins);
-				plugins.getLocation().x = getDefaultScreenSize().width - plugins.getCurrentAnimation().getCurrentFrame().getWidth(GraphicsManager.WINDOW) - 20;
+				MathUtils.centerAroundScreenPart(pluginsAnim, 1, 0.5, -MathUtils.getSize(pluginsAnim).width / 2.0, 0);
 				plugins.register();
 			} catch(IOException e) {
 				LOGGER.error("Could not read credits file", e);

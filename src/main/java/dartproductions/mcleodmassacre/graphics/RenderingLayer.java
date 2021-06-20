@@ -74,7 +74,7 @@ public class RenderingLayer {
 	 * @since 0.1.0
 	 */
 	public void paint() {
-		entities.forEach(e -> ResolutionManager.drawImageOnScreen(e.getLocation().x + e.getCurrentAnimation().getOffset().width, e.getLocation().y + e.getCurrentAnimation().getOffset().height, e.getCurrentAnimation().getCurrentFrame()));
+		entities.forEach(e -> e.getCurrentAnimation().paint(ResolutionManager.BUFFER_GRAPHICS, new Point(e.getLocation().x + ResolutionManager.getOriginOnBuffer().x, e.getLocation().y + ResolutionManager.getOriginOnBuffer().y)));
 		entities.forEach(e -> e.getCurrentAnimation().next());
 	}
 	
