@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 /**
  * Identifier for resources, tags, or anything else. Useful for creating registries.
- * <p>An identifier is made up of two parts: the group name and the name. None of these is case-sensitive. They can only contain latin alphanumeric characters (). They cannot contain any whitespace characters either; however, in the standard implementation, any whitespace characters are replaced with underscores ('_') if the identifier is created via {@link #fromString(String, String) the fromString method}.  For more info see {@link #isValidGroup(String)} and {@link #isValidName(String)}.
+ * <p>An identifier is made up of two parts: the group name and the name. None of these is case-sensitive. They can only contain latin alphanumeric characters, hashtags ('#'), underscores('_') or forward slashes ('/'). They cannot contain any whitespace characters either; however, in the standard implementation, any whitespace characters are replaced with underscores ('_') if the identifier is created via {@link #fromString(String, String) the fromString method}, and therefore these methods accept these values.  For more info see {@link #isValidGroup(String)} and {@link #isValidName(String)}.
  * <br>The group name defines the group that created the identifier - this is useful for avoiding the use of the same id by different plugins.
  * <br>The 'name' is the name of the object the identifier refers to - it should be a meaningful name.
  * <p>The combination of the group and the name must be unique, otherwise resources may get overwritten. This may be the expected behaviour of some extensions, and this use is supported, but there is no guarantee made to the order of the extensions loading. See {@link PluginManager#loadPlugins() the plugin loading order} for more details.
@@ -113,7 +113,7 @@ public interface Identifier {
 	 * @since 0.1.0
 	 */
 	static boolean isValidGroup(@Nullable String group) {
-		return group != null && Pattern.matches("^[\\w\\s]+$", group);
+		return group != null && Pattern.matches("^[\\w\\s/#]+$", group);
 	}
 	
 	/**
@@ -124,7 +124,7 @@ public interface Identifier {
 	 * @since 0.1.0
 	 */
 	static boolean isValidName(@Nullable String name) {
-		return name != null && Pattern.matches("^[\\w\\s]+$", name);
+		return name != null && Pattern.matches("^[\\w\\s/#]+$", name);
 	}
 	
 	/**
