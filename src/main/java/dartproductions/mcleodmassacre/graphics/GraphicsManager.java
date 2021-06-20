@@ -98,7 +98,7 @@ public class GraphicsManager extends JPanel {
 	 *
 	 * @since 0.1.0
 	 */
-	protected static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
+	public static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
 	/**
 	 * The main graphics thread
 	 *

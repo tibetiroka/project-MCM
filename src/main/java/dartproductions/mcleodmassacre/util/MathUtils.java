@@ -10,9 +10,9 @@
 package dartproductions.mcleodmassacre.util;
 
 import dartproductions.mcleodmassacre.entity.Entity;
-import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.ResolutionManager;
+import dartproductions.mcleodmassacre.graphics.animation.Animation;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Dimension;

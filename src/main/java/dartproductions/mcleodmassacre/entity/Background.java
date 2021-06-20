@@ -9,9 +9,9 @@
 
 package dartproductions.mcleodmassacre.entity;
 
-import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
+import dartproductions.mcleodmassacre.graphics.animation.Animation;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Point;

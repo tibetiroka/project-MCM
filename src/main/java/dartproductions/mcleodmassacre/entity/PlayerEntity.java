@@ -10,9 +10,9 @@
 package dartproductions.mcleodmassacre.entity;
 
 import dartproductions.mcleodmassacre.engine.GameEngine;
-import dartproductions.mcleodmassacre.graphics.Animation;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.RenderingLayer;
+import dartproductions.mcleodmassacre.graphics.animation.MirrorableAnimation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +59,7 @@ public interface PlayerEntity extends Entity {//todo
 	void setAttackDelay(int delay);
 	
 	@Override
-	@NotNull Animation.MirrorableAnimation getCurrentAnimation();
+	@NotNull MirrorableAnimation getCurrentAnimation();
 	
 	@Override
 	@NotNull
