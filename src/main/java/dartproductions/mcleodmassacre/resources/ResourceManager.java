@@ -477,7 +477,7 @@ public class ResourceManager {
 		try {
 			getPaths(plugin.getBaseDirectory().getPath(), false).filter(path -> "tags".equalsIgnoreCase(getFileExtension(path.toFile()))).forEach(path -> {
 				new LoadingOperation(() -> {
-					Identifier resourceId = Identifier.fromString(plugin.getId().getName(), getFileName(path.toFile()));
+					Identifier resourceId = Identifier.fromString(plugin, getFileName(path.toFile()));
 					HashSet<Identifier> tags = new HashSet<>();
 					File resourceFile = getResourceFileFromTags(path);
 					try {

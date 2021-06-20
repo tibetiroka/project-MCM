@@ -28,7 +28,7 @@ final class StandardIdentifier extends ImmutableNullsafePair<String, String> imp
 	 * @since 0.1.0
 	 */
 	public StandardIdentifier(@NotNull String group, @NotNull String name) {
-		super(group.toLowerCase(), name.toLowerCase());
+		super(group.toLowerCase().replaceAll("\\s", "_"), name.toLowerCase().replaceAll("\\s", "_"));
 	}
 	
 	@Override
