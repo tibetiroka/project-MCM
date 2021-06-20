@@ -18,7 +18,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.Point;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -110,8 +110,8 @@ public class FormattedTextAnimation implements Animation {
 	}
 	
 	@Override
-	public @NotNull Image getCurrentFrame() {
-		return images[frame];
+	public void paint(@NotNull Graphics2D graphics, @NotNull Point entityLocation) {
+		graphics.drawImage(images[frame], getOffset().width + entityLocation.x, getOffset().height + entityLocation.y, GraphicsManager.WINDOW);
 	}
 	
 	@Override

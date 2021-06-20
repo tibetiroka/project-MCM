@@ -9,6 +9,7 @@
 
 package dartproductions.mcleodmassacre.graphics.animation;
 
+import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
@@ -16,7 +17,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.geom.Area;
 import java.util.UUID;
 
@@ -112,8 +115,8 @@ public class StandardAnimation implements Animation {
 	}
 	
 	@Override
-	public @NotNull Image getCurrentFrame() {
-		return frames[frame];
+	public void paint(@NotNull Graphics2D graphics, @NotNull Point entityLocation) {
+		graphics.drawImage(getCurrentFrame(), getOffset().width + entityLocation.x, getOffset().height + entityLocation.y, GraphicsManager.WINDOW);
 	}
 	
 	@Override
@@ -149,6 +152,16 @@ public class StandardAnimation implements Animation {
 	@Override
 	public void reset() {
 		frame = 0;
+	}
+	
+	/**
+	 * Gets the image that this animation is currently showing.
+	 *
+	 * @return The current frame
+	 * @since 0.1.0
+	 */
+	public @NotNull Image getCurrentFrame() {
+		return frames[frame];
 	}
 	
 	/**

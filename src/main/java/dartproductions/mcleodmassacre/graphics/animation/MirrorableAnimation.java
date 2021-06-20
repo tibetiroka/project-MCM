@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.AlphaComposite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.image.AffineTransformOp;
@@ -66,7 +66,7 @@ public class MirrorableAnimation implements Animation {
 	 * @param animation The animation to use
 	 * @since 0.1.0
 	 */
-	public MirrorableAnimation(@NotNull Animation animation) {
+	public MirrorableAnimation(@NotNull StandardAnimation animation) {
 		this(animation, true);
 	}
 	
@@ -77,7 +77,7 @@ public class MirrorableAnimation implements Animation {
 	 * @param mirrored  True if the animation should be mirrored
 	 * @since 0.1.0
 	 */
-	public MirrorableAnimation(@NotNull Animation animation, boolean mirrored) {
+	public MirrorableAnimation(@NotNull StandardAnimation animation, boolean mirrored) {
 		this.animation = animation;
 		this.mirrored = mirrored;
 		mirroredFrames = new BufferedImage[animation.getLength()];
@@ -119,8 +119,12 @@ public class MirrorableAnimation implements Animation {
 	}
 	
 	@Override
-	public @NotNull Image getCurrentFrame() {
-		return isMirrored() ? mirroredFrames[currentFrame] : animation.getCurrentFrame();
+	public void paint(@NotNull Graphics2D graphics, @NotNull Point entityLocation) {
+		if(isMirrored()) {
+			animation.paint(graphics, entityLocation);
+		} else {
+			graphics.drawImage(mirroredFrames[currentFrame], getOffset().width + entityLocation.x, getOffset().height + entityLocation.y, GraphicsManager.WINDOW);
+		}
 	}
 	
 	@Override

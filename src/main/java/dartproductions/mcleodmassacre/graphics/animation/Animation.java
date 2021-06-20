@@ -13,7 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.Dimension;
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.geom.Area;
 import java.util.UUID;
 
@@ -35,12 +36,14 @@ public interface Animation extends Cloneable {
 	@NotNull String getAnimationName();
 	
 	/**
-	 * Gets the image that this animation is currently showing.
+	 * Paints the animation's graphics using the specified {@link Graphics2D} instance.
 	 *
-	 * @return The current frame
+	 * @param graphics       The graphics for painting
+	 * @param entityLocation The location of the entity this animation belongs to
 	 * @since 0.1.0
 	 */
-	@NotNull Image getCurrentFrame();
+	void paint(@NotNull Graphics2D graphics, @NotNull Point entityLocation);
+	//@NotNull Image getCurrentFrame();
 	
 	/**
 	 * Gets the current hitbox of this animation.
@@ -75,7 +78,7 @@ public interface Animation extends Cloneable {
 	@NotNull Dimension getOffset();
 	
 	/**
-	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely, or return the appropriate {@link #getCurrentFrame() images} or {@link #getCurrentHitbox() hitboxes}.
+	 * Checks if this animation is over. An animation is over if it can't use its {@link #next()} method safely.
 	 *
 	 * @return True if over
 	 * @since 0.1.0
