@@ -129,6 +129,21 @@
                 </executions>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>README.md</include>
+                    <include>LICENSE</include>
+                    <include>credits.txt</include>
+                    <include>version</include>
+                </includes>
+                <targetPath>extract</targetPath>
+            </resource>
+        </resources>
     </build>
 
     <dependencies>
