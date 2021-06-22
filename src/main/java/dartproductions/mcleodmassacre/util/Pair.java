@@ -114,8 +114,12 @@ public interface Pair<First, Second> {
 		
 		@Override
 		public boolean equals(Object o) {
-			if(this == o) return true;
-			if(o == null || getClass() != o.getClass()) return false;
+			if(this == o) {
+				return true;
+			}
+			if(o == null || getClass() != o.getClass()) {
+				return false;
+			}
 			ImmutablePair<?, ?> that = (ImmutablePair<?, ?>) o;
 			return Objects.equals(getFirst(), that.getFirst()) && Objects.equals(getSecond(), that.getSecond());
 		}

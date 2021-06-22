@@ -48,6 +48,7 @@ import static dartproductions.mcleodmassacre.graphics.ResolutionManager.getDefau
  */
 public interface GameState extends Identified {
 	
+	@NotNull Logger LOGGER = LogManager.getLogger(GameState.class);
 	/**
 	 * This state is used when the game is paused while on a map, fighting with other characters.
 	 *
@@ -197,7 +198,6 @@ public interface GameState extends Identified {
 		
 		}
 	};
-	@NotNull Logger LOGGER = LogManager.getLogger(GameState.class);
 	/**
 	 * The roster screen
 	 *

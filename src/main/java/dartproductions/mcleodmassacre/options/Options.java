@@ -53,8 +53,7 @@ public interface Options extends OptionGroup {
 		public static final String SOUND_OPTIONS = "Sounds", GRAPHICS_OPTIONS = "Graphics", CONTROLS = "Controls", WIDTH = "Width", HEIGHT = "Height", FULLSCREEN = "Fullscreen", QUALITY = "Quality", MUSIC_VOLUME = "Music", SFX_VOLUME = "Sound FX";
 		
 		public final @NotNull ArrayList<OptionGroup> groups = new ArrayList<>();
-		public @NotNull
-		final String name = "Settings";
+		public final @NotNull String name = "Settings";
 		
 		public StandardOptions() {
 			{
@@ -70,33 +69,6 @@ public interface Options extends OptionGroup {
 				sound.setOption(MUSIC_VOLUME, new IntOption(50));
 				sound.setOption(SFX_VOLUME, new IntOption(50));
 				groups.add(sound);
-			}
-			{//todo proper key binds for input manager
-				
-				//	StandardOptionGroup controls = new StandardOptionGroup(CONTROLS);
-				/*for(ActionType value : ActionType.values()) {
-					System.out.println((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar());
-					controls.setOption(value.name,new KeyOption(KeyStroke.getKeyStroke((value.isPress?"pressed":"released")+KeyStroke.getKeyStroke(value.keybind,0).getKeyChar())));
-				}*/
-			/*	for(ActionType type : ActionType.values) {
-					controls.setOption(type.name, new EnumOption<>(type));
-				}*/
-				/*controls.setOption(JUMP_LEFT, new KeyOption(KeyStroke.getKeyStroke("pressed q")));
-				controls.setOption(JUMP_RIGHT, new KeyOption(KeyStroke.getKeyStroke("pressed e")));
-				controls.setOption(MOVE_UP, new KeyOption(KeyStroke.getKeyStroke("pressed w")));
-				controls.setOption(MOVE_DOWN, new KeyOption(KeyStroke.getKeyStroke("pressed s")));
-				controls.setOption(MOVE_LEFT, new KeyOption(KeyStroke.getKeyStroke("pressed a")));
-				controls.setOption(MOVE_RIGHT, new KeyOption(KeyStroke.getKeyStroke("pressed d")));
-				controls.setOption(ATTACK, new KeyOption(KeyStroke.getKeyStroke("pressed p")));
-				controls.setOption(SPECIAL, new KeyOption(KeyStroke.getKeyStroke("pressed o")));
-				controls.setOption(GRAB, new KeyOption(KeyStroke.getKeyStroke("pressed u")));
-				controls.setOption(TAUNT, new KeyOption(KeyStroke.getKeyStroke("pressed k")));
-				controls.setOption(WALK, new KeyOption(KeyStroke.getKeyStroke("pressed l")));
-				controls.setOption(PAUSE, new KeyOption(KeyStroke.getKeyStroke("pressed BACKSPACE")));
-				controls.setOption(SHIELD, new KeyOption(KeyStroke.getKeyStroke("pressed i"))); 
- * @since 0.1.0 
- */
-				//	groups.add(controls);
 			}
 		}
 		

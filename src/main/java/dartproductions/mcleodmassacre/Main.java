@@ -44,6 +44,24 @@ public class Main {
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(Main.class);
 	/**
+	 * Globally shared executor service for async tasks
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(8, new ThreadFactory() {
+		protected int count = 0;
+		
+		@Override
+		public Thread newThread(@NotNull Runnable r) {
+			Thread t = new Thread(r, "Executor " + (count++));
+			t.setUncaughtExceptionHandler((t1, e) -> {
+				LOGGER.error("Uncaught exception in " + t1.getName(), e);
+				Main.panic("Uncaught exception in " + t1.getName());
+			});
+			return t;
+		}
+	});
+	/**
 	 * True if additional debug information should be logged. Defaults to false.
 	 *
 	 * @since 0.1.0
@@ -67,24 +85,6 @@ public class Main {
 	 * @since 0.1.0
 	 */
 	private static volatile boolean RUNNING = true;
-	/**
-	 * Globally shared executor service for async tasks
-	 *
-	 * @since 0.1.0
-	 */
-	private static final @NotNull ExecutorService EXECUTORS = Executors.newFixedThreadPool(8, new ThreadFactory() {
-		protected int count = 0;
-		
-		@Override
-		public Thread newThread(@NotNull Runnable r) {
-			Thread t = new Thread(r, "Executor " + (count++));
-			t.setUncaughtExceptionHandler((t1, e) -> {
-				LOGGER.error("Uncaught exception in " + t1.getName(), e);
-				Main.panic("Uncaught exception in " + t1.getName());
-			});
-			return t;
-		}
-	});
 	
 	/**
 	 * Gets the global executor service, used for various async tasks.

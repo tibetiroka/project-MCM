@@ -41,6 +41,12 @@ import java.util.Iterator;
  */
 public class GameEngine {
 	/**
+	 * Logger for the engine
+	 *
+	 * @since 0.1.0
+	 */
+	protected static final Logger LOGGER = LogManager.getLogger(GameEngine.class);
+	/**
 	 * Lock object for the engine's scheduled tasks.
 	 *
 	 * @since 0.1.0
@@ -100,12 +106,6 @@ public class GameEngine {
 	 * @since 0.1.0
 	 */
 	protected static final @NotNull ArrayList<Entity> ENTITIES_TO_REMOVE = new ArrayList<>();
-	/**
-	 * Logger for the engine
-	 *
-	 * @since 0.1.0
-	 */
-	protected static final Logger LOGGER = LogManager.getLogger(GameEngine.class);
 	/**
 	 * List of all entities that can move. Being part of the list does not mean the entity can be moved by collisions, or that it will move at any time.
 	 *

@@ -46,6 +46,12 @@ import static dartproductions.mcleodmassacre.graphics.ResolutionManager.BUFFER_G
  */
 public class GraphicsManager extends JPanel {
 	/**
+	 * Graphics-related logger
+	 *
+	 * @since 0.1.0
+	 */
+	public static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
+	/**
 	 * General-purpose lock for functions related to graphics
 	 *
 	 * @since 0.1.0
@@ -88,12 +94,6 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static final int LAYER_TOP = 15;
 	/**
-	 * Graphics-related logger
-	 *
-	 * @since 0.1.0
-	 */
-	public static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
-	/**
 	 * The rendering layers
 	 *
 	 * @since 0.1.0
@@ -123,7 +123,6 @@ public class GraphicsManager extends JPanel {
 	 * @since 0.1.0
 	 */
 	private static volatile boolean RUNNING = false;
-	
 	
 	static {
 		//creating layers

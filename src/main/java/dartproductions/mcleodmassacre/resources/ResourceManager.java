@@ -135,8 +135,7 @@ public class ResourceManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static @NotNull
-	volatile Options OPTIONS;
+	private static volatile @Nullable Options OPTIONS;
 	
 	static {
 		CACHES.register(AUDIO);
@@ -502,11 +501,7 @@ public class ResourceManager {
 					for(Identifier tag : tags) {
 						registerResourceTag(resourceId, tag);
 					}
-					try {
-						registerResource(resourceId, resourceFile);
-					} catch(MalformedURLException | FileNotFoundException e) {
-						LOGGER.warn("Could not register resource " + resourceId, e);
-					}
+					registerResource(resourceId, resourceFile);
 				});
 			});
 		} catch(IOException | URISyntaxException | NullPointerException e) {
@@ -648,8 +643,9 @@ public class ResourceManager {
 			for(File c : f.listFiles())
 				delete(c);
 		}
-		if(!f.delete())
+		if(!f.delete()) {
 			LOGGER.info("Failed to delete file: " + f.getPath());
+		}
 	}
 	
 	/**
@@ -794,12 +790,10 @@ public class ResourceManager {
 	 *
 	 * @param resource The id of the resource
 	 * @param location The location of the resource
-	 * @throws MalformedURLException
-	 * @throws FileNotFoundException
 	 * @see #loadResource(Identifier, File)
 	 * @since 0.1.0
 	 */
-	private static void registerResource(@NotNull final Identifier resource, @NotNull final File location) throws MalformedURLException, FileNotFoundException {
+	private static void registerResource(@NotNull final Identifier resource, @NotNull final File location) {
 		try {
 			if(hasTag(resource, Tag.GRAPHICS.getId())) {//graphics resource
 				final boolean isHitboxImage = hasTag(resource, Tag.HITBOX_SOURCE.getId());

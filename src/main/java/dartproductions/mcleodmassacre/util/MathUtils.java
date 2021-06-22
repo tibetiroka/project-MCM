@@ -41,7 +41,7 @@ public class MathUtils {
 	 * @return True if there is a true values; false otherwise (false if the amount is 0).
 	 * @since 0.1.0
 	 */
-	public static boolean or(IntFunction<Boolean> values, int amount, int offset) {
+	public static boolean or(@NotNull IntFunction<Boolean> values, int amount, int offset) {
 		for(int i = offset; i < offset + amount; i++) {
 			if(values.apply(i)) {
 				return true;
@@ -59,7 +59,7 @@ public class MathUtils {
 	 * @return True if there are no true values; true otherwise (true if the amount is 0).
 	 * @since 0.1.0
 	 */
-	public static boolean nor(IntFunction<Boolean> values, int amount, int offset) {
+	public static boolean nor(@NotNull IntFunction<Boolean> values, int amount, int offset) {
 		for(int i = offset; i < offset + amount; i++) {
 			if(values.apply(i)) {
 				return false;
@@ -77,7 +77,7 @@ public class MathUtils {
 	 * @return True if there is exactly one true value; false otherwise (false if the amount is 0).
 	 * @since 0.1.0
 	 */
-	public static boolean xor(IntFunction<Boolean> values, int amount, int offset) {
+	public static boolean xor(@NotNull IntFunction<Boolean> values, int amount, int offset) {
 		boolean has = false;
 		for(int i = offset; i < offset + amount; i++) {
 			if(values.apply(i)) {
@@ -99,7 +99,7 @@ public class MathUtils {
 	 * @return The lowest value or {@link Long#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static long minLong(IntFunction<Long> numbers, int amount, int offset) {
+	public static long minLong(@NotNull IntFunction<Long> numbers, int amount, int offset) {
 		long min = Long.MAX_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			long value = numbers.apply(i);
@@ -119,7 +119,7 @@ public class MathUtils {
 	 * @return The lowest value or {@link Integer#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static int minInt(IntFunction<Integer> numbers, int amount, int offset) {
+	public static int minInt(@NotNull IntFunction<Integer> numbers, int amount, int offset) {
 		int min = Integer.MAX_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			int value = numbers.apply(i);
@@ -139,7 +139,7 @@ public class MathUtils {
 	 * @return The highest value or {@link Long#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static long maxLong(IntFunction<Long> numbers, int amount, int offset) {
+	public static long maxLong(@NotNull IntFunction<Long> numbers, int amount, int offset) {
 		long max = Long.MIN_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			long value = numbers.apply(i);
@@ -159,7 +159,7 @@ public class MathUtils {
 	 * @return The highest value or {@link Integer#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static int maxInt(IntFunction<Integer> numbers, int amount, int offset) {
+	public static int maxInt(@NotNull IntFunction<Integer> numbers, int amount, int offset) {
 		int max = Integer.MIN_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			int value = numbers.apply(i);
@@ -179,7 +179,7 @@ public class MathUtils {
 	 * @return The lowest value or {@link Double#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static double minDouble(IntFunction<Double> numbers, int amount, int offset) {
+	public static double minDouble(@NotNull IntFunction<Double> numbers, int amount, int offset) {
 		double min = Double.MAX_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			double value = numbers.apply(i);
@@ -199,7 +199,7 @@ public class MathUtils {
 	 * @return The highest value or {@link Double#MAX_VALUE} if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static double maxDouble(IntFunction<Double> numbers, int amount, int offset) {
+	public static double maxDouble(@NotNull IntFunction<Double> numbers, int amount, int offset) {
 		double max = Long.MIN_VALUE;
 		for(int i = offset; i < offset + amount; i++) {
 			double value = numbers.apply(i);
@@ -219,7 +219,7 @@ public class MathUtils {
 	 * @return The average of the values or 0 if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static long avgLong(IntFunction<Long> numbers, int amount, int offset) {
+	public static long avgLong(@NotNull IntFunction<Long> numbers, int amount, int offset) {
 		BigInteger sum = BigInteger.ZERO;
 		for(int i = amount; i < amount + offset; i++) {
 			sum = sum.add(BigInteger.valueOf(numbers.apply(i)));
@@ -236,7 +236,7 @@ public class MathUtils {
 	 * @return The average of the values or 0 if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static int avgInt(IntFunction<Integer> numbers, int amount, int offset) {
+	public static int avgInt(@NotNull IntFunction<Integer> numbers, int amount, int offset) {
 		long sum = 0;
 		for(int i = amount; i < amount + offset; i++) {
 			sum += numbers.apply(i);
@@ -253,7 +253,7 @@ public class MathUtils {
 	 * @return The average of the values or 0 if the amount is 0
 	 * @since 0.1.0
 	 */
-	public static double avgDouble(IntFunction<Double> numbers, int amount, int offset) {
+	public static double avgDouble(@NotNull IntFunction<Double> numbers, int amount, int offset) {
 		BigDecimal sum = BigDecimal.ZERO;
 		for(int i = amount; i < amount + offset; i++) {
 			sum = sum.add(BigDecimal.valueOf(numbers.apply(i)));
@@ -368,7 +368,7 @@ public class MathUtils {
 	 * @return The original animation after being moved
 	 * @since 0.1.0
 	 */
-	public static @NotNull Animation setToCenterOffset(@NotNull Animation animation, Dimension offset) {
+	public static @NotNull Animation setToCenterOffset(@NotNull Animation animation, @NotNull Dimension offset) {
 		return centerAroundScreenPart(animation, 0.5, 0.5, offset.width, offset.height);
 	}
 	
@@ -409,7 +409,7 @@ public class MathUtils {
 		return entity;
 	}
 	
-	public static Dimension getSize(Animation animation) {
+	public static @NotNull Dimension getSize(@NotNull Animation animation) {
 		if(animation instanceof StandardAnimation anim) {
 			return new Dimension(anim.getCurrentFrame().getWidth(GraphicsManager.WINDOW), anim.getCurrentFrame().getHeight(GraphicsManager.WINDOW));
 		} else {

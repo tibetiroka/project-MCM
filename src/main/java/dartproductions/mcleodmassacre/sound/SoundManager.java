@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 0.1.0
  */
 public class SoundManager {
+	private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
 	/**
 	 * Lock object for the audio thread
 	 *
@@ -69,7 +70,6 @@ public class SoundManager {
 	 * @since 0.1.0
 	 */
 	private static final @NotNull ConcurrentHashMap<Identifier, ArrayList<ResumableClip>> INACTIVE_SFX = new ConcurrentHashMap<>();
-	private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
 	/**
 	 * The clip used for playing background music
 	 *
@@ -484,11 +484,6 @@ public class SoundManager {
 		}
 		
 		@Override
-		public void setFramePosition(int frames) {
-			clip.setFramePosition(frames);
-		}
-		
-		@Override
 		public long getLongFramePosition() {
 			return clip.getLongFramePosition();
 		}
@@ -496,11 +491,6 @@ public class SoundManager {
 		@Override
 		public long getMicrosecondPosition() {
 			return clip.getMicrosecondPosition();
-		}
-		
-		@Override
-		public void setMicrosecondPosition(long microseconds) {
-			clip.setMicrosecondPosition(microseconds);
 		}
 		
 		@Override
@@ -536,6 +526,16 @@ public class SoundManager {
 		@Override
 		public long getMicrosecondLength() {
 			return clip.getMicrosecondPosition();
+		}
+		
+		@Override
+		public void setFramePosition(int frames) {
+			clip.setFramePosition(frames);
+		}
+		
+		@Override
+		public void setMicrosecondPosition(long microseconds) {
+			clip.setMicrosecondPosition(microseconds);
 		}
 		
 		@Override

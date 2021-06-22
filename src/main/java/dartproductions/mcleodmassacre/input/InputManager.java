@@ -36,6 +36,7 @@ import java.util.List;
  * @since 0.1.0
  */
 public class InputManager {
+	private static final @NotNull Logger LOGGER = LogManager.getLogger(InputManager.class);
 	//
 	private static final @NotNull ArrayList<InputAction<Event>> ACTIONS = new ArrayList<>();
 	/**
@@ -44,7 +45,6 @@ public class InputManager {
 	 * @since 0.1.0
 	 */
 	private static final @NotNull Object DEVICE_LOCK = new Object();
-	private static final @NotNull Logger LOGGER = LogManager.getLogger(InputManager.class);
 	/**
 	 * The list of devices used by players. The nth device corresponds to the nth player.
 	 *
@@ -391,6 +391,12 @@ public class InputManager {
 			 */
 			class ValueControlConfig implements ControlConfig {
 				/**
+				 * The accepted controller types
+				 *
+				 * @since 0.1.0
+				 */
+				protected final @NotNull List<Controller.Type> types;
+				/**
 				 * The name of the input component
 				 *
 				 * @since 0.1.0
@@ -408,12 +414,6 @@ public class InputManager {
 				 * @since 0.1.0
 				 */
 				protected float min;
-				/**
-				 * The accepted controller types
-				 *
-				 * @since 0.1.0
-				 */
-				protected @NotNull List<Controller.Type> types;
 				
 				/**
 				 * Creates a new config
@@ -692,13 +692,13 @@ public class InputManager {
 		@Override
 		public String toString() {
 			return "InputAction{" +
-					"action=" + action +
-					", time=" + time +
-					", location=" + location +
-					", value=" + value +
-					", playerId=" + playerId +
-					", event=" + event +
-					'}';
+			       "action=" + action +
+			       ", time=" + time +
+			       ", location=" + location +
+			       ", value=" + value +
+			       ", playerId=" + playerId +
+			       ", event=" + event +
+			       '}';
 		}
 	}
 }

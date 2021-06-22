@@ -29,8 +29,7 @@ public class RenderingLayer {
 	 *
 	 * @since 0.1.0
 	 */
-	protected @NotNull
-	final List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
+	protected final @NotNull List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
 	
 	protected RenderingLayer() {
 	}
