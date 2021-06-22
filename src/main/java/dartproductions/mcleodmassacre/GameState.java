@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
+import static dartproductions.mcleodmassacre.graphics.ResolutionManager.getDefaultScreenSize;
 
 /**
  * All of the supported states of the application
@@ -445,7 +445,6 @@ public interface GameState extends Identified {
 			//todo
 		}
 	};
-	
 	/**
 	 * State for the main menu. This is the first screen the player sees after the initial loading.
 	 *
@@ -492,7 +491,6 @@ public interface GameState extends Identified {
 			new Foreground(new LoopingAnimation("mm_versus_placeholder")).register();
 		}
 	};
-	
 	/**
 	 * The data menu
 	 *

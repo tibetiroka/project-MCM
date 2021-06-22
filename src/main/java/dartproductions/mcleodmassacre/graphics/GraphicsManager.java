@@ -37,7 +37,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
-import static dartproductions.mcleodmassacre.graphics.ResolutionManager.*;
+import static dartproductions.mcleodmassacre.graphics.ResolutionManager.BUFFER_GRAPHICS;
 
 /**
  * Class for managing graphics-related locks and paint operations.

@@ -692,13 +692,13 @@ public class InputManager {
 		@Override
 		public String toString() {
 			return "InputAction{" +
-			       "action=" + action +
-			       ", time=" + time +
-			       ", location=" + location +
-			       ", value=" + value +
-			       ", playerId=" + playerId +
-			       ", event=" + event +
-			       '}';
+					"action=" + action +
+					", time=" + time +
+					", location=" + location +
+					", value=" + value +
+					", playerId=" + playerId +
+					", event=" + event +
+					'}';
 		}
 	}
 }

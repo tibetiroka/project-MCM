@@ -116,9 +116,9 @@ public class ResolutionManager {
 			double offsetX = (actualWidth - minWidth) / 2.0;//offset in scaled size
 			double offsetY = (actualHeight - minHeight) / 2.0;
 			screenRect = new Rectangle((int) Math.ceil(origin.x - offsetX / ratio),
-			                           (int) Math.ceil(origin.y - offsetY / ratio),
-			                           getLocalScreenSize().width,
-			                           getLocalScreenSize().height);
+					(int) Math.ceil(origin.y - offsetY / ratio),
+					getLocalScreenSize().width,
+					getLocalScreenSize().height);
 		}
 		OUTPUT = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
 		OUTPUT_GRAPHICS = OUTPUT.createGraphics();
