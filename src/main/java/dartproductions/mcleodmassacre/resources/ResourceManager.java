@@ -411,30 +411,33 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void onStateChange(@NotNull GameState newState, @Nullable GameState newNextState) {
+		waitForLoading();
 		double memoryUsage = getMemoryUsage();
-		AVAILABLE_UNLOADS.clear();
-		for(Identifier resourceId : RESOURCE_TAGS.getRegisteredResources()) {
-			HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
-			Cache<?> cache = getCacheOfResource(resourceId);
-			if(cache != null) {
-				boolean loaded = cache.isLoaded(resourceId);
-				if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
-					if(!loaded) {
-						//LOGGER.debug("Loaded " + resourceId);
-						cache.load(resourceId);
-					}
-				} else if(loaded) {
-					if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.getUnloadingThreshold(newState, newNextState) < memoryUsage)) {
-						//LOGGER.debug("Unloaded " + resourceId);
-						cache.unload(resourceId);
-					} else {
-						//LOGGER.debug("Scheduled " + resourceId);
-						AVAILABLE_UNLOADS.add(resourceId);
+		synchronized(AVAILABLE_UNLOADS) {
+			AVAILABLE_UNLOADS.clear();
+			for(Identifier resourceId : RESOURCE_TAGS.getRegisteredResources()) {
+				HashSet<Identifier> tags = RESOURCE_TAGS.get(resourceId);
+				Cache<?> cache = getCacheOfResource(resourceId);
+				if(cache != null) {
+					boolean loaded = cache.isLoaded(resourceId);
+					if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.isRequired(newState, newNextState))) {
+						if(!loaded) {
+							//LOGGER.debug("Loaded " + resourceId);
+							cache.load(resourceId);
+						}
+					} else if(loaded) {
+						if(tags.stream().map(TAGS::get).parallel().anyMatch(tag -> tag.getUnloadingThreshold(newState, newNextState) < memoryUsage)) {
+							//LOGGER.debug("Unloaded " + resourceId);
+							cache.unload(resourceId);
+						} else {
+							//LOGGER.debug("Scheduled " + resourceId);
+							AVAILABLE_UNLOADS.add(resourceId);
+						}
 					}
 				}
 			}
 		}
-		Main.getExecutors().execute(() -> unloadAll(0));
+		//Main.getExecutors().execute(new LoadingOperation(() -> unloadAll(0)));
 	}
 	
 	/**
@@ -444,13 +447,15 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void unloadAll(double threshold) {
-		if(!AVAILABLE_UNLOADS.isEmpty() && getMemoryUsage() > threshold) {
-			int count = AVAILABLE_UNLOADS.size();
-			for(Identifier resource : AVAILABLE_UNLOADS) {
-				getCacheOfResource(resource).unload(resource);
+		synchronized(AVAILABLE_UNLOADS) {
+			if(!AVAILABLE_UNLOADS.isEmpty() && getMemoryUsage() > threshold) {
+				int count = AVAILABLE_UNLOADS.size();
+				for(Identifier resource : AVAILABLE_UNLOADS) {
+					getCacheOfResource(resource).unload(resource);
+				}
+				AVAILABLE_UNLOADS.clear();
+				LOGGER.debug("Manually unloaded " + count + " resources");
 			}
-			AVAILABLE_UNLOADS.clear();
-			LOGGER.debug("Manually unloaded " + count + " resources");
 		}
 	}
 	

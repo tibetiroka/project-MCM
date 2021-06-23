@@ -243,6 +243,7 @@ public class GameEngine {
 		});
 		ENGINE_THREAD.start();
 		Thread monitor = new Thread(() -> {
+			LOGGER.info("Started engine monitor thread");
 			long lastFrame = 0;
 			boolean previous = false;
 			while(ENGINE_THREAD.isAlive()) {
@@ -267,6 +268,7 @@ public class GameEngine {
 					previous = false;
 				}
 			}
+			LOGGER.info("Engine monitor shut down");
 		}, "Engine monitor");
 		monitor.start();
 	}
