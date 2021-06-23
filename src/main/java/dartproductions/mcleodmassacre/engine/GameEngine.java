@@ -125,17 +125,11 @@ public class GameEngine {
 	 */
 	public static @Nullable Thread ENGINE_THREAD;
 	/**
-	 * The state of the game engine
-	 *
-	 * @since 0.1.0
-	 */
-	private static volatile boolean RUNNING = false;
-	/**
 	 * Time since the previous frame
 	 *
 	 * @since 0.1.0
 	 */
-	private static volatile long delta = 0;
+	private static long delta = 0;
 	/**
 	 * The current 'frame' of the engine. The {@link #processFrame()} method is called exactly once in every frame.
 	 *
@@ -147,17 +141,7 @@ public class GameEngine {
 	 *
 	 * @since 0.1.0
 	 */
-	private static volatile long previous = 0;
-	
-	/**
-	 * Checks if the engine is still running. Might return 'true' if the thread didn't shut down correctly.
-	 *
-	 * @return True if running
-	 * @since 0.1.0
-	 */
-	public static boolean isRunning() {
-		return RUNNING;
-	}
+	private static long previous = 0;
 	
 	/**
 	 * Registers an entity in the engine. The entity does NOT get registered in the rendering engine.
@@ -196,10 +180,9 @@ public class GameEngine {
 		}
 		ENGINE_THREAD = new Thread(() -> {//create engine thread
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
-			RUNNING = true;
 			LOGGER.info("Started game engine thread");
 			previous = System.nanoTime();
-			while(isRunning() && Main.isRunning()) {
+			while(Main.isRunning()) {
 				if(delta > FRAME_LENGTH_NANO * 30) {
 					LOGGER.warn("Massive lag spike: " + delta + " ns (" + Math.round(delta / (double) FRAME_LENGTH_NANO * 100) / 100.0 + " frames)");
 				}

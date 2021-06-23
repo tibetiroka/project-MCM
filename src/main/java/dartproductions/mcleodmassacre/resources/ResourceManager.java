@@ -489,7 +489,7 @@ public class ResourceManager {
 								String[] parts = line.split("::");
 								switch(parts[0]) {//the operation or something
 									case "id" -> resourceId = Identifier.fromString(parts[1]);//changes the resource's id
-									case "location" -> resourceFile = new File(plugin.getBaseDirectory(), line.substring("location".length()).trim().strip());
+									case "location" -> resourceFile = new File(plugin.getBaseDirectory(), line.substring("location::".length()).trim().strip());
 								}
 							} else {
 								tags.add(Identifier.fromString(line));

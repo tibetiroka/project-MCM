@@ -91,7 +91,7 @@ public class ResolutionManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static volatile boolean FILL_VISIBLE_AREAS = true;
+	private static boolean FILL_VISIBLE_AREAS = true;
 	
 	static {
 		//originalScreen = new Dimension(1280, 1024);

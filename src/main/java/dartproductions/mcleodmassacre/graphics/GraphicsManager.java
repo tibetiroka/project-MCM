@@ -117,12 +117,6 @@ public class GraphicsManager extends JPanel {
 	 * @since 0.1.0
 	 */
 	public static @NotNull JFrame WINDOW;
-	/**
-	 * The state of the main graphics thread
-	 *
-	 * @since 0.1.0
-	 */
-	private static volatile boolean RUNNING = false;
 	
 	static {
 		//creating layers
@@ -186,16 +180,7 @@ public class GraphicsManager extends JPanel {
 	public static @NotNull RenderingLayer getLayer(int index) {
 		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
 	}
-	
-	/**
-	 * Checks if the graphics thread is still running. Might keep returning 'true' if the thread didn't shut down correctly.
-	 *
-	 * @return True if running
-	 * @since 0.1.0
-	 */
-	public static boolean isRunning() {
-		return RUNNING;
-	}
+
 	
 	/**
 	 * Starts the graphics game loop. (Starts the graphics thread.) Fails silently if the thread is already running.
@@ -208,7 +193,6 @@ public class GraphicsManager extends JPanel {
 			return;
 		}
 		GRAPHICS_THREAD = new Thread(() -> {//graphics thread
-			RUNNING = true;
 			LOGGER.info("Started graphics thread");
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 1);
 			initGraphics();
@@ -255,7 +239,6 @@ public class GraphicsManager extends JPanel {
 			}
 		}
 		closeWindow();
-		RUNNING = false;
 		
 		LOGGER.info("Graphics thread shut down normally");
 	}
