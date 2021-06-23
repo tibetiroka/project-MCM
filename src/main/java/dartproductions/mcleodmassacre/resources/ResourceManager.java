@@ -485,8 +485,8 @@ public class ResourceManager {
 							if(line.isEmpty()) {
 								continue;
 							}
-							if(Pattern.matches(".*\\s+.*", line)) {//contains whitespace -> not just a tag entry
-								String[] parts = line.split("\\s+");
+							if(Pattern.matches(".+::.+", line)) {//contains whitespace -> not just a tag entry
+								String[] parts = line.split("::");
 								switch(parts[0]) {//the operation or something
 									case "id" -> resourceId = Identifier.fromString(parts[1]);//changes the resource's id
 									case "location" -> resourceFile = new File(plugin.getBaseDirectory(), line.substring("location".length()).trim().strip());
