@@ -135,7 +135,7 @@ public class GameEngine {
 	 *
 	 * @since 0.1.0
 	 */
-	private static long frame = 0;
+	private static volatile long frame = 0;
 	/**
 	 * The time when the previous frame started
 	 *
@@ -194,14 +194,14 @@ public class GameEngine {
 						ResourceManager.unloadAll(0.9);
 					}
 				}
-				synchronized(GraphicsManager.GRAPHICS_LOCK) {
-					GraphicsManager.GRAPHICS_LOCK.notifyAll();
+				synchronized(GraphicsManager.WAIT_LOCK) {
+					GraphicsManager.WAIT_LOCK.notifyAll();
 				}
 				synchronized(SoundManager.AUDIO_LOCK) {
 					SoundManager.AUDIO_LOCK.notifyAll();
 				}
 				while(Main.isRunning()) {
-					Thread.onSpinWait();
+					//Thread.onSpinWait();
 					if(!shouldRunFrame()) {
 						SoundManager.pause();
 						ResourceManager.unloadAll(0);
@@ -229,8 +229,8 @@ public class GameEngine {
 					}
 				}
 			}
-			synchronized(GraphicsManager.GRAPHICS_LOCK) {
-				GraphicsManager.GRAPHICS_LOCK.notifyAll();
+			synchronized(GraphicsManager.WAIT_LOCK) {
+				GraphicsManager.WAIT_LOCK.notifyAll();
 			}
 			SoundManager.stopAll();
 			SoundManager.clear();
@@ -246,12 +246,12 @@ public class GameEngine {
 			LOGGER.info("Started engine monitor thread");
 			long lastFrame = 0;
 			boolean previous = false;
+			try {
+				Thread.sleep(1000);
+			} catch(InterruptedException e) {
+				LOGGER.warn("Interrupted wait in engine monitor", e);
+			}
 			while(ENGINE_THREAD.isAlive()) {
-				try {
-					Thread.sleep(1000);
-				} catch(InterruptedException e) {
-					LOGGER.warn("Interrupted wait in engine monitor", e);
-				}
 				if(shouldRunFrame()) {
 					if(GameEngine.frame == lastFrame) {
 						if(previous) {
@@ -262,14 +262,24 @@ public class GameEngine {
 							previous = true;
 						}
 					} else {
+						lastFrame = GameEngine.frame;
 						previous = false;
 					}
 				} else {
 					previous = false;
 				}
+				try {
+					Thread.sleep(1000);
+				} catch(InterruptedException e) {
+					LOGGER.warn("Interrupted wait in engine monitor", e);
+				}
 			}
 			LOGGER.info("Engine monitor shut down");
 		}, "Engine monitor");
+		monitor.setUncaughtExceptionHandler((t, e) -> {
+			LOGGER.error("Uncaught exception in the engine monitor thread (" + t.getName() + ")", e);
+			Main.panic("Uncaught exception in engine monitor");
+		});
 		monitor.start();
 	}
 	
