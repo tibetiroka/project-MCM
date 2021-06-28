@@ -10,10 +10,7 @@
 package dartproductions.mcleodmassacre.graphics;
 
 import dartproductions.mcleodmassacre.Main;
-import dartproductions.mcleodmassacre.input.InputManager;
-import dartproductions.mcleodmassacre.options.Option.IntOption;
 import dartproductions.mcleodmassacre.options.Options;
-import dartproductions.mcleodmassacre.options.Options.StandardOptions;
 import dartproductions.mcleodmassacre.options.QualityOption;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
@@ -26,9 +23,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
@@ -38,6 +35,7 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 import static dartproductions.mcleodmassacre.graphics.ResolutionManager.BUFFER_GRAPHICS;
+import static dartproductions.mcleodmassacre.graphics.ResolutionManager.OUTPUT_GRAPHICS;
 
 /**
  * Class for managing graphics-related locks and paint operations.
@@ -52,11 +50,17 @@ public class GraphicsManager extends JPanel {
 	 */
 	public static final Logger LOGGER = LogManager.getLogger(GraphicsManager.class);
 	/**
-	 * General-purpose lock for functions related to graphics
+	 * General-purpose lock for functions related to paint operations
 	 *
 	 * @since 0.1.0
 	 */
 	public static final @NotNull Object GRAPHICS_LOCK = new Object();
+	/**
+	 * Lock to wait and notify the graphics thread
+	 *
+	 * @since 0.1.0
+	 */
+	public static final @NotNull Object WAIT_LOCK = new Object();
 	/**
 	 * Index of the standard rendering layer used for backgrounds
 	 *
@@ -145,29 +149,39 @@ public class GraphicsManager extends JPanel {
 	}
 	
 	/**
-	 * Configures the {@link ResolutionManager#BUFFER_GRAPHICS}'s quality settings.
+	 * Configures the specified graphics' quality settings.
 	 *
 	 * @since 0.1.0
 	 */
-	public static void configureQuality() {
-		synchronized(GRAPHICS_LOCK) {//quality settings
-			QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
-				case LOW -> RenderingHints.VALUE_RENDER_SPEED;
-				case NORMAL -> RenderingHints.VALUE_RENDER_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_RENDER_QUALITY;
-			});
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
-				case LOW -> RenderingHints.VALUE_COLOR_RENDER_SPEED;
-				case NORMAL -> RenderingHints.VALUE_COLOR_RENDER_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_COLOR_RENDER_QUALITY;
-			});
-			BUFFER_GRAPHICS.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
-				case LOW -> RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED;
-				case NORMAL -> RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT;
-				case HIGH -> RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
-			});
-		}
+	public static void configureQuality(Graphics2D graphics) {
+		//synchronized(GRAPHICS_LOCK) {//quality settings
+		QualityOption quality = (QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue();
+		graphics.setRenderingHint(RenderingHints.KEY_RENDERING, switch(quality) {
+			case LOW -> RenderingHints.VALUE_RENDER_SPEED;
+			case NORMAL -> RenderingHints.VALUE_RENDER_DEFAULT;
+			case HIGH -> RenderingHints.VALUE_RENDER_QUALITY;
+		});
+		graphics.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, switch(quality) {
+			case LOW -> RenderingHints.VALUE_COLOR_RENDER_SPEED;
+			case NORMAL -> RenderingHints.VALUE_COLOR_RENDER_DEFAULT;
+			case HIGH -> RenderingHints.VALUE_COLOR_RENDER_QUALITY;
+		});
+		graphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, switch(quality) {
+			case LOW -> RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED;
+			case NORMAL -> RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT;
+			case HIGH -> RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
+		});
+		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, switch(quality) {
+			case LOW -> RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR;
+			case NORMAL -> RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+			case HIGH -> RenderingHints.VALUE_INTERPOLATION_BICUBIC;
+		});
+		graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, switch(quality) {
+			case LOW -> RenderingHints.VALUE_FRACTIONALMETRICS_OFF;
+			case NORMAL -> RenderingHints.VALUE_FRACTIONALMETRICS_DEFAULT;
+			case HIGH -> RenderingHints.VALUE_FRACTIONALMETRICS_ON;
+		});
+		//	}
 	}
 	
 	/**
@@ -180,14 +194,13 @@ public class GraphicsManager extends JPanel {
 	public static @NotNull RenderingLayer getLayer(int index) {
 		return index < 0 ? LAYERS[0] : index >= LAYERS.length ? LAYERS[LAYERS.length - 1] : LAYERS[index];
 	}
-
 	
 	/**
-	 * Starts the graphics game loop. (Starts the graphics thread.) Fails silently if the thread is already running.
+	 * Initializes the graphics resources.
 	 *
 	 * @since 0.1.0
 	 */
-	public static void startGameLoop() {
+	public static void init() {
 		if(GRAPHICS_THREAD != null && GRAPHICS_THREAD.isAlive()) {//if running, fail
 			LOGGER.error("Attempted to start graphics game loop while previous loop was still running");
 			return;
@@ -206,6 +219,16 @@ public class GraphicsManager extends JPanel {
 	}
 	
 	/**
+	 * Configures the graphics quality to match the settings.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void configureQuality() {
+		configureQuality(BUFFER_GRAPHICS);
+		configureQuality(OUTPUT_GRAPHICS);
+	}
+	
+	/**
 	 * Closes the application window
 	 *
 	 * @since 0.1.0
@@ -213,6 +236,7 @@ public class GraphicsManager extends JPanel {
 	private static void closeWindow() {
 		WINDOW.setVisible(false);
 		WINDOW.dispose();
+		LOGGER.info("Closed window");
 	}
 	
 	/**
@@ -228,10 +252,10 @@ public class GraphicsManager extends JPanel {
 				LOGGER.error("Error during graphics painting", e);
 			}
 			WINDOW.repaint();//draw buffer to screen
-			synchronized(GRAPHICS_LOCK) {//wait for engine
+			synchronized(WAIT_LOCK) {//wait for engine
 				try {
 					if(Main.isRunning()) {
-						GRAPHICS_LOCK.wait();
+						WAIT_LOCK.wait();
 					}
 				} catch(InterruptedException e) {
 					LOGGER.warn("Interrupted wait in graphics thread", e);
@@ -239,7 +263,6 @@ public class GraphicsManager extends JPanel {
 			}
 		}
 		closeWindow();
-		
 		LOGGER.info("Graphics thread shut down normally");
 	}
 	
@@ -253,7 +276,7 @@ public class GraphicsManager extends JPanel {
 		WINDOW = new JFrame("McLeod Massacre");
 		//
 		WINDOW.setIconImage(ResourceManager.getImage(Identifier.fromString("icon")));
-		WINDOW.setSize(((IntOption) options.getSetting(StandardOptions.WIDTH)).getValue(), ((IntOption) options.getSetting(StandardOptions.HEIGHT)).getValue());
+		WINDOW.setSize(1, 1);
 		WINDOW.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WINDOW.addWindowListener(new WindowAdapter() {
 			@Override
@@ -299,21 +322,8 @@ public class GraphicsManager extends JPanel {
 	 */
 	private static void paintGraphics() {
 		synchronized(GRAPHICS_LOCK) {
-			//test for image fitting
-			/*
-			BUFFER_GRAPHICS.setColor(Color.RED);
-			fillRectOnScreen(-getOriginOnBuffer().x, -getOriginOnBuffer().y, getBufferSize().width, getBufferSize().height);
-			BUFFER_GRAPHICS.setColor(Color.BLUE);
-			fillRectOnScreen(0, 0, getDefaultScreenSize().width, getDefaultScreenSize().height);
-			BUFFER_GRAPHICS.setColor(Color.GREEN);
-			drawRectOnScreen(0, 0, getDefaultScreenSize().width - 1, getDefaultScreenSize().height - 1);*/
-			//
 			for(RenderingLayer layer : LAYERS) {
 				layer.paint();
-			}
-			if(Main.isDebug()) {
-				ResolutionManager.BUFFER_GRAPHICS.setColor(Color.RED);
-				ResolutionManager.fillRectOnScreen(InputManager.getCursorLocation().x - 2, InputManager.getCursorLocation().y - 2, 5, 5);
 			}
 			ResolutionManager.fillVisibleAreas();
 		}
