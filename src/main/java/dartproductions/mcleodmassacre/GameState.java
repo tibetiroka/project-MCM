@@ -15,8 +15,13 @@ import dartproductions.mcleodmassacre.entity.Button;
 import dartproductions.mcleodmassacre.entity.Foreground;
 import dartproductions.mcleodmassacre.graphics.GraphicsManager;
 import dartproductions.mcleodmassacre.graphics.animation.Animation;
+import dartproductions.mcleodmassacre.graphics.animation.ColorAnimation;
 import dartproductions.mcleodmassacre.graphics.animation.FormattedTextAnimation;
 import dartproductions.mcleodmassacre.graphics.animation.LoopingAnimation;
+import dartproductions.mcleodmassacre.graphics.animation.MergedAnimation;
+import dartproductions.mcleodmassacre.options.Option.EnumOption;
+import dartproductions.mcleodmassacre.options.Options.StandardOptions;
+import dartproductions.mcleodmassacre.options.QualityOption;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identified;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
@@ -34,7 +39,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Menu;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Area;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -303,6 +311,47 @@ public interface GameState extends Identified {
 			Menu.super.onStateActivation(previousState, previousNextState, nextState);
 			Menu.addBackButton(MAIN_MENU);
 			//todo
+		/*	{
+				FormattedTextAnimation anim = new FormattedTextAnimation("Game quality", new Font(Font.SANS_SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> List.of("Quality settings"), i -> new Dimension(0, 0));
+				Foreground foreground = new Foreground(anim, new Point(400, 100));
+				foreground.register();
+			}
+			{
+				ColorAnimation background = new ColorAnimation("low quality", true, i -> new Area(new Rectangle(50, 30)), i -> Color.RED, 1, new Dimension(0, 0));
+				FormattedTextAnimation foreground = new FormattedTextAnimation("low quality", new Font(Font.SANS_SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> List.of("LOW"), i -> new Dimension(10, 10));
+				MergedAnimation merged = new MergedAnimation("low quality");
+				merged.add(background);
+				merged.add(foreground);
+				Button button = new Button(merged, null, null, null, new Point(400, 130), () -> {
+					((EnumOption<QualityOption>) ResourceManager.getOptions().getSetting(StandardOptions.QUALITY)).setValue(QualityOption.LOW);
+					GraphicsManager.configureQuality();
+				});
+				button.register();
+			}
+			{
+				ColorAnimation background = new ColorAnimation("normal quality", true, i -> new Area(new Rectangle(50, 30)), i -> Color.YELLOW, 1, new Dimension(0, 0));
+				FormattedTextAnimation foreground = new FormattedTextAnimation("normal quality", new Font(Font.SANS_SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> List.of("NORMAL"), i -> new Dimension(10, 10));
+				MergedAnimation merged = new MergedAnimation("normal quality");
+				merged.add(background);
+				merged.add(foreground);
+				Button button = new Button(merged, null, null, null, new Point(450, 130), () -> {
+					((EnumOption<QualityOption>) ResourceManager.getOptions().getSetting(StandardOptions.QUALITY)).setValue(QualityOption.NORMAL);
+					GraphicsManager.configureQuality();
+				});
+				button.register();
+			}
+			{
+				ColorAnimation background = new ColorAnimation("high quality", true, i -> new Area(new Rectangle(50, 30)), i -> Color.GREEN, 1, new Dimension(0, 0));
+				FormattedTextAnimation foreground = new FormattedTextAnimation("high quality", new Font(Font.SANS_SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> List.of("HIGH"), i -> new Dimension(10, 10));
+				MergedAnimation merged = new MergedAnimation("high quality");
+				merged.add(background);
+				merged.add(foreground);
+				Button button = new Button(merged, null, null, null, new Point(500, 130), () -> {
+					((EnumOption<QualityOption>) ResourceManager.getOptions().getSetting(StandardOptions.QUALITY)).setValue(QualityOption.HIGH);
+					GraphicsManager.configureQuality();
+				});
+				button.register();
+			}*/
 		}
 	};
 	/**
@@ -534,7 +583,9 @@ public interface GameState extends Identified {
 				Animation pluginsAnim = new FormattedTextAnimation("plugins", new Font(Font.SERIF, Font.PLAIN, 12), 1, true, i -> Color.BLACK, i -> {
 					ArrayList<String> list = new ArrayList<>();
 					list.add("» Plugins");
-					for(Identifier id : ResourceManager.getRegisteredPlugins()) {
+					ArrayList<Identifier> plugins = new ArrayList<>(ResourceManager.getRegisteredPlugins());
+					plugins.sort((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.toString(), o2.toString()));
+					for(Identifier id : plugins) {
 						Plugin plugin = ResourceManager.getPlugin(id);
 						list.add(plugin.getName() + " " + plugin.getVersion());
 					}
@@ -645,7 +696,7 @@ public interface GameState extends Identified {
 		@Override
 		@NotNull
 		default Identifier getBackgroundMusicTag(@Nullable GameState nextState) {
-			return Tag.MENU_RESOURCE.getId();
+			return Tag.MENU_MUSIC.getId();
 		}
 		
 		@Override
