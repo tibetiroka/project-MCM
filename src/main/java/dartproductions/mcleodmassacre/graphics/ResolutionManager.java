@@ -9,8 +9,6 @@
 
 package dartproductions.mcleodmassacre.graphics;
 
-import dartproductions.mcleodmassacre.options.QualityOption;
-import dartproductions.mcleodmassacre.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +31,12 @@ import java.awt.image.BufferedImage;
 public class ResolutionManager {
 	
 	/**
+	 * Graphics for {@link #OUTPUT}
+	 *
+	 * @since 0.1.0
+	 */
+	public static final @NotNull Graphics2D OUTPUT_GRAPHICS;
+	/**
 	 * The buffer to use for painting
 	 *
 	 * @since 0.1.0
@@ -51,11 +55,17 @@ public class ResolutionManager {
 	 */
 	private static final @NotNull BufferedImage OUTPUT;
 	/**
-	 * Graphics for {@link #OUTPUT}
+	 * The subimage of {@link #BUFFER} that is shown on the screen.
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Graphics2D OUTPUT_GRAPHICS;
+	private static final @NotNull BufferedImage SCREEN_IMAGE;
+	/**
+	 * Graphics for {@link #SCREEN_IMAGE}
+	 *
+	 * @since 0.1.0
+	 */
+	private static final @NotNull Graphics2D SCREEN_IMAGE_GRAPHICS;
 	/**
 	 * The size of the buffer
 	 *
@@ -122,9 +132,13 @@ public class ResolutionManager {
 		}
 		OUTPUT = new BufferedImage(screenRect.width, screenRect.height, BufferedImage.TYPE_INT_ARGB);
 		OUTPUT_GRAPHICS = OUTPUT.createGraphics();
+		OUTPUT_GRAPHICS.transform(AffineTransform.getScaleInstance(ratio, ratio));
 		//
 		BUFFER = createBufferImage();
 		BUFFER_GRAPHICS = BUFFER.createGraphics();
+		//
+		SCREEN_IMAGE = BUFFER.getSubimage(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+		SCREEN_IMAGE_GRAPHICS = SCREEN_IMAGE.createGraphics();
 	}
 	
 	/**
@@ -138,14 +152,14 @@ public class ResolutionManager {
 		OUTPUT_GRAPHICS.setColor(Color.BLACK);
 		OUTPUT_GRAPHICS.fillRect(0, 0, OUTPUT.getWidth(), OUTPUT.getHeight());
 		//
-		BufferedImage visible = BUFFER.getSubimage(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
-		Image scaled = visible.getScaledInstance((int) (screenRect.width * getScreenRatio()), (int) (screenRect.height * getScreenRatio()), switch((QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue()) {
+		//BufferedImage visible = BUFFER.getSubimage(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+		/*Image scaled = SCREEN_IMAGE.getScaledInstance((int) (screenRect.width * getScreenRatio()), (int) (screenRect.height * getScreenRatio()), switch((QualityOption) ResourceManager.getOptions().getSetting("Quality").getValue()) {
 			case LOW -> BufferedImage.SCALE_FAST;
 			case NORMAL -> BufferedImage.SCALE_DEFAULT;
 			case HIGH -> BufferedImage.SCALE_AREA_AVERAGING;
-		});
+		});*/
 		//
-		OUTPUT_GRAPHICS.drawImage(scaled, 0, 0, null);
+		OUTPUT_GRAPHICS.drawImage(SCREEN_IMAGE, 0, 0, null);
 		OUTPUT_GRAPHICS.fillRect(0, 0, screenRect.width, 2);
 		OUTPUT_GRAPHICS.fillRect(0, 0, 2, screenRect.height);
 		OUTPUT_GRAPHICS.fillRect(0, screenRect.height - 2, screenRect.width, 2);
@@ -404,7 +418,7 @@ public class ResolutionManager {
 		y += origin.y;
 		Rectangle r = screenRect.intersection(new Rectangle(x, y, width, height));
 		if(!r.isEmpty()) {
-			BUFFER_GRAPHICS.fillRect(r.x, r.y, r.width, r.height);
+			SCREEN_IMAGE_GRAPHICS.fillRect(x, y, width, height);
 		}
 	}
 	
