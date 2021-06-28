@@ -349,7 +349,7 @@ public class SoundManager {
 	public static synchronized void updateBackgroundMusic() {
 		if(Main.getGameState() != GameState.IN_GAME_PAUSED) {
 			if(BACKGROUND_MUSIC == null || !BACKGROUND_MUSIC.isOpen() || !ResourceManager.hasTag(BACKGROUND_MUSIC_NAME, Main.getGameState().getBackgroundMusicTag(Main.getNextState()))) {
-				if(!FUCK_THIS.isRunning()) {
+				if(!(FUCK_THIS.isRunning() || FUCK_THIS.isOpen())) {
 					try {
 						FUCK_THIS.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream(ResourceManager.getAudio(Identifier.fromString("silence")))));
 					} catch(Exception e) {
