@@ -42,6 +42,12 @@ public interface Tag extends Identified {
 	 */
 	@NotNull Tag GRAPHICS = new IgnorantTag(Identifier.fromString("tags/graphics"));
 	/**
+	 * Tag that indicates a map resource. Forces the resource to stay loaded.
+	 *
+	 * @since 0.0.1
+	 */
+	@NotNull Tag MAP = new GreedyTag(Identifier.fromString("tags/map"));
+	/**
 	 * Tag that indicates graphics resources that are used for hitbox creation. Doesn't change the loading/unloading methods specified by other tags.
 	 *
 	 * @since 0.1.0
@@ -53,6 +59,12 @@ public interface Tag extends Identified {
 	 * @since 0.1.0
 	 */
 	@NotNull Tag MENU_RESOURCE = new GameStateTag(Identifier.fromString("tags/menu_resource"), GameState.Menu.class);
+	/**
+	 * Tag that indicates music playable in menus. Doesn't change the loading/unloading methods specified by other tags.
+	 *
+	 * @since 0.1.0
+	 */
+	@NotNull Tag MENU_MUSIC = new IgnorantTag(Identifier.fromString("tags/menu_music"));
 	/**
 	 * Tag that indicates a tag resource. Tags are never unloaded.
 	 *
