@@ -10,6 +10,7 @@
 package dartproductions.mcleodmassacre.resources;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,9 +19,11 @@ import dartproductions.mcleodmassacre.GameState;
 import dartproductions.mcleodmassacre.Main;
 import dartproductions.mcleodmassacre.engine.GameEngine;
 import dartproductions.mcleodmassacre.hitbox.ImageHitbox;
+import dartproductions.mcleodmassacre.map.Map;
 import dartproductions.mcleodmassacre.options.Options;
+import dartproductions.mcleodmassacre.options.Options.StandardOptions;
 import dartproductions.mcleodmassacre.resources.cache.Cache;
-import dartproductions.mcleodmassacre.resources.cache.GreedyCache;
+import dartproductions.mcleodmassacre.resources.cache.Registry;
 import dartproductions.mcleodmassacre.resources.cache.StandardCache;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import dartproductions.mcleodmassacre.resources.plugin.Plugin;
@@ -43,6 +46,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -89,13 +93,13 @@ public class ResourceManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Cache<Cache<?>> CACHES = new GreedyCache<>(Identifier.fromString("resources/caches"));
+	private static final @NotNull Cache<Cache<?>> CACHES = new Registry<>(Identifier.fromString("resources/caches"));
 	/**
 	 * Hitboxes created from the loaded images; the id is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF. The group of the id is the name of the plugin the image is loaded from
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Cache<ImageHitbox> HITBOXES = new StandardCache<>(Identifier.fromString("resources/hitboxes"));
+	private static final @NotNull Cache<ImageHitbox> HITBOXES = new Registry<>(Identifier.fromString("resources/hitboxes"));
 	/**
 	 * The loaded images; the id is the file's name without extension, with possibly a #number attached to it if it is a frame from a GIF. The group of the image's id is the name of the plugin the image is loaded from
 	 *
@@ -113,23 +117,27 @@ public class ResourceManager {
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Cache<Plugin> PLUGINS = new GreedyCache<>(Identifier.fromString("resources/plugins"));
+	private static final @NotNull Cache<Plugin> PLUGINS = new Registry<>(Identifier.fromString("resources/plugins"));
 	/**
 	 * The tags of all registered resources. Some resources may not have any tags assigned to them. The id is the resources' id, and the values are the id's of the tags.
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Cache<HashSet<Identifier>> RESOURCE_TAGS = new GreedyCache<>(Identifier.fromString("resources/resource_tags"));
+	private static final @NotNull Cache<HashSet<Identifier>> RESOURCE_TAGS = new Registry<>(Identifier.fromString("resources/resource_tags"));
+	/**
+	 * The loaded maps
+	 */
+	private static final @NotNull Cache<Map> MAPS = new Registry<>(Identifier.fromString("resources/maps"));
 	/**
 	 * The created tags; the id is the plugin's id.
 	 *
 	 * @since 0.1.0
 	 */
-	private static final @NotNull Cache<Tag> TAGS = new GreedyCache<>(Identifier.fromString("resources/tags"));
+	private static final @NotNull Cache<Tag> TAGS = new Registry<>(Identifier.fromString("resources/tags"));
 	/**
 	 * The list of resources associated with each tag. The id is the tag's id, and the cached values are the id's of resources associated with that tag.
 	 */
-	private static final @NotNull Cache<HashSet<Identifier>> TAG_RESOURCES = new GreedyCache<>(Identifier.fromString("resources/tag_resources"));
+	private static final @NotNull Cache<HashSet<Identifier>> TAG_RESOURCES = new Registry<>(Identifier.fromString("resources/tag_resources"));
 	/**
 	 * The active game options
 	 *
@@ -217,7 +225,7 @@ public class ResourceManager {
 	}
 	
 	/**
-	 * Gets the cache where the resource is stored. Works for graphical and audio assets.
+	 * Gets the cache where the resource is stored.
 	 *
 	 * @param resourceId The id of the resource
 	 * @return The cache of the resource; doesn't return null for valid graphics/audio entries
@@ -229,6 +237,12 @@ public class ResourceManager {
 		}
 		if(hasTag(resourceId, Tag.AUDIO.getId())) {
 			return AUDIO;
+		}
+		if(hasTag(resourceId, Tag.MAP.getId())) {
+			return MAPS;
+		}
+		if(hasTag(resourceId, Tag.TAG.getId())) {
+			return TAGS;
 		}
 		return null;//shouldn't happen due to NPE during registration, but I don't want to add an else clause
 	}
@@ -478,6 +492,7 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	public static void registerAssets(@NotNull final Plugin plugin) {
+		waitForLoading();
 		try {
 			getPaths(plugin.getBaseDirectory().getPath(), false).filter(path -> "tags".equalsIgnoreCase(getFileExtension(path.toFile()))).forEach(path -> {
 				new LoadingOperation(() -> {
@@ -490,11 +505,12 @@ public class ResourceManager {
 							if(line.isEmpty()) {
 								continue;
 							}
-							if(Pattern.matches(".+::.+", line)) {//contains whitespace -> not just a tag entry
+							if(Pattern.matches(".+::.+", line)) {//contains :: -> not just a tag entry
 								String[] parts = line.split("::");
 								switch(parts[0]) {//the operation or something
 									case "id" -> resourceId = Identifier.fromString(parts[1]);//changes the resource's id
-									case "location" -> resourceFile = new File(plugin.getBaseDirectory(), line.substring("location::".length()).trim().strip());
+									case "location" -> resourceFile = new File(plugin.getBaseDirectory(), line.substring("location::".length()).trim().strip());//changes the resource's location
+									default -> LOGGER.warn("Illegal entry for asset: '" + line + "'");
 								}
 							} else {
 								tags.add(Identifier.fromString(line));
@@ -550,6 +566,33 @@ public class ResourceManager {
 					LOGGER.info("Interrupted wait for resource loading", e);
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Gets the map with the specified id.
+	 *
+	 * @param id The id of the map
+	 * @return The map or null if not found
+	 * @since 0.1.0
+	 */
+	public static @Nullable Map getMap(@NotNull Identifier id) {
+		return MAPS.get(id);
+	}
+	
+	/**
+	 * Saves the game options to a file.
+	 *
+	 * @since 0.1.0
+	 */
+	public static void saveSettings() {
+		try {
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			FileWriter writer = new FileWriter("settings.json");
+			gson.toJson(getOptions(), writer);
+			writer.close();
+		} catch(Exception e) {
+			LOGGER.warn("Could not save settings", e);
 		}
 	}
 	
@@ -778,16 +821,18 @@ public class ResourceManager {
 	 * @since 0.1.0
 	 */
 	private static void loadSettings() {
-		File file = new File("settings.json");
-		if(!file.exists()) {
-			try {
-				file.createNewFile();
-			} catch(IOException e) {
-				LOGGER.error("Could not create file for settings", e);
+		try {
+			File file = new File("settings.json");
+			if(!file.exists()) {
+				OPTIONS = Options.getDefaultOptions();
+			} else {
+				Gson gson = new Gson();
+				OPTIONS = gson.fromJson(new FileReader(file), StandardOptions.class);
 			}
+			//TODO proper loading
+		} catch(Exception e) {
+			LOGGER.warn("Could not load game options", e);
 		}
-		//TODO proper loading
-		OPTIONS = Options.getDefaultOptions();
 	}
 	
 	/**
@@ -806,7 +851,7 @@ public class ResourceManager {
 				final Image image = loadImage(location);
 				final BufferedImage[] images = getImageFrames(image, location);
 				IMAGES.register(resource, () -> images[0]);//registering basic image
-				IMAGES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw"), () -> loadImage(location));
+				IMAGES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/raw"), () -> image);
 				if(isHitboxImage) {
 					if(getImage(resource) instanceof BufferedImage) {
 						HITBOXES.register(Identifier.fromString(resource.getGroup(), resource.getName() + "/hitbox"), () -> new ImageHitbox(binarisate(getBufferedImage(resource))));
@@ -848,8 +893,13 @@ public class ResourceManager {
 							new GameStateTag(resource, classNames.toArray(new Class[0]));
 						}
 					}
-					default -> throw new IllegalArgumentException("Illegal tag type in tag resource " + resource + " (" + type + ")");
+					default -> throw new IllegalConfigurationException("Illegal tag type in tag resource " + resource + " (" + type + ")");
 				}
+			} else if(hasTag(resource, Tag.MAP.getId())) {
+				Map map = new Map(location, resource);
+				MAPS.register(map);
+			} else {
+				throw new IllegalArgumentException("Resource doesn't belong to any resource type");
 			}
 		} catch(Exception e) {
 			LOGGER.warn("Could not register resource " + resource, e);
@@ -863,7 +913,7 @@ public class ResourceManager {
 	 * @param tag      The id of the tag
 	 * @since 0.1.0
 	 */
-	private static void registerResourceTag(@NotNull Identifier resource, @NotNull Identifier tag) {
+	private static synchronized void registerResourceTag(@NotNull Identifier resource, @NotNull Identifier tag) {
 		if(!RESOURCE_TAGS.isLoaded(resource)) {
 			RESOURCE_TAGS.register(resource, HashSet::new);
 		}
