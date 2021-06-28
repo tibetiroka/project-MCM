@@ -9,17 +9,20 @@
 
 package dartproductions.mcleodmassacre.resources.plugin;
 
+import dartproductions.mcleodmassacre.resources.IllegalConfigurationException;
 import dartproductions.mcleodmassacre.resources.ResourceManager;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -30,6 +33,12 @@ import java.util.HashSet;
  */
 public class PluginManager {
 	protected static final Logger LOGGER = LogManager.getLogger(PluginManager.class);
+	/**
+	 * The class loader used for plugins. Null if the plugins are not loaded yet.
+	 *
+	 * @since 0.1.0
+	 */
+	private static @Nullable ClassLoader PLUGIN_CLASS_LOADER;
 	
 	/**
 	 * Finds and initializes all plugins. For any plugin, there will be a {@link Plugin} instance created and registered in the plugin cache.
@@ -69,6 +78,8 @@ public class PluginManager {
 	 * @since 0.1.0
 	 */
 	public static void loadPlugins() {
+		ArrayList<Plugin> loadingOrder = new ArrayList<>();
+		HashSet<URL> resourceLocations = new HashSet<>();
 		HashMap<Identifier, HashSet<Identifier>> loadbefores = new HashMap<>();
 		for(Identifier id : ResourceManager.getRegisteredPlugins()) {
 			Plugin plugin = ResourceManager.getPlugin(id);
@@ -89,7 +100,8 @@ public class PluginManager {
 					if(plugin != null) {
 						LOGGER.info("Loading plugin " + plugin.getName() + ":" + plugin.getVersion());
 						ResourceManager.registerAssets(plugin);
-						loadPlugin(ResourceManager.getPlugin(id));
+						loadingOrder.add(plugin);
+						resourceLocations.addAll(getPaths(plugin));
 						LOGGER.info("Loaded plugin " + plugin.getName() + ":" + plugin.getVersion());
 					} else {
 						LOGGER.error("Couldn't load plugin " + id + " (plugin doesn't exist)");
@@ -99,8 +111,12 @@ public class PluginManager {
 			boolean changed = loadbefores.entrySet().removeIf(e -> e.getValue().isEmpty());//remove newly loaded plugins
 			loadbefores.forEach((id, value) -> value.removeIf(i -> !loadbefores.containsKey(i)));//
 			if(!changed) {
-				throw new IllegalStateException("Plugins cannot be loaded due to loadbefore/loadafter deadlock");
+				throw new IllegalConfigurationException("Plugins cannot be loaded due to loadbefore/loadafter deadlock");
 			}
+		}
+		createClassLoader(resourceLocations);
+		for(Plugin plugin : loadingOrder) {
+			loadPlugin(plugin);
 		}
 	}
 	
@@ -117,21 +133,44 @@ public class PluginManager {
 	 */
 	private static void loadPlugin(@NotNull Plugin plugin) {
 		if(plugin.getConfiguration().jar != null && plugin.getConfiguration().modEntry != null) {
-			URL[] urls = new URL[plugin.getConfiguration().jar.length];
-			for(int i = 0; i < plugin.getConfiguration().jar.length; i++) {
-				try {
-					urls[i] = new File(plugin.getBaseDirectory(), plugin.getConfiguration().jar[i]).toURI().toURL();
-				} catch(MalformedURLException e) {
-					LOGGER.warn("Could not create URL to plugin resource jar for plugin " + plugin.getConfiguration().name, e);
-				}
-			}
-			final URLClassLoader loader = new URLClassLoader(urls);
 			try {
-				Class<? extends Mod> modClass = (Class<? extends Mod>) loader.loadClass(plugin.getConfiguration().modEntry);
+				Class<? extends Mod> modClass = (Class<? extends Mod>) PLUGIN_CLASS_LOADER.loadClass(plugin.getConfiguration().modEntry);
 				modClass.getDeclaredConstructor().newInstance().init();
 			} catch(ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
 				LOGGER.warn("Could not load mod entry for plugin " + plugin.getConfiguration().name, e);
 			}
 		}
+	}
+	
+	/**
+	 * Gets the paths to the jar files as specified in the plugin's configuration.
+	 *
+	 * @param plugin The plugin to get the resources of
+	 * @return The list of {@link URL URLs}
+	 * @since 0.1.0
+	 */
+	private static ArrayList<URL> getPaths(@NotNull Plugin plugin) {
+		ArrayList<URL> urls = new ArrayList<>();
+		if(plugin.getConfiguration().jar != null && plugin.getConfiguration().modEntry != null) {
+			for(int i = 0; i < plugin.getConfiguration().jar.length; i++) {
+				try {
+					urls.add(new File(plugin.getBaseDirectory(), plugin.getConfiguration().jar[i]).toURI().toURL());
+				} catch(Exception e) {
+					LOGGER.warn("Could not create URL to plugin resource jar for plugin " + plugin.getConfiguration().name, e);
+				}
+			}
+		}
+		return urls;
+	}
+	
+	/**
+	 * Creates the {@link #PLUGIN_CLASS_LOADER} using the specified {@link URL URLs} and the thread's current context class loader. Also sets this class loader as the context class loader of the application.
+	 *
+	 * @param urls The list of resources the loader needs to be able to load
+	 * @since 0.1.0
+	 */
+	private static void createClassLoader(@NotNull Collection<URL> urls) {
+		PLUGIN_CLASS_LOADER = new URLClassLoader("Class loader for plugins", urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
+		Thread.currentThread().setContextClassLoader(PLUGIN_CLASS_LOADER);
 	}
 }
