@@ -11,6 +11,7 @@ package dartproductions.mcleodmassacre.resources.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import dartproductions.mcleodmassacre.resources.IllegalConfigurationException;
 import dartproductions.mcleodmassacre.resources.id.Identified;
 import dartproductions.mcleodmassacre.resources.id.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -214,10 +215,10 @@ public class Plugin implements Identified {
 		 */
 		protected void verify() {
 			if(name == null) {
-				throw new IllegalStateException("Plugin name must be specified");
+				throw new IllegalConfigurationException("Plugin name must be specified");
 			}
 			if(version == null) {
-				throw new IllegalStateException("Plugin version must be specified");
+				throw new IllegalConfigurationException("Plugin version must be specified");
 			}
 		}
 	}
