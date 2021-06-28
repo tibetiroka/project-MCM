@@ -14,11 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
- * Cache implementation that doesn't support unloading, and loads all resources as soon as they are registered. Useful for storing resources that can be used by the game at any time. It can also be used as a global registry.
+ * {@link Cache} implementation that doesn't support unloading, but unlike {@link Registry}, doesn't load the resources when they are registered. Every resource is loaded when it is first accessed, and stay in the cache after that. The loader function for the resource is removed after it is loaded.
  *
  * @param <T> The type of the stored resource
  * @since 0.1.0
@@ -30,6 +31,13 @@ public class GreedyCache<T> implements Cache<T> {
 	 * @since 0.1.0
 	 */
 	protected final @NotNull HashMap<Identifier, T> cache = new HashMap<>();
+	
+	/**
+	 * The resource loaders
+	 *
+	 * @since 0.1.0
+	 */
+	protected final @NotNull HashMap<Identifier, Callable<T>> loaders = new HashMap<>();
 	
 	/**
 	 * The identifier of the cache
@@ -66,7 +74,10 @@ public class GreedyCache<T> implements Cache<T> {
 	
 	@Override
 	public @NotNull Set<Identifier> getRegisteredResources() {
-		return cache.keySet();
+		HashSet<Identifier> set = new HashSet<>();
+		set.addAll(loaders.keySet());
+		set.addAll(cache.keySet());
+		return set;
 	}
 	
 	@Override
@@ -81,17 +92,25 @@ public class GreedyCache<T> implements Cache<T> {
 	
 	@Override
 	public boolean load(@NotNull Identifier id) {
-		return isLoaded(id);
+		if(isLoaded(id)) {
+			return true;
+		}
+		if(loaders.containsKey(id) && loaders.get(id) != null) {
+			try {
+				cache.put(id, loaders.remove(id).call());
+				return true;
+			} catch(Exception e) {
+				LOGGER.error("Could not call resource loader in cache " + id, e);
+				return false;
+			}
+		}
+		return false;
 	}
 	
 	@Override
 	public void register(@NotNull Identifier id, @Nullable Callable<T> loader) {
-		try {
-			if(!isLoaded(id) || loader != null) {
-				cache.put(id, loader == null ? null : loader.call());
-			}
-		} catch(Exception e) {
-			LOGGER.warn("Could not load resource to cache", e);
+		if(loader != null && !loaders.containsKey(id) && !cache.containsKey(id)) {
+			loaders.put(id, loader);
 		}
 	}
 	
