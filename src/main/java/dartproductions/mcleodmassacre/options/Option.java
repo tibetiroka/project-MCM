@@ -10,7 +10,17 @@
 package dartproductions.mcleodmassacre.options;
 
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.JsonAdapter;
+import dartproductions.mcleodmassacre.options.OptionGroup.StandardOptionGroup.StringOptionMapAdapter.Wrapper;
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Type;
 
 /**
  * A single setting in the options.
@@ -231,6 +241,7 @@ public interface Option<T> {
 		 *
 		 * @since 0.1.0
 		 */
+		@JsonAdapter(EnumAdapter.class)
 		protected @Nullable T value;
 		
 		/**
@@ -292,6 +303,23 @@ public interface Option<T> {
 		@Override
 		public void setVisibleName(@Nullable String name) {
 			this.name = name;
+		}
+		
+		/**
+		 * JSON serializer and deserializer for enum values.
+		 *
+		 * @since 0.1.0
+		 */
+		protected static class EnumAdapter implements JsonSerializer<Enum<?>>, JsonDeserializer<Enum<?>> {
+			@Override
+			public Enum<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+				return (Enum<?>) ((Wrapper) context.deserialize(json, Wrapper.class)).getData();
+			}
+			
+			@Override
+			public JsonElement serialize(Enum src, Type typeOfSrc, JsonSerializationContext context) {
+				return context.serialize(new Wrapper(src.getDeclaringClass().getName(), src));
+			}
 		}
 	}
 	
@@ -381,7 +409,6 @@ public interface Option<T> {
 	 *
 	 * @since 0.1.0
 	 */
-	
 	class StringOption implements Option<String> {
 		/**
 		 * The name of the option
