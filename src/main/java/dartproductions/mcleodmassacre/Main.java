@@ -151,6 +151,7 @@ public class Main {
 		LOGGER.info("Changed running state to " + running);
 		if(!isRunning()) {
 			EXECUTORS.shutdown();
+			ResourceManager.saveSettings();
 			LOGGER.info("Shutting down the global executors");
 		}
 	}
@@ -165,6 +166,7 @@ public class Main {
 		parseArgs(args);
 		loadAppData();
 		ResourceManager.onStateChange(GameState.LOADING, GameState.MAIN_MENU);//synchronous resource loading initially
+		ResourceManager.waitForLoading();
 		startGameLoops();
 		setGameState(GameState.LOADING, GameState.MAIN_MENU);
 	}
@@ -258,32 +260,32 @@ public class Main {
 	 * @param newNextState The new next state, as specified by {@link #getNextState()}
 	 * @since 0.1.0
 	 */
-	public static synchronized void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
+	public static void setGameState(@NotNull GameState newGameState, @Nullable GameState newNextState) {
 		synchronized(GameEngine.ENGINE_WAIT_LOCK) {
-			synchronized(GraphicsManager.GRAPHICS_LOCK) {
-				GameState previous = GAME_STATE;
-				GameState previousNext = NEXT_STATE;
-				//
-				GAME_STATE = newGameState;
-				NEXT_STATE = newNextState;
-				//
-				if(previous != null) {
-					previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
-				}
-				//
-				LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
-				//
-				GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
-				if(newGameState.isLoadingState()) {
-					getExecutors().execute(() -> {
-						ResourceManager.onStateChange(newGameState, newNextState);
-						setGameState(newNextState, null);
-					});
-				} else {
-					ResourceManager.onStateChange(newGameState, newNextState);
-				}
-				
+			//synchronized(GraphicsManager.GRAPHICS_LOCK) {
+			GameState previous = GAME_STATE;
+			GameState previousNext = NEXT_STATE;
+			//
+			GAME_STATE = newGameState;
+			NEXT_STATE = newNextState;
+			//
+			if(previous != null) {
+				previous.onStateDeactivation(previousNext, GAME_STATE, NEXT_STATE);
 			}
+			//
+			LOGGER.debug("Changed state to " + GAME_STATE + (newNextState == null ? "" : " (with next state " + newNextState + ")"));
+			//
+			if(newGameState.isLoadingState()) {
+				getExecutors().execute(() -> {
+					ResourceManager.onStateChange(newGameState, newNextState);
+					GameEngine.scheduleTask(1, () -> setGameState(newNextState, null));
+				});
+			} else {
+				ResourceManager.onStateChange(newGameState, newNextState);
+			}
+			//
+			GAME_STATE.onStateActivation(previous, previousNext, NEXT_STATE);
+			//}
 		}
 	}
 	
@@ -383,7 +385,7 @@ public class Main {
 	private static void startGameLoops() {
 		InputManager.initialize();
 		ResourceManager.waitForLoading();
-		GraphicsManager.startGameLoop();
+		GraphicsManager.init();
 		GameEngine.start();
 	}
 	
